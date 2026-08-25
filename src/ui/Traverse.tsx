@@ -22,7 +22,10 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
   const viewportRef = useRef<HTMLDivElement>(null);
   const [vp, setVp] = useState({ w: 0, h: 0 });
   const [t, setT] = useState({ x: 0, y: 0, s: 1 });
-  const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinched = useRef(false);
+  const tapId = useRef<number | null>(null);
+  const tapStart = useRef({ x: 0, y: 0 });
 
   const [sel, setSel] = useState<Sel | null>(null);
   const [sol, setSol] = useState<SolImages | null>(null);
@@ -48,7 +51,11 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
 
   useEffect(() => {
     if (!vp.w || !vp.h) return;
-    const s = Math.min(vp.w / w, vp.h / h);
+    const contain = Math.min(vp.w / w, vp.h / h);
+    const cover = Math.max(vp.w / w, vp.h / h);
+    // On phones, fill the screen and let the user pan, instead of a thin
+    // letterboxed strip. Cap so it isn't over-zoomed on square-ish crops.
+    const s = vp.w < 560 ? Math.min(cover, contain * 4) : contain;
     setT({ x: (vp.w - w * s) / 2, y: (vp.h - h * s) / 2, s });
   }, [vp.w, vp.h, w, h]);
 
@@ -77,21 +84,76 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
       .catch(() => { setError(true); setLoading(false); });
   }
 
-  // Pan / zoom / tap.
+  // Keep the image from being panned off-screen (at least `m` px stay visible),
+  // so a stray touch can never make it "disappear".
+  const clampXY = (x: number, y: number, s: number) => {
+    if (!vp.w || !vp.h) return { x, y };
+    const iw = w * s, ih = h * s;
+    const mx = Math.min(90, vp.w * 0.5), my = Math.min(90, vp.h * 0.5);
+    return {
+      x: Math.max(Math.min(x, vp.w - mx), mx - iw),
+      y: Math.max(Math.min(y, vp.h - my), my - ih),
+    };
+  };
+
+  // Pan (1 finger) / pinch-zoom (2 fingers) / tap-to-select.
   const onPointerDown = (e: React.PointerEvent) => {
-    (e.target as Element).setPointerCapture?.(e.pointerId);
-    drag.current = { x: e.clientX, y: e.clientY, tx: t.x, ty: t.y, moved: false };
+    try { viewportRef.current?.setPointerCapture?.(e.pointerId); } catch { /* not an active pointer */ }
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 1) {
+      pinched.current = false;
+      tapId.current = e.pointerId;
+      tapStart.current = { x: e.clientX, y: e.clientY };
+    } else {
+      tapId.current = null; // multi-touch is never a tap
+    }
   };
+
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!drag.current) return;
-    const dx = e.clientX - drag.current.x, dy = e.clientY - drag.current.y;
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.current.moved = true;
-    setT((prev) => ({ ...prev, x: drag.current!.tx + dx, y: drag.current!.ty + dy }));
+    const pts = pointers.current;
+    if (!pts.has(e.pointerId)) return;
+    const rect = viewportRef.current!.getBoundingClientRect();
+
+    if (pts.size >= 2) {
+      const before = [...pts.values()];
+      const oldMidX = (before[0]!.x + before[1]!.x) / 2, oldMidY = (before[0]!.y + before[1]!.y) / 2;
+      const oldDist = Math.hypot(before[0]!.x - before[1]!.x, before[0]!.y - before[1]!.y);
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const after = [...pts.values()];
+      const newMidX = (after[0]!.x + after[1]!.x) / 2, newMidY = (after[0]!.y + after[1]!.y) / 2;
+      const newDist = Math.hypot(after[0]!.x - after[1]!.x, after[0]!.y - after[1]!.y);
+      const cx = newMidX - rect.left, cy = newMidY - rect.top;
+      const ratio = oldDist > 0 ? newDist / oldDist : 1;
+      pinched.current = true;
+      setT((p) => {
+        const s = Math.min(maxS, Math.max(minS, p.s * ratio));
+        const k = s / p.s;
+        const x = cx - (cx - p.x) * k + (newMidX - oldMidX);
+        const y = cy - (cy - p.y) * k + (newMidY - oldMidY);
+        const c = clampXY(x, y, s);
+        return { s, x: c.x, y: c.y };
+      });
+      return;
+    }
+
+    const old = pts.get(e.pointerId)!;
+    const dx = e.clientX - old.x, dy = e.clientY - old.y;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    setT((p) => {
+      const c = clampXY(p.x + dx, p.y + dy, p.s);
+      return { ...p, x: c.x, y: c.y };
+    });
   };
+
   const onPointerUp = (e: React.PointerEvent) => {
-    const d = drag.current;
-    drag.current = null;
-    if (!d || d.moved) return; // was a drag, not a tap
+    // A tap is a single pointer that barely moved (tolerant of finger jitter).
+    const near = Math.hypot(e.clientX - tapStart.current.x, e.clientY - tapStart.current.y) < 8;
+    const wasTap = pointers.current.size === 1 && tapId.current === e.pointerId && !pinched.current && near;
+    pointers.current.delete(e.pointerId);
+    if (viewportRef.current?.hasPointerCapture?.(e.pointerId)) {
+      viewportRef.current.releasePointerCapture(e.pointerId);
+    }
+    if (!wasTap) return;
     const rect = viewportRef.current!.getBoundingClientRect();
     const ix = (e.clientX - rect.left - t.x) / t.s;
     const iy = (e.clientY - rect.top - t.y) / t.s;
@@ -103,7 +165,6 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
       const dist = dx * dx + dy * dy;
       if (dist < bd) { bd = dist; best = { lon: wp.lon, lat: wp.lat, sol: wp.sol }; }
     }
-    // Only select if the tap landed near the path (in screen pixels).
     if (best && Math.sqrt(bd) * t.s < 46) pick(best);
     else { setSel(null); setSol(null); }
   };
@@ -112,7 +173,8 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
     setT((prev) => {
       const s = Math.min(maxS, Math.max(minS, prev.s * factor));
       const k = s / prev.s;
-      return { s, x: cx - (cx - prev.x) * k, y: cy - (cy - prev.y) * k };
+      const c = clampXY(cx - (cx - prev.x) * k, cy - (cy - prev.y) * k, s);
+      return { s, x: c.x, y: c.y };
     });
   };
   const onWheel = (e: React.WheelEvent) => {
@@ -149,7 +211,7 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerLeave={() => { drag.current = null; }}
+        onPointerCancel={onPointerUp}
         onWheel={onWheel}
       >
         <div className="traverse-world" style={{ width: w, height: h, transform: `translate(${t.x}px,${t.y}px) scale(${t.s})` }}>
