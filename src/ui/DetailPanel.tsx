@@ -87,6 +87,26 @@ export function DetailPanel({
       ? `as of ${fmtUtcHm(generatedAt)} UTC`
       : EMDASH;
 
+  // Share the craft's light-time as a ready-made post. Native share sheet on
+  // mobile (X, Bluesky, anywhere); falls back to the X compose intent.
+  async function share() {
+    const url = `https://sublight.observer/?c=${e.id}#c/${e.id}`;
+    const text =
+      owltSeconds != null
+        ? `A signal to ${e.name} takes ${fmtDuration(owltSeconds)} to reach Earth. Everything we see of it is already that old.`
+        : `${e.name}, one of the solar system's active robotic fleet, mapped in light-time.`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Sublight', text, url });
+        return;
+      } catch {
+        /* user cancelled */
+      }
+    }
+    const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(intent, '_blank', 'noopener,noreferrer');
+  }
+
   return (
     <aside className="detail" aria-label={`${e.name} details`}>
       <div className="detail-head">
@@ -97,9 +117,14 @@ export function DetailPanel({
           </div>
           <div className="detail-loc">{e.location}</div>
         </div>
-        <button className="detail-close" onClick={onClose} aria-label="Close panel">
-          ✕
-        </button>
+        <div className="detail-head-btns">
+          <button className="detail-share" onClick={share} aria-label={`Share ${e.name}`}>
+            Share ↗
+          </button>
+          <button className="detail-close" onClick={onClose} aria-label="Close panel">
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* hero frame (imaging craft) */}

@@ -1083,3 +1083,21 @@ a {
   /* HUD controls: keep clear of the notch/edges */
   .hud-controls { top: 14px; right: 14px; }
 }
+
+/* --- share button (detail panel header) ----------------------------------- */
+.detail-head-btns { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.detail-share {
+  background: none;
+  border: 1px solid var(--rule-2);
+  color: var(--signal);
+  font-family: var(--mono);
+  font-size: var(--fs-detail-sub);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
+}
+.detail-share:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.08); }
+.detail-share:focus-visible { outline: 1px solid var(--signal); outline-offset: 2px; }
