@@ -66,7 +66,10 @@ const SPOTLIGHT = [
 ];
 const REGION: Record<string, string> = { perseverance: 'Jezero Crater', curiosity: 'Gale Crater' };
 
-function link(id?: string) { return id ? `${SITE}/#c/${id}` : SITE; }
+// A query param makes each URL distinct to X's card scraper (which ignores the
+// #hash), so it re-fetches the now-correct OG tags instead of a stale cache.
+// The app itself ignores the query and routes on the hash.
+function link(id?: string) { return id ? `${SITE}/?c=${id}#c/${id}` : `${SITE}/?view=fleet`; }
 
 function genLightTime(d: any, dayOfYear: number): Post | null {
   const id = SPOTLIGHT[dayOfYear % SPOTLIGHT.length]!;
@@ -98,7 +101,7 @@ function genFleetPulse(d: any): Post {
   return {
     kind: 'fleet-pulse',
     text: `${d.fleet.craft.length} robotic explorers are still working across the solar system tonight, from rovers on Mars to two probes in interstellar space. Their signals reach us between ${fmtDur(near)} and ${fmtDur(farr)} old.`,
-    link: SITE,
+    link: `${SITE}/?view=fleet`,
   };
 }
 
