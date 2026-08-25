@@ -1,0 +1,271 @@
+[
+  {
+    "id": "perseverance",
+    "name": "Perseverance",
+    "naifId": -168,
+    "agency": "NASA / JPL",
+    "launched": "2020-07-30",
+    "arrived": "2021-02-18",
+    "status": "active",
+    "kind": "rover",
+    "host": "mars",
+    "location": "Jezero Crater · Mars",
+    "imagery": {
+      "source": "mars2020"
+    },
+    "note": "Surface rover; Horizons has no trajectory for it, so its position is taken from Mars."
+  },
+  {
+    "id": "curiosity",
+    "name": "Curiosity",
+    "naifId": -76,
+    "agency": "NASA / JPL",
+    "launched": "2011-11-26",
+    "arrived": "2012-08-06",
+    "status": "active",
+    "kind": "rover",
+    "host": "mars",
+    "location": "Mount Sharp · Mars",
+    "imagery": {
+      "source": "msl"
+    },
+    "note": "Surface rover on Aeolis Mons; positioned via Mars for consistency with the other landers."
+  },
+  {
+    "id": "ingenuity",
+    "name": "Ingenuity",
+    "naifId": null,
+    "agency": "NASA / JPL",
+    "launched": "2020-07-30",
+    "arrived": "2021-02-18",
+    "status": "retired",
+    "kind": "lander",
+    "host": "mars",
+    "location": "Valinor Hills · Mars",
+    "imagery": null,
+    "note": "Rotorcraft grounded since January 2024; no distinct NAIF ID, positioned via Mars.",
+    "archiveImage": {
+      "nasaId": "PIA25321",
+      "title": "Ingenuity on the surface of Mars",
+      "credit": "NASA/JPL-Caltech"
+    }
+  },
+  {
+    "id": "jwst",
+    "name": "JWST",
+    "naifId": -170,
+    "agency": "NASA / ESA / CSA",
+    "launched": "2021-12-25",
+    "arrived": "2022-01-24",
+    "status": "active",
+    "kind": "observatory",
+    "host": null,
+    "location": "Sun–Earth L2",
+    "imagery": null,
+    "note": "Infrared observatory halo-orbiting the second Sun–Earth Lagrange point, about 1.5 million km from Earth.",
+    "archiveImage": {
+      "nasaId": "carina_nebula",
+      "title": "Cosmic Cliffs in the Carina Nebula",
+      "credit": "NASA, ESA, CSA, STScI"
+    }
+  },
+  {
+    "id": "dscovr",
+    "name": "DSCOVR",
+    "naifId": -78,
+    "agency": "NOAA / NASA",
+    "launched": "2015-02-11",
+    "arrived": "2015-06-08",
+    "status": "active",
+    "kind": "observatory",
+    "host": "earth",
+    "location": "Sun–Earth L1",
+    "imagery": {
+      "source": "epic"
+    },
+    "note": "Space-weather sentinel at L1; its EPIC camera returns full-disk images of the sunlit Earth."
+  },
+  {
+    "id": "yutu-2",
+    "name": "Yutu-2",
+    "naifId": null,
+    "agency": "CNSA",
+    "launched": "2018-12-07",
+    "arrived": "2019-01-03",
+    "status": "dormant",
+    "kind": "rover",
+    "host": "moon",
+    "location": "Von Kármán Crater · Moon",
+    "imagery": null,
+    "note": "Far-side lunar rover; not carried in Horizons, so it is positioned via the Moon."
+  },
+  {
+    "id": "bepicolombo",
+    "name": "BepiColombo",
+    "naifId": -121,
+    "agency": "ESA / JAXA",
+    "launched": "2018-10-20",
+    "arrived": null,
+    "status": "cruise",
+    "kind": "orbiter",
+    "host": null,
+    "location": "Cruise to Mercury",
+    "imagery": null,
+    "note": "Two-orbiter stack still on its cruise to Mercury orbit insertion."
+  },
+  {
+    "id": "parker-solar-probe",
+    "name": "Parker Solar Probe",
+    "naifId": -96,
+    "agency": "NASA / JHU APL",
+    "launched": "2018-08-12",
+    "arrived": null,
+    "status": "active",
+    "kind": "observatory",
+    "host": null,
+    "location": "Heliocentric orbit",
+    "imagery": null,
+    "note": "Repeatedly dips through the solar corona on a shrinking heliocentric orbit."
+  },
+  {
+    "id": "solar-orbiter",
+    "name": "Solar Orbiter",
+    "naifId": -144,
+    "agency": "ESA / NASA",
+    "launched": "2020-02-10",
+    "arrived": null,
+    "status": "active",
+    "kind": "observatory",
+    "host": null,
+    "location": "Heliocentric orbit",
+    "imagery": null,
+    "note": "Images the Sun and its poles from an inclined heliocentric orbit."
+  },
+  {
+    "id": "akatsuki",
+    "name": "Akatsuki",
+    "naifId": -5,
+    "agency": "JAXA",
+    "launched": "2010-05-20",
+    "arrived": "2015-12-07",
+    "status": "silent",
+    "kind": "orbiter",
+    "host": "venus",
+    "location": "Venus orbit",
+    "imagery": null,
+    "note": "Venus climate orbiter; contact was lost in 2024, its geometry is still computed via Venus."
+  },
+  {
+    "id": "europa-clipper",
+    "name": "Europa Clipper",
+    "naifId": -159,
+    "agency": "NASA / JPL",
+    "launched": "2024-10-14",
+    "arrived": null,
+    "status": "cruise",
+    "kind": "orbiter",
+    "host": null,
+    "location": "Cruise to Jupiter",
+    "imagery": null,
+    "note": "En route to Jupiter for repeated flybys of the moon Europa."
+  },
+  {
+    "id": "juice",
+    "name": "JUICE",
+    "naifId": -28,
+    "agency": "ESA",
+    "launched": "2023-04-14",
+    "arrived": null,
+    "status": "cruise",
+    "kind": "orbiter",
+    "host": null,
+    "location": "Cruise to Jupiter",
+    "imagery": null,
+    "note": "Jupiter Icy Moons Explorer, bound for Ganymede orbit."
+  },
+  {
+    "id": "psyche",
+    "name": "Psyche",
+    "naifId": -255,
+    "agency": "NASA / JPL",
+    "launched": "2023-10-13",
+    "arrived": null,
+    "status": "cruise",
+    "kind": "orbiter",
+    "host": null,
+    "location": "Cruise to 16 Psyche",
+    "imagery": null,
+    "note": "Travelling to the metal-rich main-belt asteroid 16 Psyche."
+  },
+  {
+    "id": "lucy",
+    "name": "Lucy",
+    "naifId": -49,
+    "agency": "NASA",
+    "launched": "2021-10-16",
+    "arrived": null,
+    "status": "cruise",
+    "kind": "flyby",
+    "host": null,
+    "location": "Cruise to the Trojans",
+    "imagery": null,
+    "note": "On a twelve-year tour of the Jupiter Trojan asteroids."
+  },
+  {
+    "id": "new-horizons",
+    "name": "New Horizons",
+    "naifId": -98,
+    "agency": "NASA / JHU APL",
+    "launched": "2006-01-19",
+    "arrived": null,
+    "status": "active",
+    "kind": "flyby",
+    "host": null,
+    "location": "Kuiper Belt",
+    "imagery": null,
+    "note": "Past its Pluto and Arrokoth flybys, still returning data from the Kuiper Belt.",
+    "archiveImage": {
+      "nasaId": "PIA19952",
+      "title": "Pluto in enhanced colour",
+      "credit": "NASA/JHU APL/SwRI"
+    }
+  },
+  {
+    "id": "voyager-2",
+    "name": "Voyager 2",
+    "naifId": -32,
+    "agency": "NASA / JPL",
+    "launched": "1977-08-20",
+    "arrived": null,
+    "status": "active",
+    "kind": "flyby",
+    "host": null,
+    "location": "Interstellar space",
+    "imagery": null,
+    "note": "Crossed the heliopause in 2018; the only craft to have flown past Uranus and Neptune.",
+    "archiveImage": {
+      "nasaId": "PIA01492",
+      "title": "Neptune, imaged by Voyager 2",
+      "credit": "NASA/JPL"
+    }
+  },
+  {
+    "id": "voyager-1",
+    "name": "Voyager 1",
+    "naifId": -31,
+    "agency": "NASA / JPL",
+    "launched": "1977-09-05",
+    "arrived": null,
+    "status": "active",
+    "kind": "flyby",
+    "host": null,
+    "location": "Interstellar space",
+    "imagery": null,
+    "note": "The most distant human-made object, in interstellar space since 2012.",
+    "archiveImage": {
+      "nasaId": "PIA23645",
+      "title": "The Pale Blue Dot (2020 reprocessing)",
+      "credit": "NASA/JPL-Caltech"
+    }
+  }
+]

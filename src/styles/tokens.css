@@ -1,0 +1,88 @@
+/* Design tokens — single source of truth, mirrored from CLAUDE.md.
+   Do not introduce colour values outside this file. */
+:root {
+  --void: #06080b;
+  --panel: #0c0f15;
+  --rule: #171c25;
+  --rule-2: #232b37;
+  --txt: #dce2ec;
+  --dim: #6e7889;
+  --dim-2: #454d5c;
+
+  --signal: #8fd6e6; /* active */
+  --delay: #e5b571; /* RESERVED: light-time + imaging craft only */
+  --dead: #3b4250; /* silent / retired */
+
+  /* Numbers + small text: Roboto Mono, IBM Plex Mono as glyph fallback. */
+  --mono: 'Roboto Mono', 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Big titles (craft names, headings): Stack Sans Notch. */
+  --sans: 'Stack Sans Notch', 'IBM Plex Sans', system-ui, sans-serif;
+
+  --masthead-h: 72px;
+  --drawer-h: 238px;
+  --sidebar-w: 380px;
+
+  /* Global text multiplier — every per-text token below is scaled by this. */
+  --font-scale: 1.2;
+
+  /* --------------------------------------------------------------------- */
+  /* Per-text font-size tokens. One per text role; edit any value here to   */
+  /* resize just that text. Each is multiplied by --font-scale.             */
+  /* --------------------------------------------------------------------- */
+
+  /* masthead */
+  --fs-brand: calc(18px * var(--font-scale)); /* "OUT THERE / v0.4" */
+  --fs-mast-right: calc(16px * var(--font-scale)); /* UTC · tracking · About */
+  --fs-body: calc(14px * var(--font-scale)); /* default body text */
+
+  /* HUD (over the map) */
+  --fs-hud-eyebrow: calc(16px * var(--font-scale)); /* "currently tracking" */
+  --fs-hud-name: calc(42px * var(--font-scale)); /* big craft name */
+  --fs-hud-name-caret: calc(32px * var(--font-scale)); /* ↗ next to the name */
+  --fs-hud-loc: calc(20px * var(--font-scale)); /* craft location line */
+  --fs-stat-l: calc(12px * var(--font-scale)); /* stat labels (bottom-left) */
+  --fs-stat-v: calc(32px * var(--font-scale)); /* big stat values */
+  --fs-stat-v-small: calc(24px * var(--font-scale)); /* smaller stat values */
+  --fs-ctrl: calc(14px * var(--font-scale)); /* "Whole system" / "Signal path" */
+
+  /* raw-frame thumbnail */
+  --fs-thumb-foot: calc(12px * var(--font-scale)); /* captured / arrived caption */
+  --fs-thumb-expand: calc(12px * var(--font-scale)); /* "full screen" hint */
+  --fs-thumb-none: calc(12px * var(--font-scale)); /* "telemetry only" */
+  --fs-thumb-credit: calc(12px * var(--font-scale)); /* image credit */
+
+  /* fleet sidebar */
+  --fs-sidebar-title: calc(24px * var(--font-scale)); /* "Fleet register" */
+  --fs-sidebar-sub: calc(16px * var(--font-scale)); /* "N assets · sorted…" */
+  --fs-legend: calc(14px * var(--font-scale)); /* legend chips */
+  --fs-craft-name: calc(20px * var(--font-scale)); /* row craft name */
+  --fs-craft-loc: calc(16px * var(--font-scale)); /* row location */
+  --fs-craft-range: calc(16px * var(--font-scale)); /* row distance */
+  --fs-craft-owlt: calc(16px * var(--font-scale)); /* row light-time */
+  --fs-feed: calc(14px * var(--font-scale)); /* "IMG" tag */
+
+  /* detail panel */
+  --fs-detail-name: calc(32px * var(--font-scale));
+  --fs-detail-sub: calc(12px * var(--font-scale)); /* agency · kind · status */
+  --fs-detail-note: calc(16px * var(--font-scale)); /* editorial note */
+  --fs-detail-grid-v: calc(14px * var(--font-scale)); /* stat values */
+  --fs-detail-section-l: calc(12px * var(--font-scale)); /* section labels */
+  --fs-detail-source: calc(12px * var(--font-scale)); /* provenance line */
+
+  /* full-screen viewer (lightbox) */
+  --fs-lb-craft: calc(24px * var(--font-scale)); /* craft name */
+  --fs-lb-meta: calc(16px * var(--font-scale)); /* instrument · sol · n/N */
+  --fs-lb-nav: calc(26px * var(--font-scale)); /* ‹ › arrows */
+  --fs-lb-times: calc(16px * var(--font-scale)); /* captured/arrived */
+  --fs-lb-times-lb-l: calc(14px * var(--font-scale)); /* their labels */
+  --fs-lb-arrow: calc(14px * var(--font-scale)); /* "→ light →" */
+  --fs-lb-credit: calc(14px * var(--font-scale));
+
+  /* about page */
+  --fs-about-h1: calc(36px * var(--font-scale));
+  --fs-about-lede: calc(17px * var(--font-scale));
+  --fs-about-h2: calc(19px * var(--font-scale));
+  --fs-about-p: calc(15.5px * var(--font-scale));
+  --fs-about-ul: calc(15.5px * var(--font-scale));
+  --fs-about-a-back: calc(12px * var(--font-scale)); /* "← back to the map" */
+}

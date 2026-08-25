@@ -1,0 +1,32 @@
+# Sublight — sublight.observer
+# Search engines and AI assistants are welcome (we want to be cited and found).
+# Only aggressive SEO / backlink scrapers, which give no visibility and only add
+# log and analytics noise, are turned away. robots.txt is advisory; hard edge
+# blocking is handled on Cloudflare (see SITE-OPS.md).
+
+# Default: allow everything, including AI crawlers (GPTBot, ClaudeBot,
+# PerplexityBot, OAI-SearchBot, Google-Extended, Applebot-Extended, …).
+User-agent: *
+Allow: /
+
+# --- Aggressive SEO / backlink scrapers (log + analytics noise) --------------
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /

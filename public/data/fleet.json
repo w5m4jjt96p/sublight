@@ -1,0 +1,192 @@
+{
+  "generatedAt": "2026-08-21T15:35:52.591Z",
+  "craft": [
+    {
+      "id": "perseverance",
+      "heliocentricAu": 1.505577,
+      "eclipticLonDeg": 64.1604,
+      "heliocentricAuNextDay": 1.506884,
+      "eclipticLonDegNextDay": 64.694,
+      "rangeAu": 1.9073,
+      "rangeAuNextDay": 1.902325,
+      "owltSeconds": 951.752,
+      "source": "horizons:499"
+    },
+    {
+      "id": "curiosity",
+      "heliocentricAu": 1.505587,
+      "eclipticLonDeg": 64.1611,
+      "heliocentricAuNextDay": 1.506898,
+      "eclipticLonDegNextDay": 64.6947,
+      "rangeAu": 1.907318,
+      "rangeAuNextDay": 1.902345,
+      "owltSeconds": 951.761,
+      "source": "horizons:-76"
+    },
+    {
+      "id": "ingenuity",
+      "heliocentricAu": 1.505577,
+      "eclipticLonDeg": 64.1604,
+      "heliocentricAuNextDay": 1.506884,
+      "eclipticLonDegNextDay": 64.694,
+      "rangeAu": 1.9073,
+      "rangeAuNextDay": 1.902325,
+      "owltSeconds": 951.752,
+      "source": "horizons:499"
+    },
+    {
+      "id": "jwst",
+      "heliocentricAu": 1.020014,
+      "eclipticLonDeg": 327.3691,
+      "heliocentricAuNextDay": 1.01978,
+      "eclipticLonDegNextDay": 328.3387,
+      "rangeAu": 0.00938,
+      "rangeAuNextDay": 0.00931,
+      "owltSeconds": 4.681,
+      "source": "horizons:-170"
+    },
+    {
+      "id": "dscovr",
+      "heliocentricAu": 1.001338,
+      "eclipticLonDeg": 327.5202,
+      "heliocentricAuNextDay": 1.001118,
+      "eclipticLonDegNextDay": 328.4856,
+      "rangeAu": 0.010503,
+      "rangeAuNextDay": 0.010507,
+      "owltSeconds": 5.241,
+      "source": "horizons:-78"
+    },
+    {
+      "id": "yutu-2",
+      "heliocentricAu": 1.012175,
+      "eclipticLonDeg": 327.4612,
+      "heliocentricAuNextDay": 1.012463,
+      "eclipticLonDegNextDay": 328.4313,
+      "rangeAu": 0.002697,
+      "rangeAuNextDay": 0.002704,
+      "owltSeconds": 1.346,
+      "source": "horizons:301"
+    },
+    {
+      "id": "bepicolombo",
+      "heliocentricAu": 0.336143,
+      "eclipticLonDeg": 125.2064,
+      "heliocentricAuNextDay": 0.340507,
+      "eclipticLonDegNextDay": 130.5413,
+      "rangeAu": 1.327012,
+      "rangeAuNextDay": 1.337662,
+      "owltSeconds": 662.185,
+      "source": "horizons:-121"
+    },
+    {
+      "id": "parker-solar-probe",
+      "heliocentricAu": 0.492206,
+      "eclipticLonDeg": 345.877,
+      "heliocentricAuNextDay": 0.473381,
+      "eclipticLonDegNextDay": 347.121,
+      "rangeAu": 0.567215,
+      "rangeAuNextDay": 0.583875,
+      "owltSeconds": 283.043,
+      "source": "horizons:-96"
+    },
+    {
+      "id": "solar-orbiter",
+      "heliocentricAu": 0.297046,
+      "eclipticLonDeg": 283.2082,
+      "heliocentricAuNextDay": 0.300978,
+      "eclipticLonDegNextDay": 290.4993,
+      "rangeAu": 0.828625,
+      "rangeAuNextDay": 0.798581,
+      "owltSeconds": 413.488,
+      "source": "horizons:-144"
+    },
+    {
+      "id": "akatsuki",
+      "heliocentricAu": 0.727841,
+      "eclipticLonDeg": 288.5657,
+      "heliocentricAuNextDay": 0.727893,
+      "eclipticLonDegNextDay": 290.1467,
+      "rangeAu": 0.640384,
+      "rangeAuNextDay": 0.632466,
+      "owltSeconds": 319.555,
+      "source": "horizons:299"
+    },
+    {
+      "id": "europa-clipper",
+      "heliocentricAu": 1.137756,
+      "eclipticLonDeg": 294.4584,
+      "heliocentricAuNextDay": 1.130541,
+      "eclipticLonDegNextDay": 295.3108,
+      "rangeAu": 0.625473,
+      "rangeAuNextDay": 0.624079,
+      "owltSeconds": 312.114,
+      "source": "horizons:-159"
+    },
+    {
+      "id": "juice",
+      "heliocentricAu": 1.238436,
+      "eclipticLonDeg": 334.9635,
+      "heliocentricAuNextDay": 1.232927,
+      "eclipticLonDegNextDay": 335.6018,
+      "rangeAu": 0.268342,
+      "rangeAuNextDay": 0.260323,
+      "owltSeconds": 133.904,
+      "source": "horizons:-28"
+    },
+    {
+      "id": "psyche",
+      "heliocentricAu": 1.524953,
+      "eclipticLonDeg": 72.0841,
+      "heliocentricAuNextDay": 1.528187,
+      "eclipticLonDegNextDay": 72.6599,
+      "rangeAu": 2.029638,
+      "rangeAuNextDay": 2.027347,
+      "owltSeconds": 1012.799,
+      "source": "horizons:-255"
+    },
+    {
+      "id": "lucy",
+      "heliocentricAu": 4.94568,
+      "eclipticLonDeg": 220.9451,
+      "heliocentricAuNextDay": 4.94907,
+      "eclipticLonDegNextDay": 220.9967,
+      "rangeAu": 5.32445,
+      "rangeAuNextDay": 5.341933,
+      "owltSeconds": 2656.926,
+      "source": "horizons:-49"
+    },
+    {
+      "id": "new-horizons",
+      "heliocentricAu": 65.391898,
+      "eclipticLonDeg": 288.4861,
+      "heliocentricAuNextDay": 65.399719,
+      "eclipticLonDegNextDay": 288.4866,
+      "rangeAu": 64.610673,
+      "rangeAuNextDay": 64.629608,
+      "owltSeconds": 32241.035,
+      "source": "horizons:-98"
+    },
+    {
+      "id": "voyager-2",
+      "heliocentricAu": 143.729281,
+      "eclipticLonDeg": 290.7108,
+      "heliocentricAuNextDay": 143.73797,
+      "eclipticLonDegNextDay": 290.711,
+      "rangeAu": 143.098133,
+      "rangeAuNextDay": 143.115069,
+      "owltSeconds": 71406.653,
+      "source": "horizons:-32"
+    },
+    {
+      "id": "voyager-1",
+      "heliocentricAu": 171.517341,
+      "eclipticLonDeg": 256.7611,
+      "heliocentricAuNextDay": 171.527091,
+      "eclipticLonDegNextDay": 256.7614,
+      "rangeAu": 171.248753,
+      "rangeAuNextDay": 171.271741,
+      "owltSeconds": 85453.947,
+      "source": "horizons:-31"
+    }
+  ]
+}

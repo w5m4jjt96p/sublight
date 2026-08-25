@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-08-19T16:21:29.564Z",
+  "byCraft": {
+    "psyche": {
+      "inContact": true,
+      "direction": "both",
+      "antenna": "DSS25"
+    }
+  }
+}

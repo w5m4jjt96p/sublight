@@ -1,0 +1,42 @@
+{
+  "mercury": {
+    "file": "/bodies/mercury.jpg",
+    "full": "/bodies/mercury-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA12051/PIA12051~orig.jpg"
+  },
+  "venus": {
+    "file": "/bodies/venus.jpg",
+    "full": "/bodies/venus-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA00257/PIA00257~orig.jpg"
+  },
+  "moon": {
+    "file": "/bodies/moon.jpg",
+    "full": "/bodies/moon-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001861/GSFC_20171208_Archive_e001861~orig.jpg"
+  },
+  "mars": {
+    "file": "/bodies/mars.jpg",
+    "full": "/bodies/mars-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA00407/PIA00407~orig.jpg"
+  },
+  "jupiter": {
+    "file": "/bodies/jupiter.jpg",
+    "full": "/bodies/jupiter-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA01594/PIA01594~orig.jpg"
+  },
+  "saturn": {
+    "file": "/bodies/saturn.jpg",
+    "full": "/bodies/saturn-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA21047/PIA21047~orig.jpg"
+  },
+  "uranus": {
+    "file": "/bodies/uranus.jpg",
+    "full": "/bodies/uranus-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA18182/PIA18182~orig.jpg"
+  },
+  "neptune": {
+    "file": "/bodies/neptune.jpg",
+    "full": "/bodies/neptune-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA01492/PIA01492~orig.jpg"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "sublight",
+  "private": true,
+  "version": "0.4.0",
+  "type": "module",
+  "description": "Interactive map of the solar system's active robotic fleet, built around signal light-time.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
+    "data:ephemerides": "tsx scripts/fetch-ephemerides.ts",
+    "data:frames": "tsx scripts/fetch-frames.ts",
+    "data:archive": "tsx scripts/fetch-archive.ts",
+    "data:bodies": "tsx scripts/fetch-bodies.ts",
+    "data:tracks": "tsx scripts/fetch-mars-tracks.ts",
+    "social": "tsx scripts/social.ts",
+    "social:live": "tsx scripts/social.ts --live",
+    "cf:harden": "tsx scripts/cloudflare-harden.ts",
+    "data:verify": "tsx scripts/verify.ts",
+    "data:probe": "tsx scripts/probe-horizons.ts",
+    "og": "tsx scripts/generate-og.ts",
+    "ios:sync": "bash scripts/sync-ios.sh"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.1.1",
+    "@fontsource/ibm-plex-sans": "^5.1.1",
+    "@fontsource/roboto-mono": "^5.3.0",
+    "@fontsource/stack-sans-notch": "^5.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "sharp": "^0.33.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}

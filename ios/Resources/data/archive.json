@@ -1,0 +1,37 @@
+{
+  "ingenuity": {
+    "file": "/frames/archive-ingenuity.jpg",
+    "full": "/frames/archive-ingenuity-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA25321/PIA25321~orig.jpg",
+    "title": "Ingenuity on the surface of Mars",
+    "credit": "NASA/JPL-Caltech"
+  },
+  "jwst": {
+    "file": "/frames/archive-jwst.jpg",
+    "full": "/frames/archive-jwst-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~orig.png",
+    "title": "Cosmic Cliffs in the Carina Nebula",
+    "credit": "NASA, ESA, CSA, STScI"
+  },
+  "new-horizons": {
+    "file": "/frames/archive-new-horizons.jpg",
+    "full": "/frames/archive-new-horizons-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA19952/PIA19952~orig.jpg",
+    "title": "Pluto in enhanced colour",
+    "credit": "NASA/JHU APL/SwRI"
+  },
+  "voyager-2": {
+    "file": "/frames/archive-voyager-2.jpg",
+    "full": "/frames/archive-voyager-2-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA01492/PIA01492~orig.jpg",
+    "title": "Neptune, imaged by Voyager 2",
+    "credit": "NASA/JPL"
+  },
+  "voyager-1": {
+    "file": "/frames/archive-voyager-1.jpg",
+    "full": "/frames/archive-voyager-1-full.jpg",
+    "sourceUrl": "https://images-assets.nasa.gov/image/PIA23645/PIA23645~orig.jpg",
+    "title": "The Pale Blue Dot (2020 reprocessing)",
+    "credit": "NASA/JPL-Caltech"
+  }
+}

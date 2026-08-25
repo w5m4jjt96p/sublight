@@ -1,0 +1,137 @@
+name: refresh-data
+
+# Daily data refresh. A frozen-on-yesterday site beats a broken one, so a failing
+# fetch never fails the run — it opens an issue with the log and commits whatever
+# good data we still have.
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # 04:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fetch ephemerides (Horizons)
+        id: ephem
+        continue-on-error: true
+        run: npm run data:ephemerides 2>&1 | tee ephem.log
+
+      - name: Fetch raw frames (Mars rovers) + Sun
+        id: frames
+        continue-on-error: true
+        run: npm run data:frames 2>&1 | tee frames.log
+
+      - name: Fetch archive stills (NASA library)
+        id: archive
+        continue-on-error: true
+        run: npm run data:archive 2>&1 | tee archive.log
+
+      - name: Fetch body photos (planets / Moon)
+        id: bodies
+        continue-on-error: true
+        run: npm run data:bodies 2>&1 | tee bodies.log
+
+      - name: Snapshot DSN (optional)
+        id: dsn
+        continue-on-error: true
+        run: npm run data:dsn 2>&1 | tee dsn.log
+
+      - name: Build Mars rover traverses (path + HiRISE basemap)
+        id: tracks
+        continue-on-error: true
+        run: npm run data:tracks 2>&1 | tee tracks.log
+
+      - name: Regenerate Open Graph image
+        continue-on-error: true
+        run: npm run og 2>&1 | tee og.log
+
+      - name: Verify
+        id: verify
+        continue-on-error: true
+        run: npm run data:verify 2>&1 | tee verify.log
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name  "out-there-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data public/frames public/bodies public/tracks public/sun.jpg public/og.png
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "data: daily refresh $(date -u +%FT%TZ)"
+            git push
+          fi
+
+      # Post the day's Sublight update. Runs only on the daily cron (never on a
+      # manual dispatch), and no-ops if the X secrets are absent.
+      - name: Post to X
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+        run: npm run social:live 2>&1 | tee social.log
+
+      # Publish the refreshed site. The bot's data commit above uses GITHUB_TOKEN,
+      # which does not trigger deploy.yml, so deploy here instead.
+      - name: Publish to Cloudflare Pages
+        continue-on-error: true
+        run: |
+          npm run build
+          npx wrangler pages deploy dist --project-name sublight --branch main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Open an issue if any step failed
+        if: >-
+          steps.ephem.outcome == 'failure' ||
+          steps.frames.outcome == 'failure' ||
+          steps.dsn.outcome == 'failure' ||
+          steps.verify.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const read = (f) => { try { return fs.readFileSync(f, 'utf8').slice(-4000); } catch { return '(no log)'; } };
+            const body = [
+              '## Daily data refresh reported problems',
+              '',
+              'The site was **not** broken — good data from a previous run was kept.',
+              'Outcomes:',
+              `- ephemerides: ${{ steps.ephem.outcome }}`,
+              `- frames: ${{ steps.frames.outcome }}`,
+              `- dsn: ${{ steps.dsn.outcome }}`,
+              `- verify: ${{ steps.verify.outcome }}`,
+              '',
+              '<details><summary>verify.log</summary>', '', '```', read('verify.log'), '```', '</details>',
+              '<details><summary>ephem.log</summary>', '', '```', read('ephem.log'), '```', '</details>',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Data refresh anomalies — ${new Date().toISOString().slice(0,10)}`,
+              body,
+              labels: ['data-refresh'],
+            });

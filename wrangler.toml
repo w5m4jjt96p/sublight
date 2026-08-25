@@ -1,0 +1,4 @@
+# Cloudflare Pages project config (static site; no Worker, no backend).
+name = "sublight"
+compatibility_date = "2024-11-01"
+pages_build_output_dir = "dist"

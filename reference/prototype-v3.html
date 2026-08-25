@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Out There — prototype v0.3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#06080B;
+  --panel:#0C0F15;
+  --rule:#171C25;
+  --rule-2:#232B37;
+  --txt:#DCE2EC;
+  --dim:#6E7889;
+  --dim-2:#454D5C;
+  --signal:#8FD6E6;
+  --delay:#E5B571;
+  --dead:#3B4250;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --sans:'IBM Plex Sans', system-ui, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--void);color:var(--txt);
+  font-family:var(--mono);font-size:13px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* ---------- masthead ---------- */
+.masthead{
+  flex:0 0 auto;height:46px;border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:space-between;padding:0 20px;
+}
+.brand{font-weight:600;font-size:12px;letter-spacing:.26em;text-transform:uppercase}
+.brand span{color:var(--dim-2)}
+.mast-right{display:flex;gap:20px;font-size:10.5px;letter-spacing:.1em;color:var(--dim-2)}
+.mast-right b{color:var(--dim);font-weight:400}
+
+/* ---------- stage ---------- */
+.stage{flex:1 1 auto;position:relative;overflow:hidden;min-height:0;cursor:grab}
+.stage.drag{cursor:grabbing}
+#sky{display:block;width:100%;height:100%}
+
+.hud{position:absolute;pointer-events:none}
+.hud-tl{top:18px;left:20px;max-width:290px}
+.hud-eyebrow{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim-2);margin-bottom:9px}
+.hud-name{font-family:var(--sans);font-size:26px;font-weight:400;letter-spacing:-.02em;line-height:1.1;margin-bottom:4px}
+.hud-loc{font-size:11px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+
+.hud-bl{bottom:18px;left:20px;display:flex;gap:26px;align-items:flex-end}
+.stat-l{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim-2);margin-bottom:7px}
+.stat-v{font-size:23px;font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.stat-v.delay{color:var(--delay)}
+.stat-v.small{font-size:15px}
+
+.hud-tr{top:18px;right:20px;display:flex;gap:8px;pointer-events:auto}
+.ctrl{
+  background:transparent;border:1px solid var(--rule-2);color:var(--dim);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  padding:7px 11px;cursor:pointer;transition:color .15s,border-color .15s;
+}
+.ctrl:hover{color:var(--txt);border-color:var(--dim-2)}
+.ctrl:focus-visible{outline:1px solid var(--signal);outline-offset:2px}
+.ctrl.off{color:var(--dim-2);border-color:var(--rule)}
+
+/* ---------- raw frame thumbnail ---------- */
+.thumb{
+  position:absolute;right:20px;bottom:18px;width:236px;
+  border:1px solid var(--rule-2);background:rgba(10,13,18,.86);
+  backdrop-filter:blur(6px);padding:9px;
+}
+.thumb-cap,.thumb-foot{
+  display:flex;justify-content:space-between;
+  font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim-2);
+}
+.thumb-cap{margin-bottom:8px}
+.thumb-foot{margin-top:8px}
+.thumb-foot b{color:var(--delay);font-weight:400}
+.thumb-box{position:relative;height:132px;border:1px solid var(--rule);overflow:hidden;background:#0A0D12}
+.thumb-box svg{position:absolute;inset:0;width:100%;height:100%;display:none}
+.thumb-box svg.on{display:block}
+.scan{
+  position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);
+}
+.thumb-none{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  text-align:center;font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim-2);line-height:2.2;padding:16px;
+}
+.thumb-none.on{display:flex}
+
+/* ---------- fleet drawer ---------- */
+.drawer{flex:0 0 auto;border-top:1px solid var(--rule);background:var(--panel);height:238px;display:flex;flex-direction:column}
+.drawer-bar{
+  flex:0 0 auto;height:46px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid var(--rule);
+}
+.drawer-t{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim-2)}
+.drawer-t em{font-style:normal;color:var(--dim-2);opacity:.6;margin-left:14px;letter-spacing:.12em}
+.legend{display:flex;gap:16px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim-2)}
+.legend i{display:inline-block;width:5px;height:5px;margin-right:7px;vertical-align:middle;font-style:normal}
+.scroll{flex:1 1 auto;overflow-y:auto;overflow-x:hidden}
+.scroll::-webkit-scrollbar{width:8px}
+.scroll::-webkit-scrollbar-thumb{background:var(--rule-2)}
+
+table{width:100%;border-collapse:collapse}
+tbody tr{border-bottom:1px solid var(--rule);cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#111621}
+tbody tr.sel{background:#141A26}
+tbody tr.sel td:first-child{box-shadow:inset 2px 0 0 var(--signal)}
+tbody td{padding:10px 14px 10px 0;font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody td.name{color:var(--txt);padding-left:20px;width:1%}
+tbody td.num{text-align:right}
+tbody td.owlt{color:var(--delay);width:1%;padding-right:20px}
+tbody td.loc{width:99%;overflow:hidden;text-overflow:ellipsis}
+.dot{display:inline-block;width:5px;height:5px;margin-right:10px;vertical-align:middle}
+.s-active .dot{background:var(--signal)}
+.s-cruise .dot{background:var(--dim)}
+.s-dormant .dot{background:var(--delay)}
+.s-silent .dot,.s-retired .dot{background:var(--dead)}
+.s-silent td,.s-retired td{color:var(--dim-2)}
+.s-silent td.name,.s-retired td.name{color:var(--dim)}
+.feed{color:var(--delay);font-size:9px;letter-spacing:.14em;margin-left:10px}
+
+@media (max-width:860px){
+  .thumb{display:none}
+}
+@media (max-width:700px){
+  .hud-tl{max-width:200px}.hud-name{font-size:19px}
+  .hud-bl{gap:16px}.stat-v{font-size:17px}
+  td.loc{display:none}
+  .legend{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="brand">Out&nbsp;There<span>&nbsp;/ v0.3</span></div>
+  <div class="mast-right">
+    <span>UTC <b id="utc">--:--:--</b></span>
+    <span>TRACKING <b>16</b></span>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+  <canvas id="sky"></canvas>
+
+  <div class="hud hud-tl">
+    <div class="hud-eyebrow">Currently tracking</div>
+    <div class="hud-name" id="hName">Perseverance</div>
+    <div class="hud-loc" id="hLoc">Jezero Crater · Mars</div>
+  </div>
+
+  <div class="hud hud-tr">
+    <button class="ctrl" id="btnSystem">Whole system</button>
+    <button class="ctrl" id="btnLines">Signal path</button>
+  </div>
+
+  <div class="hud hud-bl">
+    <div><div class="stat-l">One-way light time</div><div class="stat-v delay" id="hOwlt">16m 48s</div></div>
+    <div><div class="stat-l">Signal age</div><div class="stat-v" id="hAge">16:48</div></div>
+    <div><div class="stat-l">Range</div><div class="stat-v small" id="hRange">2.02 AU</div></div>
+    <div><div class="stat-l">Last downlink</div><div class="stat-v small" id="hLast">4h 12m</div></div>
+  </div>
+
+  <!-- raw frame -->
+  <div class="thumb" id="thumb">
+    <div class="thumb-cap"><span id="tCam">NAVCAM RIGHT</span><span id="tSol">SOL 1971</span></div>
+    <div class="thumb-box">
+      <!-- Jezero plain -->
+      <svg id="sceneA" viewBox="0 0 300 170" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="skyA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2B2622"/><stop offset="100%" stop-color="#5A4B3C"/>
+          </linearGradient>
+          <linearGradient id="grdA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4A3C30"/><stop offset="100%" stop-color="#1E1813"/>
+          </linearGradient>
+        </defs>
+        <rect width="300" height="86" fill="url(#skyA)"/>
+        <rect y="86" width="300" height="84" fill="url(#grdA)"/>
+        <path d="M0 86 L38 79 L74 84 L118 74 L162 82 L206 76 L252 84 L300 78 L300 88 L0 88Z" fill="#332A22"/>
+        <ellipse cx="70" cy="118" rx="30" ry="7" fill="#3B3126" opacity=".85"/>
+        <ellipse cx="212" cy="140" rx="44" ry="10" fill="#332A21" opacity=".9"/>
+        <ellipse cx="150" cy="104" rx="13" ry="4" fill="#54452F" opacity=".7"/>
+        <rect x="0" y="150" width="300" height="20" fill="#100D0A"/>
+        <path d="M18 170 L46 152 L88 170Z" fill="#0C0A08"/>
+      </svg>
+      <!-- Mount Sharp -->
+      <svg id="sceneB" viewBox="0 0 300 170" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="skyB" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#241F1C"/><stop offset="100%" stop-color="#61503F"/>
+          </linearGradient>
+          <linearGradient id="grdB" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4E4034"/><stop offset="100%" stop-color="#1B1611"/>
+          </linearGradient>
+        </defs>
+        <rect width="300" height="92" fill="url(#skyB)"/>
+        <path d="M300 92 L300 22 L250 34 L214 50 L182 62 L150 74 L118 84 L60 90 L0 92Z" fill="#3A2F26"/>
+        <g stroke="#2E251E" stroke-width="1" opacity=".8">
+          <path d="M300 44 L232 56 L186 70" fill="none"/>
+          <path d="M300 60 L246 70 L200 80" fill="none"/>
+          <path d="M300 76 L262 82 L226 88" fill="none"/>
+        </g>
+        <rect y="92" width="300" height="78" fill="url(#grdB)"/>
+        <ellipse cx="96" cy="124" rx="38" ry="9" fill="#3E332A" opacity=".85"/>
+        <ellipse cx="238" cy="146" rx="40" ry="10" fill="#362C24" opacity=".9"/>
+        <rect x="0" y="156" width="300" height="14" fill="#100D0A"/>
+      </svg>
+      <div class="thumb-none" id="tNone">No imaging downlink<br>Telemetry only</div>
+      <div class="scan"></div>
+    </div>
+    <div class="thumb-foot"><span id="tCap">CAPTURED 04:12</span><span>ARRIVED <b id="tArr">04:29</b></span></div>
+  </div>
+</div>
+
+<div class="drawer">
+  <div class="drawer-bar">
+    <span class="drawer-t">Fleet register — 16 assets<em>Radial scale logarithmic · drag to pan · scroll to zoom</em></span>
+    <span class="legend">
+      <span><i style="background:#E5B571"></i>Imaging</span>
+      <span><i style="background:#8FD6E6"></i>Active</span>
+      <span><i style="background:#6E7889"></i>Cruise</span>
+      <span><i style="background:#3B4250"></i>Silent</span>
+    </span>
+  </div>
+  <div class="scroll"><table><tbody id="fleet"></tbody></table></div>
+</div>
+
+<script>
+/* =========== DATA (illustrative) ===========
+   au   = range from Earth  → drives light time
+   rau  = heliocentric radius → drives map position          */
+const FLEET = [
+  {n:"Yutu-2",            loc:"Von Kármán · Moon",    au:0.0026, rau:1.00, ang:326, s:1.28,  last:"9d",       st:"dormant", feed:false},
+  {n:"JWST",              loc:"Sun–Earth L2",         au:0.0100, rau:1.01, ang:326, s:5,     last:"12m",      st:"active",  feed:false},
+  {n:"BepiColombo",       loc:"Mercury approach",     au:1.100,  rau:0.45, ang:310, s:549,   last:"2h 41m",   st:"cruise",  feed:false},
+  {n:"Parker Solar Probe",loc:"Heliocentric",         au:0.600,  rau:0.60, ang:280, s:299,   last:"31m",      st:"active",  feed:false},
+  {n:"Solar Orbiter",     loc:"Heliocentric",         au:0.720,  rau:0.72, ang:95,  s:359,   last:"1h 04m",   st:"active",  feed:false},
+  {n:"Akatsuki",          loc:"Venus orbit",          au:1.480,  rau:0.72, ang:42,  s:739,   last:"Apr 2024", st:"silent",  feed:false},
+  {n:"Perseverance",      loc:"Jezero Crater · Mars", au:2.020,  rau:1.52, ang:20,  s:1008,  last:"4h 12m",   st:"active",  feed:"A", cam:"NAVCAM RIGHT", sol:"SOL 1971"},
+  {n:"Curiosity",         loc:"Mount Sharp · Mars",   au:2.020,  rau:1.52, ang:20,  s:1008,  last:"7h 55m",   st:"active",  feed:"B", cam:"MASTCAM LEFT", sol:"SOL 4612"},
+  {n:"Ingenuity",         loc:"Valinor Hills · Mars", au:2.020,  rau:1.52, ang:20,  s:1008,  last:"Jan 2024", st:"retired", feed:false},
+  {n:"Europa Clipper",    loc:"Cruise to Jupiter",    au:2.310,  rau:2.60, ang:100, s:1153,  last:"3h 02m",   st:"cruise",  feed:false},
+  {n:"Juice",             loc:"Cruise to Jupiter",    au:2.400,  rau:3.10, ang:140, s:1198,  last:"6h 18m",   st:"cruise",  feed:false},
+  {n:"Psyche",            loc:"Cruise to 16 Psyche",  au:3.100,  rau:3.50, ang:200, s:1547,  last:"11h 30m",  st:"cruise",  feed:false},
+  {n:"Lucy",              loc:"Cruise to Trojans",    au:3.600,  rau:4.60, ang:250, s:1796,  last:"9h 47m",   st:"cruise",  feed:false},
+  {n:"New Horizons",      loc:"Kuiper Belt",          au:62.00,  rau:62.0, ang:195, s:30940, last:"1d 04h",   st:"active",  feed:false},
+  {n:"Voyager 2",         loc:"Interstellar space",   au:141.0,  rau:141,  ang:220, s:70360, last:"2d 03h",   st:"active",  feed:false},
+  {n:"Voyager 1",         loc:"Interstellar space",   au:168.0,  rau:168,  ang:35,  s:83830, last:"1d 22h",   st:"active",  feed:false}
+];
+
+const PLANETS = [
+  {n:"Mercury",rau:0.39,ang:300,r:2.0},{n:"Venus",rau:0.72,ang:42,r:2.8},
+  {n:"Earth",rau:1.00,ang:326,r:3.0},  {n:"Mars",rau:1.52,ang:20,r:2.4},
+  {n:"Jupiter",rau:5.20,ang:118,r:5.2},{n:"Saturn",rau:9.55,ang:6,r:4.4},
+  {n:"Uranus",rau:19.2,ang:62,r:3.4},  {n:"Neptune",rau:30.1,ang:358,r:3.4}
+];
+
+/* =========== LOG-RADIAL PROJECTION =========== */
+const R_MAX=1000, K=400, DEN=Math.log10(1+200*K);
+const rOf = au => R_MAX * Math.log10(1 + au*K) / DEN;
+const pos = (au,deg) => { const a=(deg-90)*Math.PI/180, r=rOf(au); return {x:Math.cos(a)*r, y:Math.sin(a)*r}; };
+FLEET.forEach(c => Object.assign(c, pos(c.rau, c.ang)));
+PLANETS.forEach(p => Object.assign(p, pos(p.rau, p.ang)));
+const EARTH = PLANETS[2];
+
+/* =========== CLUSTERS (co-located craft) =========== */
+const CLUSTERS = [];
+FLEET.forEach(c => {
+  let g = CLUSTERS.find(g => Math.hypot(g.x-c.x, g.y-c.y) < 16);
+  if(!g){ g = {x:c.x, y:c.y, m:[]}; CLUSTERS.push(g); }
+  c._g = g; c._gi = g.m.length; g.m.push(c);
+});
+// unit vector pointing away from the Sun, per cluster
+CLUSTERS.forEach(g => {
+  const d = Math.hypot(g.x, g.y) || 1;
+  g.ux = g.x/d; g.uy = g.y/d;
+});
+
+/* =========== CANVAS =========== */
+const cv=document.getElementById('sky'), ctx=cv.getContext('2d'), stage=document.getElementById('stage');
+let W=0,H=0,DPR=1,base=.3;
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=stage.clientWidth; H=stage.clientHeight;
+  cv.width=W*DPR; cv.height=H*DPR;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  base=Math.min(W,H)/2/R_MAX*0.88;
+}
+const cam={x:0,y:0,k:.3}, tgt={x:0,y:0,k:.3};
+const project=(x,y)=>[W/2+(x-cam.x)*cam.k, H/2+(y-cam.y)*cam.k];
+const STARS=Array.from({length:420},()=>({x:(Math.random()-.5)*7000,y:(Math.random()-.5)*7000,r:Math.random()*.9+.2,a:Math.random()*.45+.12}));
+
+let sel=6, showPath=true, t0=performance.now();
+
+function ring(rw,color,dash){
+  const [sx,sy]=project(0,0);
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=1;
+  if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.arc(sx,sy,rw*cam.k,0,6.284); ctx.stroke(); ctx.restore();
+}
+function label(sx,sy,txt,color,dy){
+  ctx.fillStyle=color; ctx.font='9px "IBM Plex Mono", monospace';
+  ctx.textAlign='center'; ctx.fillText(txt,sx,sy+dy);
+}
+
+function draw(now){
+  const dt=Math.min((now-t0)/1000,.05); t0=now;
+  const e=1-Math.pow(.001,dt);
+  cam.x+=(tgt.x-cam.x)*e; cam.y+=(tgt.y-cam.y)*e; cam.k+=(tgt.k-cam.k)*e;
+
+  ctx.clearRect(0,0,W,H);
+
+  for(const s of STARS){
+    const [sx,sy]=project(s.x*.25,s.y*.25);
+    if(sx<-20||sx>W+20||sy<-20||sy>H+20) continue;
+    ctx.globalAlpha=s.a; ctx.fillStyle='#AEB9CC'; ctx.fillRect(sx,sy,s.r,s.r);
+  }
+  ctx.globalAlpha=1;
+
+  ring(rOf(120),'rgba(143,214,230,.10)',[3,6]);
+  label(...project(0,-rOf(120)),'HELIOPAUSE ≈ 120 AU','#2E3644',-8);
+
+  ctx.globalAlpha=.5;
+  for(let i=0;i<220;i++){
+    const a=(i*137.508)*Math.PI/180, au=32+(i%17)*1.6;
+    const [sx,sy]=project(Math.cos(a)*rOf(au),Math.sin(a)*rOf(au));
+    ctx.fillStyle='#232B37'; ctx.fillRect(sx,sy,1.2,1.2);
+  }
+  ctx.globalAlpha=1;
+
+  for(const p of PLANETS) ring(rOf(p.rau),'rgba(70,82,102,.34)');
+
+  for(const au of [1,10,100]){
+    const [sx,sy]=project(rOf(au),0);
+    ctx.fillStyle='#2E3644'; ctx.font='9px "IBM Plex Mono", monospace';
+    ctx.textAlign='left'; ctx.fillText(au+' AU',sx+5,sy-5);
+  }
+
+  const [ox,oy]=project(0,0);
+  const g=ctx.createRadialGradient(ox,oy,0,ox,oy,34);
+  g.addColorStop(0,'rgba(229,181,113,.30)'); g.addColorStop(1,'rgba(229,181,113,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(ox,oy,34,0,6.284); ctx.fill();
+  ctx.fillStyle='#E5B571'; ctx.beginPath(); ctx.arc(ox,oy,3.4,0,6.284); ctx.fill();
+
+  for(const p of PLANETS){
+    const [sx,sy]=project(p.x,p.y);
+    ctx.fillStyle='#5A6678'; ctx.beginPath(); ctx.arc(sx,sy,p.r,0,6.284); ctx.fill();
+    label(sx,sy,p.n.toUpperCase(),'#4A5464',p.r+11);
+  }
+
+  /* --- fan out co-located craft, in screen space --- */
+  const spread = 17 + Math.min(3.4, cam.k/base - 1) * 13;
+  FLEET.forEach(f=>{
+    const g=f._g, n=g.m.length;
+    const [ax,ay]=project(g.x,g.y);
+    g._ax=ax; g._ay=ay;
+    if(n===1){ f._sx=ax; f._sy=ay; return; }
+    const span=(Math.PI/180)*88;
+    const a0=Math.atan2(g.uy,g.ux) - span/2;
+    const a=a0 + span*(f._gi/(n-1));
+    f._sx=ax+Math.cos(a)*spread;
+    f._sy=ay+Math.sin(a)*spread;
+  });
+
+  /* cluster anchors + leader lines */
+  ctx.save();
+  ctx.strokeStyle='rgba(70,82,102,.5)'; ctx.lineWidth=1;
+  CLUSTERS.forEach(g=>{
+    if(g.m.length===1) return;
+    ctx.beginPath(); ctx.arc(g._ax,g._ay,2.4,0,6.284); ctx.stroke();
+    g.m.forEach(f=>{ ctx.beginPath(); ctx.moveTo(g._ax,g._ay); ctx.lineTo(f._sx,f._sy); ctx.stroke(); });
+  });
+  ctx.restore();
+
+  /* signal path */
+  const c=FLEET[sel];
+  if(showPath && c.st!=='silent' && c.st!=='retired'){
+    const [ex,ey]=project(EARTH.x,EARTH.y);
+    ctx.save(); ctx.strokeStyle='rgba(229,181,113,.32)'; ctx.lineWidth=1; ctx.setLineDash([2,5]);
+    ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(c._sx,c._sy); ctx.stroke(); ctx.restore();
+    const u=((now/5200)%1);
+    ctx.fillStyle='#E5B571'; ctx.globalAlpha=Math.sin(u*Math.PI);
+    ctx.fillRect(ex+(c._sx-ex)*u-1.6, ey+(c._sy-ey)*u-1.6, 3.2, 3.2);
+    ctx.globalAlpha=1;
+  }
+
+  /* craft */
+  FLEET.forEach((f,i)=>{
+    const on=i===sel;
+    const col = (f.st==='silent'||f.st==='retired') ? '#3B4250'
+              : f.feed ? '#E5B571'
+              : f.st==='cruise' ? '#6E7889' : '#8FD6E6';
+    if(on){
+      ctx.strokeStyle=col; ctx.lineWidth=1;
+      ctx.globalAlpha=.55+Math.sin(now/420)*.25;
+      ctx.beginPath(); ctx.arc(f._sx,f._sy,11,0,6.284); ctx.stroke();
+      ctx.globalAlpha=1;
+      ctx.beginPath();
+      ctx.moveTo(f._sx-16,f._sy); ctx.lineTo(f._sx-8,f._sy);
+      ctx.moveTo(f._sx+8,f._sy);  ctx.lineTo(f._sx+16,f._sy);
+      ctx.stroke();
+    }
+    ctx.fillStyle=col; ctx.fillRect(f._sx-2.5,f._sy-2.5,5,5);
+    label(f._sx,f._sy,f.n.toUpperCase(),
+      on?'#DCE2EC':((f.st==='silent'||f.st==='retired')?'#39414F':'#707B8D'), on?22:12);
+  });
+
+  requestAnimationFrame(draw);
+}
+
+/* =========== INTERACTION =========== */
+function flyTo(i){
+  const c=FLEET[i];
+  tgt.x=c.x; tgt.y=c.y;
+  tgt.k=base*(c.rau<0.8?5.5:c.rau<5?4.2:2.6);
+}
+document.getElementById('btnSystem').addEventListener('click',()=>{tgt.x=0;tgt.y=0;tgt.k=base;});
+const btnLines=document.getElementById('btnLines');
+btnLines.addEventListener('click',()=>{ showPath=!showPath; btnLines.classList.toggle('off',!showPath); });
+
+let dragging=false,lx=0,ly=0,moved=0;
+stage.addEventListener('pointerdown',e=>{dragging=true;moved=0;lx=e.clientX;ly=e.clientY;stage.classList.add('drag');stage.setPointerCapture(e.pointerId);});
+stage.addEventListener('pointermove',e=>{
+  if(!dragging) return;
+  const dx=e.clientX-lx, dy=e.clientY-ly;
+  moved+=Math.abs(dx)+Math.abs(dy);
+  tgt.x-=dx/cam.k; tgt.y-=dy/cam.k; cam.x=tgt.x; cam.y=tgt.y;
+  lx=e.clientX; ly=e.clientY;
+});
+stage.addEventListener('pointerup',e=>{
+  dragging=false; stage.classList.remove('drag');
+  if(moved>6) return;
+  const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+  let best=-1,bd=24;
+  FLEET.forEach((f,i)=>{ const d=Math.hypot(f._sx-mx,f._sy-my); if(d<bd){bd=d;best=i;} });
+  if(best>=0) select(best,true);
+});
+stage.addEventListener('wheel',e=>{
+  e.preventDefault();
+  tgt.k=Math.max(base*.55, Math.min(base*22, tgt.k*Math.exp(-e.deltaY*.0016)));
+},{passive:false});
+
+/* =========== TABLE =========== */
+const tb=document.getElementById('fleet');
+const fmt=s=>{
+  if(s<60) return s.toFixed(2).replace(/\.?0+$/,'')+' s';
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=Math.round(s%60);
+  return h?`${h}h ${String(m).padStart(2,'0')}m`:`${m}m ${String(x).padStart(2,'0')}s`;
+};
+FLEET.forEach((c,i)=>{
+  const tr=document.createElement('tr');
+  tr.className='s-'+c.st; tr.tabIndex=0;
+  tr.innerHTML=`
+    <td class="name"><span class="dot"></span>${c.n}${c.feed?'<span class="feed">IMG</span>':''}</td>
+    <td class="loc">${c.loc}</td>
+    <td class="num">${c.au<.01?c.au.toFixed(4):c.au.toFixed(2)} AU</td>
+    <td class="num owlt">${fmt(c.s)}</td>`;
+  tr.addEventListener('click',()=>select(i,true));
+  tr.addEventListener('keydown',ev=>{ if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(i,true);} });
+  tb.appendChild(tr);
+});
+
+/* =========== SELECTION =========== */
+const $=id=>document.getElementById(id);
+let ageBase=1008, tick=0;
+
+function select(i,fly){
+  sel=i; const c=FLEET[i];
+  [...tb.children].forEach((r,k)=>r.classList.toggle('sel',k===i));
+  $('hName').textContent=c.n;
+  $('hLoc').textContent=c.loc;
+  $('hOwlt').textContent=fmt(c.s);
+  $('hRange').textContent=(c.au<.01?c.au.toFixed(4):c.au.toFixed(2))+' AU';
+  $('hLast').textContent=c.last;
+  ageBase=c.s; tick=0;
+
+  /* thumbnail */
+  const A=$('sceneA'), B=$('sceneB'), none=$('tNone');
+  A.classList.toggle('on', c.feed==='A');
+  B.classList.toggle('on', c.feed==='B');
+  none.classList.toggle('on', !c.feed);
+  $('tCam').textContent = c.feed ? c.cam : '—';
+  $('tSol').textContent = c.feed ? c.sol : 'NO FEED';
+  if(c.feed){
+    const cap=new Date(Date.now()-c.s*1000);
+    const arr=new Date();
+    const hm=d=>String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
+    $('tCap').textContent='CAPTURED '+hm(cap);
+    $('tArr').textContent=hm(arr);
+  } else {
+    $('tCap').textContent='—'; $('tArr').textContent='—';
+  }
+
+  if(fly) flyTo(i);
+}
+
+setInterval(()=>{
+  $('utc').textContent=new Date().toISOString().slice(11,19);
+  tick=(tick+1)%Math.max(2,Math.round(ageBase));
+  const r=Math.round(ageBase)-tick;
+  $('hAge').textContent = r>=3600
+    ? Math.floor(r/3600)+':'+String(Math.floor((r%3600)/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0')
+    : String(Math.floor(r/60)).padStart(2,'0')+':'+String(r%60).padStart(2,'0');
+},1000);
+
+/* =========== BOOT =========== */
+window.addEventListener('resize',resize);
+resize();
+cam.k=tgt.k=base;
+select(6,false);
+flyTo(6);
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

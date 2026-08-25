@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g" cx="38%" cy="34%" r="78%">
+      <stop offset="0%" stop-color="#cf7a4c"/>
+      <stop offset="100%" stop-color="#7d3418"/>
+    </radialGradient>
+    <clipPath id="c"><circle cx="32" cy="32" r="26"/></clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="26" fill="url(#g)"/>
+  <g clip-path="url(#c)" fill="#6b2c15" opacity="0.5">
+    <ellipse cx="26" cy="30" rx="9" ry="5"/>
+    <ellipse cx="42" cy="40" rx="6" ry="4"/>
+  </g>
+  <ellipse cx="32" cy="12" rx="7" ry="3" fill="#e8ddd2" opacity="0.7" clip-path="url(#c)"/>
+</svg>
