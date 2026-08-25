@@ -1048,3 +1048,38 @@ a {
   color: var(--dim); padding: 3px 5px; text-align: left;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 128px;
 }
+
+/* =====================================================================
+   Mobile / phone layout (≤560px). Masthead had no responsive rules, so
+   its nav overflowed off-screen; the info panel and overlays are tuned
+   for touch here too.
+   ===================================================================== */
+@media (max-width: 560px) {
+  :root {
+    --masthead-h: 52px;
+    --font-scale: 1;
+  }
+
+  /* masthead: shrink brand, drop clock/tracking + the ⌘K hint, keep nav */
+  .masthead { padding: 0 14px; }
+  .brand-logo { height: 18px; }
+  .mast-right { gap: 13px; font-size: 13px; letter-spacing: 0.04em; }
+  .mast-right > span { display: none; } /* UTC + TRACKING */
+  .kbd-hint { display: none; }
+  .mast-link { letter-spacing: 0.08em; }
+
+  /* info panel: full-screen sheet under the masthead */
+  .detail {
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    border-radius: 0;
+    padding: 16px 16px 40px;
+    backdrop-filter: blur(14px);
+    background: rgba(9, 12, 17, 0.86);
+  }
+
+  /* HUD controls: keep clear of the notch/edges */
+  .hud-controls { top: 14px; right: 14px; }
+}

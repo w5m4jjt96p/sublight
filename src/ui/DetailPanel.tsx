@@ -203,13 +203,13 @@ export function DetailPanel({
           <div className="detail-section-l">Talk to it</div>
           {quiet ? (
             <p className="detail-note detail-talk-p">
-              No longer listening — {e.name} is {e.status}. A message would arrive, but nothing
+              No longer listening. {e.name} is {e.status}: a message would arrive, but nothing
               would answer.
             </p>
           ) : (
             <p className="detail-note detail-talk-p">
               A command sent now reaches {e.name} at <b>{roundTrip.arrival} UTC</b>. Its reply would
-              return at <b>{roundTrip.reply} UTC</b> — a {roundTrip.rtt} round trip. You cannot have a
+              return at <b>{roundTrip.reply} UTC</b>, a {roundTrip.rtt} round trip. You cannot have a
               conversation with it.
             </p>
           )}

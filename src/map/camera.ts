@@ -16,7 +16,9 @@ export class Camera {
   reducedMotion = false;
 
   setViewport(w: number, h: number): void {
-    this.base = ((Math.min(w, h) / 2 / R_MAX) * 0.88);
+    // Tighter fit on phones so outer-craft labels don't clip at the edges.
+    const margin = w < 560 ? 0.7 : 0.88;
+    this.base = (Math.min(w, h) / 2 / R_MAX) * margin;
   }
 
   /** Ease toward target. dt in seconds. */

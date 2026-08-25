@@ -62,7 +62,7 @@ export function Gallery({ frames, now, onOpen, onBack }: GalleryProps) {
         </a>
         <h1>The wall of arriving light</h1>
         <p className="gallery-lede">
-          Every frame the fleet has sent home, newest first. None of it is happening now — each
+          Every frame the fleet has sent home, newest first. None of it is happening now; each
           image left its camera hours or days ago and is only just here.
           {oldest && (
             <>

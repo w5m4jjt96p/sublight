@@ -40,7 +40,7 @@ export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }:
           onClick={onOpenSearch}
           aria-label="Search (press / or Cmd-K)"
         >
-          Find ⌘K
+          Find <span className="kbd-hint">⌘K</span>
         </button>
         {navLink('gallery', 'Gallery')}
         {navLink('about', 'About')}

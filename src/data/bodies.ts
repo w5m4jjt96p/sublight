@@ -25,7 +25,7 @@ export const BODIES: Record<string, BodyInfo> = {
     name: 'The Sun',
     kind: 'Star · G2V',
     blurb:
-      'The star at the centre of it all. Its light — the yardstick of this whole map — takes about eight minutes to reach Earth.',
+      'The star at the centre of it all. Its light, the yardstick of this whole map, takes about eight minutes to reach Earth.',
     facts: [
       { label: 'Diameter', value: '1,392,700 km' },
       { label: 'Mass', value: '333,000 Earths' },
@@ -61,7 +61,7 @@ export const BODIES: Record<string, BodyInfo> = {
   earth: {
     name: 'Earth',
     kind: 'Planet · home',
-    blurb: 'The only place we know of that everything on this map came from — and the point all the light-times are measured to.',
+    blurb: 'The only place we know of that everything on this map came from, and the point all the light-times are measured to.',
     facts: [
       { label: 'Distance from Sun', value: '1.00 AU' },
       { label: 'Diameter', value: '12,742 km' },
@@ -73,7 +73,7 @@ export const BODIES: Record<string, BodyInfo> = {
   moon: {
     name: 'The Moon',
     kind: 'Natural satellite',
-    blurb: 'Earth’s companion, about 1.3 light-seconds away — the farthest humans have ever travelled.',
+    blurb: 'Earth’s companion, about 1.3 light-seconds away, the farthest humans have ever travelled.',
     facts: [
       { label: 'Distance from Earth', value: '384,400 km' },
       { label: 'Diameter', value: '3,474 km' },
@@ -85,7 +85,7 @@ export const BODIES: Record<string, BodyInfo> = {
   mars: {
     name: 'Mars',
     kind: 'Planet · terrestrial',
-    blurb: 'The rusty desert world where most of this fleet’s live cameras are — Perseverance and Curiosity roll across it right now.',
+    blurb: 'The rusty desert world where most of this fleet’s live cameras are. Perseverance and Curiosity roll across it right now.',
     facts: [
       { label: 'Distance from Sun', value: '1.52 AU' },
       { label: 'Diameter', value: '6,779 km' },
@@ -97,7 +97,7 @@ export const BODIES: Record<string, BodyInfo> = {
   jupiter: {
     name: 'Jupiter',
     kind: 'Planet · gas giant',
-    blurb: 'The largest planet — a banded ball of hydrogen and helium with a centuries-old storm wider than Earth.',
+    blurb: 'The largest planet, a banded ball of hydrogen and helium with a centuries-old storm wider than Earth.',
     facts: [
       { label: 'Distance from Sun', value: '5.20 AU' },
       { label: 'Diameter', value: '139,820 km' },
@@ -121,7 +121,7 @@ export const BODIES: Record<string, BodyInfo> = {
   uranus: {
     name: 'Uranus',
     kind: 'Planet · ice giant',
-    blurb: 'A pale, featureless ice giant tipped on its side, visited only once — by Voyager 2 in 1986.',
+    blurb: 'A pale, featureless ice giant tipped on its side, visited only once, by Voyager 2 in 1986.',
     facts: [
       { label: 'Distance from Sun', value: '19.2 AU' },
       { label: 'Diameter', value: '50,724 km' },
