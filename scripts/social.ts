@@ -11,7 +11,7 @@
 // Credentials (env / GitHub Actions secrets):
 //   X_API_KEY X_API_SECRET X_ACCESS_TOKEN X_ACCESS_SECRET   (OAuth 1.0a)
 // ---------------------------------------------------------------------------
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import crypto from 'node:crypto';
@@ -208,8 +208,13 @@ async function postX(post: Post): Promise<void> {
 }
 
 // ---- main -----------------------------------------------------------------
+function imageUrl(post: Post): string | null {
+  return post.imagePath ? `${SITE}/${post.imagePath.replace(/^public\//, '')}` : null;
+}
+
 async function main() {
   const live = process.argv.includes('--live');
+  const outIdx = process.argv.indexOf('--out');
   const d = await loadData();
   const today = new Date();
   const post = pickPost(d, today);
@@ -219,6 +224,15 @@ async function main() {
   render(post).split('\n').forEach((l) => console.log('│ ' + l));
   if (post.imagePath) console.log('│ 🖼  ' + post.imagePath);
   console.log('└────────────────────────────────────────────');
+
+  // Write the ready-to-paste post to a file (for the manual copy-paste flow).
+  if (outIdx !== -1 && process.argv[outIdx + 1]) {
+    const img = imageUrl(post);
+    const body = render(post) + (img ? `\n\nImage to attach: ${img}` : '') + '\n';
+    await writeFile(process.argv[outIdx + 1]!, body);
+    console.log(`\nWrote ${process.argv[outIdx + 1]}`);
+    return;
+  }
 
   if (!live) {
     console.log('\n7-day preview:');

@@ -1,16 +1,23 @@
-# Sublight social posts (X)
+# Sublight daily post
 
 One deterministic post a day, built from the freshly generated data so no number
-is ever invented. Runs at the end of the daily GitHub Action
-(`.github/workflows/refresh.yml`), only on the scheduled cron. Secrets never
-touch the client — they live in GitHub Actions secrets, in keeping with the
-zero-backend rule.
+is ever invented. Generated at the end of the daily GitHub Action
+(`.github/workflows/refresh.yml`).
 
-## Preview locally (no credentials needed)
+## Default flow: generate + copy-paste (free)
+X's API now charges per post (Pay-Per-Use), so by default we do **not** post
+automatically. Instead, the daily job opens a **GitHub issue** titled
+`🛰️ Post for YYYY-MM-DD` with the ready-to-paste text (and, for rover posts, a
+link to the image to attach). You get the notification, paste it to X (or
+anywhere), then close the issue.
+
+Test it now without waiting for the 04:00 UTC cron: repo → **Actions** →
+**refresh-data** → **Run workflow**. An issue appears within a couple of minutes.
+
+Preview locally, no posting:
 ```bash
 npm run social
 ```
-Prints today's post and a 7-day preview. Nothing is published.
 
 ## Post types (rotated deterministically)
 - **light-time** — a craft's current one-way delay and round trip
@@ -22,17 +29,14 @@ Prints today's post and a 7-day preview. Nothing is published.
 Every post links back to the relevant page on sublight.observer; the link
 unfurls a card via the site's OG image.
 
-## Going live — what you need to create (I can't create accounts or hold keys)
-1. Create the X account, then apply for a developer app at developer.x.com.
-2. In the app: set permissions to **Read and write**, generate **OAuth 1.0a**
-   API key/secret and an access token/secret **for the posting account**.
-3. Add GitHub repo secrets:
-   - `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET`
-   - The free API tier covers one post a day. Text posts are supported; the
-     link card provides the visual.
-4. Test end to end before the cron with the env vars set:
-   ```bash
-   npm run social:live
-   ```
+## Optional: fully automatic posting to X (paid)
+The code still supports posting straight to X via the API if you fund it
+(Pay-Per-Use credits, or the paid Basic tier). To switch it back on:
+1. In the X developer portal, add credits / a payment method.
+2. Add repo secrets `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`,
+   `X_ACCESS_SECRET` (OAuth 1.0a, App permissions **Read and write**).
+3. In `refresh.yml`, swap the "Generate daily post" / "Open daily post issue"
+   steps for a step running `npm run social:live` with those secrets in `env`.
 
-The job no-ops if the secrets are missing, so nothing breaks before you set it up.
+Verified: the OAuth 1.0a signing works end to end — the only blocker on the free
+attempt was X returning `402 credits depleted`.

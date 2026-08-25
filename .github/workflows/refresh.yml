@@ -81,17 +81,35 @@ jobs:
             git push
           fi
 
-      # Post the day's Sublight update. Runs only on the daily cron (never on a
-      # manual dispatch), and no-ops if the X secrets are absent.
-      - name: Post to X
-        if: github.event_name == 'schedule'
+      # Generate the day's post and open a GitHub issue with it, ready to
+      # copy-paste to X by hand (X's API now charges per post, so we skip it).
+      - name: Generate daily post
+        id: post
         continue-on-error: true
-        env:
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-        run: npm run social:live 2>&1 | tee social.log
+        run: npm run social -- --out social-post.txt
+
+      - name: Open daily post issue
+        if: steps.post.outcome == 'success'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('social-post.txt', 'utf8');
+            const date = new Date().toISOString().slice(0, 10);
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🛰️ Post for ${date}`,
+              labels: ['daily-post'],
+              body: [
+                'Copy-paste to X, then close this issue.',
+                '',
+                '```',
+                body.trim(),
+                '```',
+              ].join('\n'),
+            });
 
       # Publish the refreshed site. The bot's data commit above uses GITHUB_TOKEN,
       # which does not trigger deploy.yml, so deploy here instead.
