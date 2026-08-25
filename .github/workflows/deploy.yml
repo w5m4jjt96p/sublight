@@ -27,7 +27,9 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Publish to Cloudflare Pages
-        run: npx wrangler pages deploy dist --project-name sublight --branch main
+        run: |
+          npx wrangler pages project create sublight --production-branch main 2>/dev/null || true
+          npx wrangler pages deploy dist --project-name sublight --branch main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
