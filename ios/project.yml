@@ -19,6 +19,8 @@ targets:
         type: folder
       - path: Resources/bodies
         type: folder
+      - path: Resources/tracks
+        type: folder
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: observer.sublight.app

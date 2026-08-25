@@ -79,6 +79,7 @@ struct CraftDetail: View {
     @ObservedObject var store: DataStore
     let id: String
     @State private var lightbox: URL?
+    @State private var showTraverse = false
 
     private var craft: Craft? { store.craft.first { $0.id == id } }
 
@@ -89,6 +90,7 @@ struct CraftDetail: View {
                     header(c)
                     if c.isImaging { hero(c) }
                     lightTimeBlock(c)
+                    if store.tracks[id] != nil { traverseButton }
                     factsGrid(c)
                     if !c.reg.note.isEmpty { note(c.reg.note) }
                     if let frames = store.frames[id]?.recent, !frames.isEmpty {
@@ -101,6 +103,11 @@ struct CraftDetail: View {
         }
         .fullScreenCover(item: $lightbox) { url in
             Lightbox(url: url) { lightbox = nil }
+        }
+        .fullScreenCover(isPresented: $showTraverse) {
+            if let track = store.tracks[id] {
+                TraverseView(track: track, craftName: craft?.name ?? track.label) { showTraverse = false }
+            }
         }
     }
 
@@ -127,6 +134,26 @@ struct CraftDetail: View {
                     .clipped().cornerRadius(6)
                 if let cap { Kicker(text: cap, color: Theme.dim) }
             }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var traverseButton: some View {
+        Button { showTraverse = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
+                    .font(.system(size: 18)).foregroundColor(Theme.signal)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Surface traverse").font(.titleSemi(15)).foregroundColor(Theme.txt)
+                    Text("Every drive and photo, on the real map of Mars")
+                        .font(.mono(11)).foregroundColor(Theme.dim)
+                }
+                Spacer()
+                Image(systemName: "arrow.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Theme.signal.opacity(0.06)))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }

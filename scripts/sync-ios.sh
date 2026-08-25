@@ -6,13 +6,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "→ copying generated data + imagery into ios/Resources"
-mkdir -p ios/Resources/data ios/Resources/frames ios/Resources/bodies
+mkdir -p ios/Resources/data ios/Resources/frames ios/Resources/bodies ios/Resources/tracks
 cp public/data/fleet.json public/data/planets.json public/data/frames.json \
-   public/data/archive.json public/data/bodyphotos.json data/registry.json \
-   ios/Resources/data/
+   public/data/archive.json public/data/bodyphotos.json public/data/tracks.json \
+   data/registry.json ios/Resources/data/
 cp public/frames/*.jpg ios/Resources/frames/
 cp public/bodies/*.jpg ios/Resources/bodies/
 cp public/sun.jpg ios/Resources/bodies/sun.jpg
+cp public/tracks/*.jpg ios/Resources/tracks/
 
 echo "→ emitting editorial bodies.json"
 npx tsx -e "import {BODIES} from './src/data/bodies.ts'; import {writeFileSync} from 'node:fs'; writeFileSync('ios/Resources/data/bodies.json', JSON.stringify(BODIES,null,2)+'\n');"

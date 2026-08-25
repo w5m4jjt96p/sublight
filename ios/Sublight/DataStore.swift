@@ -20,6 +20,7 @@ final class DataStore: ObservableObject {
     private(set) var archive: [String: ArchiveEntry] = [:]
     private(set) var bodies: [String: BodyInfo] = [:]
     private(set) var bodyPhotos: [String: BodyPhoto] = [:]
+    private(set) var tracks: [String: RoverTrack] = [:]
     private(set) var fleetGeneratedAt: String = ""
 
     init() { load() }
@@ -32,6 +33,7 @@ final class DataStore: ObservableObject {
         archive = decode("archive") ?? [:]
         bodies = decode("bodies") ?? [:]
         bodyPhotos = decode("bodyphotos") ?? [:]
+        tracks = (decode("tracks") as TracksData?)?.rovers ?? [:]
 
         registryById = Dictionary(uniqueKeysWithValues: registry.map { ($0.id, $0) })
         fleetGeneratedAt = fleet?.generatedAt ?? ""

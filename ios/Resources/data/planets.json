@@ -1,77 +1,77 @@
 {
-  "generatedAt": "2026-08-21T15:35:52.591Z",
+  "generatedAt": "2026-08-25T15:33:30.421Z",
   "planets": [
     {
       "id": "mercury",
       "name": "Mercury",
-      "heliocentricAu": 0.320787,
-      "eclipticLonDeg": 118.1537,
-      "heliocentricAuNextDay": 0.324798,
-      "eclipticLonDegNextDay": 123.9503
+      "heliocentricAu": 0.339002,
+      "eclipticLonDeg": 140.4433,
+      "heliocentricAuNextDay": 0.344288,
+      "eclipticLonDegNextDay": 145.6236
     },
     {
       "id": "venus",
       "name": "Venus",
-      "heliocentricAu": 0.727841,
-      "eclipticLonDeg": 288.5657,
-      "heliocentricAuNextDay": 0.727893,
-      "eclipticLonDegNextDay": 290.1467
+      "heliocentricAu": 0.728026,
+      "eclipticLonDeg": 294.8895,
+      "heliocentricAuNextDay": 0.728063,
+      "eclipticLonDegNextDay": 296.4703
     },
     {
       "id": "earth",
       "name": "Earth",
-      "heliocentricAu": 1.011718,
-      "eclipticLonDeg": 327.6111,
-      "heliocentricAuNextDay": 1.011509,
-      "eclipticLonDegNextDay": 328.574
+      "heliocentricAu": 1.010866,
+      "eclipticLonDeg": 331.4646,
+      "heliocentricAuNextDay": 1.010647,
+      "eclipticLonDegNextDay": 332.4288
     },
     {
       "id": "moon",
       "name": "Moon",
-      "heliocentricAu": 1.012175,
-      "eclipticLonDeg": 327.4612,
-      "heliocentricAuNextDay": 1.012463,
-      "eclipticLonDegNextDay": 328.4313
+      "heliocentricAu": 1.013021,
+      "eclipticLonDeg": 331.3747,
+      "heliocentricAuNextDay": 1.013054,
+      "eclipticLonDegNextDay": 332.3648
     },
     {
       "id": "mars",
       "name": "Mars",
-      "heliocentricAu": 1.505577,
-      "eclipticLonDeg": 64.1604,
-      "heliocentricAuNextDay": 1.506884,
-      "eclipticLonDegNextDay": 64.694
+      "heliocentricAu": 1.510807,
+      "eclipticLonDeg": 66.2894,
+      "heliocentricAuNextDay": 1.512115,
+      "eclipticLonDegNextDay": 66.8194
     },
     {
       "id": "jupiter",
       "name": "Jupiter",
-      "heliocentricAu": 5.293451,
-      "eclipticLonDeg": 127.8507,
-      "heliocentricAuNextDay": 5.293784,
-      "eclipticLonDegNextDay": 127.9308
+      "heliocentricAu": 5.294784,
+      "eclipticLonDeg": 128.1713,
+      "heliocentricAuNextDay": 5.295117,
+      "eclipticLonDegNextDay": 128.2514
     },
     {
       "id": "saturn",
       "name": "Saturn",
-      "heliocentricAu": 9.447164,
-      "eclipticLonDeg": 9.403,
-      "heliocentricAuNextDay": 9.446859,
-      "eclipticLonDegNextDay": 9.4371
+      "heliocentricAu": 9.445941,
+      "eclipticLonDeg": 9.5394,
+      "heliocentricAuNextDay": 9.445634,
+      "eclipticLonDegNextDay": 9.5735
     },
     {
       "id": "uranus",
       "name": "Uranus",
-      "heliocentricAu": 19.448682,
-      "eclipticLonDeg": 62.1849,
-      "heliocentricAuNextDay": 19.448502,
-      "eclipticLonDegNextDay": 62.1963
+      "heliocentricAu": 19.44796,
+      "eclipticLonDeg": 62.2306,
+      "heliocentricAuNextDay": 19.44778,
+      "eclipticLonDegNextDay": 62.242
     },
     {
       "id": "neptune",
       "name": "Neptune",
-      "heliocentricAu": 29.879038,
-      "eclipticLonDeg": 2.4001,
-      "heliocentricAuNextDay": 29.879014,
-      "eclipticLonDegNextDay": 2.4062
+      "heliocentricAu": 29.878942,
+      "eclipticLonDeg": 2.4243,
+      "heliocentricAuNextDay": 29.878918,
+      "eclipticLonDegNextDay": 2.4304
     }
   ]
 }

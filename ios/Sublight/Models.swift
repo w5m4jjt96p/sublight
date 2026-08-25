@@ -117,3 +117,46 @@ struct BodyPhoto: Codable {
     let full: String
     let sourceUrl: String
 }
+
+// MARK: - Mars rover surface traverses (data/tracks.json)
+
+struct TrackWaypoint: Codable {
+    let lon: Double
+    let lat: Double
+    let sol: Int?
+}
+
+struct TrackFrame: Codable {
+    let wxWest: Double
+    let wxEast: Double
+    let wyNorth: Double
+    let wySouth: Double
+}
+
+struct RoverTrack: Codable, Identifiable {
+    struct Current: Codable {
+        let lon: Double
+        let lat: Double
+        let sol: Int?
+        let site: Int?
+        let drive: Int?
+    }
+    let id: String
+    let label: String
+    let basemap: String
+    let image: String
+    let w: Int
+    let h: Int
+    let frame: TrackFrame
+    let metersPerPixel: Double
+    let distanceKm: Double?
+    let solFirst: Int?
+    let solLast: Int?
+    let current: Current
+    let waypoints: [TrackWaypoint]
+}
+
+struct TracksData: Codable {
+    let generatedAt: String
+    let rovers: [String: RoverTrack]
+}
