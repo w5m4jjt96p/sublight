@@ -238,6 +238,7 @@ struct MapView: View {
 
     private func draw(_ ctx: GraphicsContext, size: CGSize, layout: MapLayout, date: Date) {
         drawStars(ctx, size: size)
+        drawOrbits(ctx, sun: layout.sunScreen)
         drawSun(ctx, at: layout.sunScreen)
 
         // Signal path to the selected craft.
@@ -252,6 +253,35 @@ struct MapView: View {
             case .body(let id): drawBody(ctx, id: id, at: item.screen)
             case .craft(let id): drawCraft(ctx, id: id, at: item.screen)
             }
+        }
+    }
+
+    /// Concentric orbit rings (one per planet's heliocentric distance), the
+    /// heliopause, and AU scale markers — centred on the Sun. Mirrors the web.
+    private func drawOrbits(_ ctx: GraphicsContext, sun: CGPoint) {
+        func ring(_ worldRadius: Double, _ color: Color, dash: [CGFloat] = []) {
+            let r = worldRadius * Double(effScale)
+            guard r > 2 else { return }
+            let rect = CGRect(x: sun.x - r, y: sun.y - r, width: r * 2, height: r * 2)
+            ctx.stroke(Path(ellipseIn: rect), with: .color(color),
+                       style: StrokeStyle(lineWidth: 1, dash: dash))
+        }
+        // planet orbits
+        for p in store.planets where p.id != "moon" {
+            ring(Projection.rOf(p.heliocentricAu), Color(hex: "465266").opacity(0.34))
+        }
+        // heliopause
+        ring(Projection.rOf(120), Theme.signal.opacity(0.10), dash: [3, 6])
+        let hp = Projection.rOf(120) * Double(effScale)
+        if hp > 40 {
+            drawLabel(ctx, text: "HELIOPAUSE ≈ 120 AU",
+                      at: CGPoint(x: sun.x, y: sun.y - CGFloat(hp) - 6), color: Theme.dim2)
+        }
+        // AU scale markers along the +x axis
+        for (au, label) in [(1.0, "1 AU"), (10.0, "10 AU"), (100.0, "100 AU")] {
+            let r = Projection.rOf(au) * Double(effScale)
+            guard r > 10 else { continue }
+            drawLabel(ctx, text: label, at: CGPoint(x: sun.x + CGFloat(r), y: sun.y + 8), color: Theme.dim2)
         }
     }
 
