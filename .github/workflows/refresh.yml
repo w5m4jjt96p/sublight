@@ -101,7 +101,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `🛰️ Post for ${date}`,
-              labels: ['daily-post'],
               body: [
                 'Copy-paste to X, then close this issue.',
                 '',
