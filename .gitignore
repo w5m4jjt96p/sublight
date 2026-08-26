@@ -13,3 +13,4 @@ ios/web/
 # local tooling
 .claude/settings.local.json
 *.local
+ios/screenshots/
