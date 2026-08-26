@@ -2,30 +2,46 @@ import SwiftUI
 
 @main
 struct SublightApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
     var body: some Scene {
         WindowGroup { ContentView() }
+            .backgroundTask(.appRefresh(NotificationManager.taskId)) {
+                await NotificationManager.shared.checkForNewImagery()
+                NotificationManager.shared.scheduleRefresh()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background { NotificationManager.shared.scheduleRefresh() }
+            }
     }
 }
+
+enum NavTab { case gallery, map, settings }
 
 struct ContentView: View {
     @StateObject private var store = DataStore()
     @StateObject private var controller = MapController()
     @State private var selection: Selection?
-    @State private var showGallery = false
+    @State private var tab: NavTab = .map
     @State private var showSearch = false
-    @State private var showAbout = false
 
     var body: some View {
         ZStack {
             MapView(store: store, controller: controller, selection: $selection)
                 .ignoresSafeArea()
 
+            if tab == .gallery {
+                GalleryView(store: store) { tab = .map }
+                    .transition(.opacity)
+            } else if tab == .settings {
+                SettingsView(store: store)
+                    .transition(.opacity)
+            }
+
             VStack(spacing: 0) {
-                Masthead(onSearch: { showSearch = true },
-                         onGallery: { showGallery = true },
-                         onAbout: { showAbout = true })
+                if tab == .map { TopBar(onSearch: { showSearch = true }) }
                 Spacer()
-                HUD(controller: controller)
+                NavBar(tab: $tab, onMapReset: { controller.reset() })
             }
         }
         .preferredColorScheme(.dark)
@@ -35,62 +51,42 @@ struct ContentView: View {
             case .body(let id): BodyDetail(store: store, id: id)
             }
         }
-        .fullScreenCover(isPresented: $showGallery) {
-            GalleryView(store: store) { showGallery = false }
-        }
         .fullScreenCover(isPresented: $showSearch) {
             SearchView(store: store, onSelect: { sel in
                 showSearch = false
+                tab = .map
                 if let w = store.currentWorld(for: sel) { controller.focus(world: w) }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { selection = sel }
             }, onClose: { showSearch = false })
         }
-        .sheet(isPresented: $showAbout) { AboutView() }
+        .animation(.easeInOut(duration: 0.2), value: tab)
     }
 }
 
-// MARK: - Masthead
+// MARK: - Top bar (map only): live clock + search, no logo
 
-private struct Masthead: View {
+private struct TopBar: View {
     let onSearch: () -> Void
-    let onGallery: () -> Void
-    let onAbout: () -> Void
-
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            BundleImage(url: DataStore.imageURL("sublight-wordmark.png"), contentMode: .fit)
-                .frame(height: 16)
-                .frame(width: 77)
-
-            Spacer()
-
+        HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text(utc(ctx.date)).font(.mono(11)).foregroundColor(Theme.txt)
+                HStack(spacing: 6) {
+                    Text(utc(ctx.date)).font(.mono(12)).foregroundColor(Theme.txt)
                     Text("UTC").font(.mono(8)).tracking(2).foregroundColor(Theme.dim2)
                 }
             }
-
-            iconButton("magnifyingglass", action: onSearch)
-            iconButton("square.grid.2x2", action: onGallery)
-            iconButton("info.circle", action: onAbout)
+            Spacer()
+            Button(action: onSearch) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(Theme.txt)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Circle()))
+                    .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
+            }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            Theme.void.opacity(0.82)
-                .background(.ultraThinMaterial)
-                .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
-        )
-    }
-
-    private func iconButton(_ name: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: name)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(Theme.dim)
-                .frame(width: 34, height: 34)
-        }
+        .padding(.horizontal, 18)
+        .padding(.top, 6)
     }
 
     private func utc(_ date: Date) -> String {
@@ -101,72 +97,123 @@ private struct Masthead: View {
     }
 }
 
-// MARK: - HUD
+// MARK: - Floating bottom nav bar
 
-private struct HUD: View {
-    @ObservedObject var controller: MapController
+private struct NavBar: View {
+    @Binding var tab: NavTab
+    let onMapReset: () -> Void
 
     var body: some View {
-        HStack(spacing: 0) {
-            Button { controller.reset() } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "scope").font(.system(size: 11))
-                    Text("Whole system").font(.mono(11))
-                }
-                .foregroundColor(Theme.txt)
-                .padding(.horizontal, 12).padding(.vertical, 9)
-            }
-            divider
-            Button { controller.zoom(0.7) } label: {
-                Image(systemName: "minus").font(.system(size: 13)).foregroundColor(Theme.txt)
-                    .frame(width: 38, height: 36)
-            }
-            divider
-            Button { controller.zoom(1.4) } label: {
-                Image(systemName: "plus").font(.system(size: 13)).foregroundColor(Theme.txt)
-                    .frame(width: 38, height: 36)
-            }
+        HStack(spacing: 6) {
+            item(.gallery, icon: "photo.on.rectangle.angled", label: "Gallery")
+            mapButton
+            item(.settings, icon: "gearshape", label: "Settings")
         }
+        .padding(8)
         .background(
-            Capsule().fill(Theme.panel.opacity(0.9))
+            Capsule().fill(Theme.panel.opacity(0.82))
+                .background(.ultraThinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
         )
-        .padding(.bottom, 28)
+        .padding(.horizontal, 44)
+        .padding(.bottom, 8)
     }
 
-    private var divider: some View {
-        Rectangle().fill(Theme.rule2).frame(width: 1, height: 22)
+    private func item(_ t: NavTab, icon: String, label: String) -> some View {
+        Button { tab = t } label: {
+            VStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 18))
+                Text(label).font(.mono(9)).tracking(0.5)
+            }
+            .foregroundColor(tab == t ? Theme.signal : Theme.dim)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var mapButton: some View {
+        Button {
+            onMapReset()
+            tab = .map
+        } label: {
+            Image(systemName: "sun.max.fill")
+                .font(.system(size: 24))
+                .foregroundColor(tab == .map ? Theme.void : Theme.txt)
+                .frame(width: 60, height: 60)
+                .background(
+                    Circle().fill(tab == .map ? Theme.delay : Theme.rule2)
+                        .shadow(color: tab == .map ? Theme.delay.opacity(0.5) : .clear, radius: 10)
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 
-// MARK: - About
+// MARK: - Settings (notifications + about)
 
-private struct AboutView: View {
+private struct SettingsView: View {
+    @ObservedObject var store: DataStore
+    @State private var notifOn = NotificationManager.shared.isEnabled
+    @State private var busy = false
+
     var body: some View {
         ZStack {
-            Theme.panel.ignoresSafeArea()
+            Theme.void.ignoresSafeArea()
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    Text("Sublight").font(.title(40)).foregroundColor(Theme.txt)
-                    Text("Nothing you see is happening now.")
-                        .font(.title(22)).foregroundColor(Theme.delay)
-                    Text("This is a live map of the Sun, the planets, and the small fleet of robotic spacecraft still working across the solar system. Everything is drawn where the light says it is — as old as the time that light took to reach Earth. Tap anything to see how far its signal has travelled, and how long ago the view you're seeing actually left.")
-                        .font(.mono(14)).foregroundColor(Theme.txt).lineSpacing(6)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Divider().background(Theme.rule)
-                    Text("Data: JPL Horizons ephemerides, NASA mission imagery (Mars 2020, MSL, DSCOVR/EPIC) and the NASA Image Library. No value on screen is invented — missing data shows as “—”. Positions are a daily snapshot, interpolated in real time.")
-                        .font(.mono(11)).foregroundColor(Theme.dim).lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("Type: Stack Sans Notch & Roboto Mono, under the SIL Open Font License 1.1 (bundled in the app). NASA imagery and data are public domain, credited to their source. Sublight is an independent project, not affiliated with or endorsed by NASA or any space agency.")
-                        .font(.mono(11)).foregroundColor(Theme.dim).lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("sublight.observer").font(.mono(11)).foregroundColor(Theme.dim2)
+                VStack(alignment: .leading, spacing: 24) {
+                    Text("Settings").font(.title(34)).foregroundColor(Theme.txt)
+
+                    // Notifications
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("NOTIFICATIONS").font(.mono(10)).tracking(1.5).foregroundColor(Theme.dim2)
+                        Toggle(isOn: $notifOn) {
+                            Text("New imagery alerts").font(.monoMed(15)).foregroundColor(Theme.txt)
+                        }
+                        .tint(Theme.signal)
+                        .disabled(busy)
+                        Text("A local alert when a rover or DSCOVR sends home a new frame. iOS wakes the app to check for new data, so the timing is approximate, about once a day with regular use.")
+                            .font(.mono(12)).foregroundColor(Theme.dim).lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(16)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Theme.panel))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
+
+                    aboutSection
                 }
                 .padding(24)
+                .padding(.bottom, 110) // clear the floating nav bar
             }
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
-        .presentationBackground(Theme.panel)
+        .onChange(of: notifOn) { _, on in
+            Task {
+                busy = true
+                if on {
+                    let ok = await NotificationManager.shared.enable()
+                    if !ok { notifOn = false } // permission denied
+                } else {
+                    NotificationManager.shared.disable()
+                }
+                busy = false
+            }
+        }
+    }
+
+    private var aboutSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Nothing you see is happening now.")
+                .font(.title(22)).foregroundColor(Theme.delay)
+            Text("A live map of the Sun, the planets, and the small fleet of robotic spacecraft still working across the solar system. Everything is drawn where the light says it is, as old as the time that light took to reach Earth. Tap anything to see how far its signal has travelled, and how long ago the view you're seeing actually left.")
+                .font(.mono(14)).foregroundColor(Theme.txt).lineSpacing(6)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Data: JPL Horizons ephemerides, NASA mission imagery (Mars 2020, MSL, DSCOVR/EPIC) and the NASA Image Library. No value on screen is invented; missing data shows as “—”. Positions are a daily snapshot, interpolated in real time.")
+                .font(.mono(11)).foregroundColor(Theme.dim).lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Type: Stack Sans Notch & Roboto Mono, under the SIL Open Font License 1.1. NASA imagery and data are public domain, credited to their source. Sublight is an independent project, not affiliated with or endorsed by NASA or any space agency.")
+                .font(.mono(11)).foregroundColor(Theme.dim).lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("sublight.observer").font(.mono(11)).foregroundColor(Theme.dim2)
+        }
     }
 }

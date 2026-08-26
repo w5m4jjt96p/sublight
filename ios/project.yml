@@ -38,6 +38,10 @@ targets:
         CFBundleShortVersionString: "0.4.0"
         UIUserInterfaceStyle: Dark
         ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - observer.sublight.refresh
         UILaunchScreen:
           UIColorName: ""
         UISupportedInterfaceOrientations:
