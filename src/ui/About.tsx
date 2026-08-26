@@ -127,7 +127,7 @@ export function About({ model, onBack }: AboutProps) {
           closer, you can help keep it running and growing.
         </p>
         <p>
-          <a className="support-btn" href="https://ko-fi.com/sublight" target="_blank" rel="noreferrer">
+          <a className="support-btn" href="https://ko-fi.com/sublightobserver" target="_blank" rel="noreferrer">
             Buy me a coffee ☕
           </a>
         </p>
