@@ -121,6 +121,17 @@ export function About({ model, onBack }: AboutProps) {
           NAIF ID and the daily job resolves the rest. See the project README.
         </p>
 
+        <h2>Support</h2>
+        <p>
+          Sublight is free, with no ads and no tracking. If it made the solar system feel a little
+          closer, you can help keep it running and growing.
+        </p>
+        <p>
+          <a className="support-btn" href="https://ko-fi.com/sublight" target="_blank" rel="noreferrer">
+            Buy me a coffee ☕
+          </a>
+        </p>
+
         <h2>Type and licences</h2>
         <p>
           Set in Stack Sans Notch and Roboto Mono, with IBM Plex as a fallback, all under the{' '}

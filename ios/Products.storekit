@@ -1,0 +1,58 @@
+{
+  "identifier" : "B1F2C3D4-0000-0000-0000-000000000001",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "1",
+      "localizations" : [
+        {
+          "description" : "A small coffee for the developer.",
+          "displayName" : "Small coffee",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "observer.sublight.tip.small",
+      "referenceName" : "Small coffee",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "2",
+      "localizations" : [
+        {
+          "description" : "A generous coffee for the developer.",
+          "displayName" : "Big coffee",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "observer.sublight.tip.medium",
+      "referenceName" : "Big coffee",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "3",
+      "localizations" : [
+        {
+          "description" : "A week of coffee. Thank you.",
+          "displayName" : "A week of coffee",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "observer.sublight.tip.large",
+      "referenceName" : "A week of coffee",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+  },
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

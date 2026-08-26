@@ -1101,3 +1101,19 @@ a {
 }
 .detail-share:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.08); }
 .detail-share:focus-visible { outline: 1px solid var(--signal); outline-offset: 2px; }
+
+/* --- support (Ko-fi) button in About --------------------------------------- */
+.support-btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 10px 18px;
+  border: 1px solid var(--delay);
+  border-radius: 6px;
+  color: var(--delay);
+  font-family: var(--mono);
+  font-size: var(--fs-about-p);
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.support-btn:hover { background: var(--delay); color: var(--void); }

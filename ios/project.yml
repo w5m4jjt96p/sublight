@@ -55,3 +55,14 @@ targets:
           - StackSansNotch-Regular.ttf
           - StackSansNotch-SemiBold.ttf
           - StackSansNotch-Bold.ttf
+
+schemes:
+  Sublight:
+    build:
+      targets:
+        Sublight: all
+    run:
+      config: Debug
+      storeKitConfiguration: Products.storekit
+    archive:
+      config: Release

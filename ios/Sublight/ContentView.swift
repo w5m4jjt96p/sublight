@@ -154,6 +154,7 @@ private struct NavBar: View {
 
 private struct SettingsView: View {
     @ObservedObject var store: DataStore
+    @StateObject private var tips = TipStore()
     @State private var notifOn = NotificationManager.shared.isEnabled
     @State private var busy = false
 
@@ -180,6 +181,8 @@ private struct SettingsView: View {
                     .background(RoundedRectangle(cornerRadius: 8).fill(Theme.panel))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
 
+                    supportSection
+
                     aboutSection
                 }
                 .padding(24)
@@ -197,6 +200,44 @@ private struct SettingsView: View {
                 }
                 busy = false
             }
+        }
+    }
+
+    @ViewBuilder private var supportSection: some View {
+        if !tips.products.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("SUPPORT").font(.mono(10)).tracking(1.5).foregroundColor(Theme.dim2)
+                if tips.didThank {
+                    Text("Thank you. It genuinely helps.")
+                        .font(.monoMed(14)).foregroundColor(Theme.delay)
+                } else {
+                    Text("Sublight is free, with no ads. If you'd like to support its development:")
+                        .font(.mono(12)).foregroundColor(Theme.dim).lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                HStack(spacing: 8) {
+                    ForEach(tips.products, id: \.id) { p in
+                        Button { Task { await tips.buy(p) } } label: {
+                            VStack(spacing: 3) {
+                                Text(p.displayName).font(.mono(10)).foregroundColor(Theme.dim)
+                                if tips.purchasingID == p.id {
+                                    ProgressView().tint(Theme.delay)
+                                } else {
+                                    Text(p.displayPrice).font(.monoMed(15)).foregroundColor(Theme.delay)
+                                }
+                            }
+                            .frame(maxWidth: .infinity).padding(.vertical, 12)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(Theme.void))
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.delay.opacity(0.5), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(tips.purchasingID != nil)
+                    }
+                }
+            }
+            .padding(16)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
         }
     }
 
