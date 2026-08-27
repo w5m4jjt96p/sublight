@@ -411,8 +411,12 @@ export function App() {
       {view === 'gallery' && (
         <Gallery
           frames={frames}
+          archive={archive}
+          model={model}
+          generatedAt={generatedAt}
           now={now}
           onOpen={(craftId, index) => openLightbox(craftId, index)}
+          onOpenArchive={openArchive}
           onBack={() => navigate('map')}
         />
       )}
