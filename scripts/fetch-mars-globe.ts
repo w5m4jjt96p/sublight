@@ -15,8 +15,8 @@ const OUT_DIR = join(ROOT, 'public', 'mars');
 const OUT = join(OUT_DIR, 'globe.jpg');
 
 // USGS Viking MDIM 2.1 colorized global mosaic (public domain, NASA/JPL/USGS).
-const SRC =
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Mars_G%C3%A9olocalisation.jpg/1280px-Mars_G%C3%A9olocalisation.jpg';
+// Full-resolution original is 2048x1024.
+const SRC = 'https://upload.wikimedia.org/wikipedia/commons/b/b7/Mars_G%C3%A9olocalisation.jpg';
 
 async function exists(p: string): Promise<boolean> {
   try { await access(p); return true; } catch { return false; }
@@ -28,9 +28,9 @@ async function main() {
     const res = await fetch(SRC, { headers: { 'User-Agent': 'sublight.observer (mars globe texture)' } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const buf = Buffer.from(await res.arrayBuffer());
-    // Equirectangular 2:1, downscaled for the client. 1024x512 is plenty for a
-    // ~300px globe and keeps the asset small.
-    await sharp(buf).resize(1024, 512, { fit: 'fill' }).jpeg({ quality: 82 }).toFile(OUT);
+    // Equirectangular 2:1 at 2048x1024 (the source's full size, power-of-two so
+    // WebGL can mipmap it). Sharp enough for a zoomable globe, still ~300-500KB.
+    await sharp(buf).resize(2048, 1024, { fit: 'fill' }).jpeg({ quality: 88 }).toFile(OUT);
     console.log(`mars globe texture: wrote ${OUT}`);
   } catch (err) {
     if (await exists(OUT)) {
