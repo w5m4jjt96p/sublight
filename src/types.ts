@@ -239,6 +239,29 @@ export interface SatellitesData {
 // Snapshotted daily from NOAA SWPC; the browser also polls it live (SWPC serves
 // Access-Control-Allow-Origin: *), exactly like the DSN feed.
 
+// --- Deep sky (public/data/deepsky.json) -----------------------------------
+// Iconic objects captioned by the age of their light. Editorial distances +
+// hand-picked public-domain NASA imagery, downloaded locally at build time.
+
+export interface DeepSkyObject {
+  id: string;
+  name: string;
+  kind: string; // nebula | galaxy | deep-field
+  catalog: string;
+  /** Published distance in light-years = the light-travel time in years. */
+  distanceLy: number;
+  file: string; // local thumbnail
+  full: string; // local large image
+  sourceUrl: string; // original at the NASA library
+  credit: string;
+  note: string;
+}
+
+export interface DeepSkyData {
+  generatedAt: string;
+  objects: DeepSkyObject[];
+}
+
 export interface SpaceWeather {
   generatedAt: string;
   /** Latest planetary K index (0-9), or null if unavailable. */

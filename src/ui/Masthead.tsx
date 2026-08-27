@@ -1,4 +1,4 @@
-type View = 'map' | 'about' | 'gallery' | 'orbit' | 'mars';
+type View = 'map' | 'about' | 'gallery' | 'orbit' | 'mars' | 'deepsky';
 
 interface MastheadProps {
   trackingCount: number;
@@ -9,7 +9,7 @@ interface MastheadProps {
 }
 
 export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }: MastheadProps) {
-  const navLink = (target: 'gallery' | 'about' | 'orbit' | 'mars', label: string) => (
+  const navLink = (target: 'gallery' | 'about' | 'orbit' | 'mars' | 'deepsky', label: string) => (
     <a
       className={`mast-link${view === target ? ' active' : ''}`}
       href={`#${target}`}
@@ -44,6 +44,7 @@ export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }:
         </button>
         {navLink('mars', 'Mars')}
         {navLink('orbit', 'Near-Earth')}
+        {navLink('deepsky', 'Deep Sky')}
         {navLink('gallery', 'Gallery')}
         {navLink('about', 'About')}
       </div>

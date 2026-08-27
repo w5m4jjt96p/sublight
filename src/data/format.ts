@@ -24,6 +24,18 @@ export function fmtLight(seconds: number | null | undefined): string {
   return fmtDuration(seconds);
 }
 
+/**
+ * A light-year distance rendered as the age of the light: "1,344 years",
+ * "2.5 million years", "13.2 billion years". This is the light-travel time.
+ */
+export function fmtLightYears(ly: number | null | undefined): string {
+  if (ly == null || !isFinite(ly)) return EMDASH;
+  if (ly >= 1e9) return `${(ly / 1e9).toFixed(1).replace(/\.0$/, '')} billion years`;
+  if (ly >= 1e6) return `${(ly / 1e6).toFixed(1).replace(/\.0$/, '')} million years`;
+  if (ly >= 1e5) return `${Math.round(ly / 1e3)},000 years`;
+  return `${Math.round(ly).toLocaleString('en-US')} years`;
+}
+
 /** Kilometres with adaptive precision + thousands separators. */
 export function fmtKm(km: number | null | undefined): string {
   if (km == null || !isFinite(km)) return EMDASH;

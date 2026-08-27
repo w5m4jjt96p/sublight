@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-08-27T12:31:14.199Z",
+  "objects": [
+    {
+      "id": "orion",
+      "name": "Orion Nebula",
+      "kind": "nebula",
+      "catalog": "M42",
+      "distanceLy": 1344,
+      "file": "/deep-sky/orion.jpg",
+      "full": "/deep-sky/orion-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/PIA04227/PIA04227~orig.jpg",
+      "credit": "NASA, ESA, M. Robberto (STScI) and the Hubble Space Telescope Orion Treasury Project Team",
+      "note": "The nearest large star-forming region, a nursery of newborn suns."
+    },
+    {
+      "id": "southern-ring",
+      "name": "Southern Ring Nebula",
+      "kind": "nebula",
+      "catalog": "NGC 3132",
+      "distanceLy": 2500,
+      "file": "/deep-sky/southern-ring.jpg",
+      "full": "/deep-sky/southern-ring-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/southern_ring_nebula/southern_ring_nebula~orig.png",
+      "credit": "NASA, ESA, CSA, STScI (JWST)",
+      "note": "A dying star's exhaled shells of gas, imaged by Webb."
+    },
+    {
+      "id": "pillars",
+      "name": "Pillars of Creation",
+      "kind": "nebula",
+      "catalog": "Eagle Nebula, M16",
+      "distanceLy": 6500,
+      "file": "/deep-sky/pillars.jpg",
+      "full": "/deep-sky/pillars-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e000842/GSFC_20171208_Archive_e000842~orig.jpg",
+      "credit": "NASA, ESA, Hubble Heritage Team (STScI/AURA)",
+      "note": "Towers of cold gas and dust where new stars are forming."
+    },
+    {
+      "id": "crab",
+      "name": "Crab Nebula",
+      "kind": "nebula",
+      "catalog": "M1",
+      "distanceLy": 6500,
+      "file": "/deep-sky/crab.jpg",
+      "full": "/deep-sky/crab-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/PIA03606/PIA03606~orig.jpg",
+      "credit": "NASA, ESA, J. Hester and A. Loll (Arizona State University)",
+      "note": "The wreck of a supernova that Earth saw explode in 1054 AD."
+    },
+    {
+      "id": "cosmic-cliffs",
+      "name": "Cosmic Cliffs",
+      "kind": "nebula",
+      "catalog": "Carina Nebula, NGC 3324",
+      "distanceLy": 7600,
+      "file": "/deep-sky/cosmic-cliffs.jpg",
+      "full": "/deep-sky/cosmic-cliffs-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~orig.png",
+      "credit": "NASA, ESA, CSA, STScI (JWST)",
+      "note": "The edge of a stellar nursery in Carina, carved by young stars."
+    },
+    {
+      "id": "andromeda",
+      "name": "Andromeda Galaxy",
+      "kind": "galaxy",
+      "catalog": "M31",
+      "distanceLy": 2500000,
+      "file": "/deep-sky/andromeda.jpg",
+      "full": "/deep-sky/andromeda-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/PIA08787/PIA08787~orig.jpg",
+      "credit": "NASA/JPL-Caltech, K. Gordon (University of Arizona)",
+      "note": "The nearest large galaxy, and where the Milky Way is headed."
+    },
+    {
+      "id": "whirlpool",
+      "name": "Whirlpool Galaxy",
+      "kind": "galaxy",
+      "catalog": "M51",
+      "distanceLy": 23000000,
+      "file": "/deep-sky/whirlpool.jpg",
+      "full": "/deep-sky/whirlpool-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001925/GSFC_20171208_Archive_e001925~orig.jpg",
+      "credit": "NASA, ESA, S. Beckwith (STScI) and the Hubble Heritage Team (STScI/AURA)",
+      "note": "A grand-design spiral caught mid-collision with a smaller galaxy."
+    },
+    {
+      "id": "sombrero",
+      "name": "Sombrero Galaxy",
+      "kind": "galaxy",
+      "catalog": "M104",
+      "distanceLy": 29000000,
+      "file": "/deep-sky/sombrero.jpg",
+      "full": "/deep-sky/sombrero-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/PIA15226/PIA15226~orig.jpg",
+      "credit": "NASA, ESA and the Hubble Heritage Team (STScI/AURA)",
+      "note": "A galaxy seen nearly edge-on, ringed by a dark lane of dust."
+    },
+    {
+      "id": "deep-field",
+      "name": "Hubble eXtreme Deep Field",
+      "kind": "deep-field",
+      "catalog": "XDF",
+      "distanceLy": 13200000000,
+      "file": "/deep-sky/deep-field.jpg",
+      "full": "/deep-sky/deep-field-full.jpg",
+      "sourceUrl": "https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001651/GSFC_20171208_Archive_e001651~orig.jpg",
+      "credit": "NASA, ESA, G. Illingworth, D. Magee, P. Oesch (UC Santa Cruz), R. Bouwens (Leiden), the HUDF09 Team",
+      "note": "Thousands of galaxies in one dark patch of sky, the farthest almost as old as the universe."
+    }
+  ]
+}

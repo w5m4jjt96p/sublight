@@ -115,6 +115,20 @@ export function About({ model, onBack }: AboutProps) {
           )}
         </ul>
 
+        <h2>The deep sky</h2>
+        <p>
+          The Deep Sky view carries the thesis past the fleet. A handful of famous galaxies and
+          nebulae are shown at their published distance, turned into the age of the light: the
+          Orion Nebula at about 1,340 years, Andromeda at 2.5 million, the Hubble deep field near
+          13 billion. The images are public domain, from NASA, the Hubble and Webb telescopes,
+          downloaded once from the{' '}
+          <a href="https://images.nasa.gov/" target="_blank" rel="noreferrer">
+            NASA Image &amp; Video Library
+          </a>{' '}
+          and credited to their instrument teams. The distances are published values, shown as
+          approximate.
+        </p>
+
         <h2>The Mars globe</h2>
         <p>
           The Mars view is a real globe, not a photo: an equirectangular Viking colour mosaic
