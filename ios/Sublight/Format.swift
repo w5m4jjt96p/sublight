@@ -59,6 +59,21 @@ enum Fmt {
         return (f.string(from: NSNumber(value: km)) ?? "—") + " km"
     }
 
+    /// A light-year distance as the age of its light: "1,344 years",
+    /// "2.5 million years", "13.2 billion years".
+    static func lightYears(_ ly: Double) -> String {
+        guard ly.isFinite else { return "—" }
+        func trim(_ x: Double) -> String {
+            let s = String(format: "%.1f", x)
+            return s.hasSuffix(".0") ? String(s.dropLast(2)) : s
+        }
+        if ly >= 1e9 { return "\(trim(ly / 1e9)) billion years" }
+        if ly >= 1e6 { return "\(trim(ly / 1e6)) million years" }
+        if ly >= 1e5 { return "\(Int((ly / 1e3).rounded())),000 years" }
+        let f = NumberFormatter(); f.numberStyle = .decimal; f.maximumFractionDigits = 0
+        return (f.string(from: NSNumber(value: ly)) ?? "\(Int(ly))") + " years"
+    }
+
     static func au(_ v: Double) -> String {
         if v >= 100 { return String(format: "%.0f AU", v) }
         if v >= 10 { return String(format: "%.1f AU", v) }

@@ -9,7 +9,7 @@ echo "→ copying generated data + imagery into ios/Resources"
 mkdir -p ios/Resources/data ios/Resources/frames ios/Resources/bodies ios/Resources/tracks
 cp public/data/fleet.json public/data/planets.json public/data/frames.json \
    public/data/archive.json public/data/bodyphotos.json public/data/tracks.json \
-   public/data/satellites.json public/data/spaceweather.json \
+   public/data/satellites.json public/data/spaceweather.json public/data/deepsky.json \
    data/registry.json ios/Resources/data/
 cp public/frames/*.jpg ios/Resources/frames/
 cp public/bodies/*.jpg ios/Resources/bodies/

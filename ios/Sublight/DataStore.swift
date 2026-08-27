@@ -22,6 +22,7 @@ final class DataStore: ObservableObject {
     private(set) var bodyPhotos: [String: BodyPhoto] = [:]
     private(set) var tracks: [String: RoverTrack] = [:]
     private(set) var satellites: [SatelliteRecord] = []
+    private(set) var deepSky: [DeepSkyObject] = []
     private(set) var fleetGeneratedAt: String = ""
 
     init() { load() }
@@ -36,6 +37,7 @@ final class DataStore: ObservableObject {
         bodyPhotos = decode("bodyphotos") ?? [:]
         tracks = (decode("tracks") as TracksData?)?.rovers ?? [:]
         satellites = (decode("satellites") as SatellitesData?)?.satellites ?? []
+        deepSky = (decode("deepsky") as DeepSkyData?)?.objects ?? []
 
         registryById = Dictionary(uniqueKeysWithValues: registry.map { ($0.id, $0) })
         fleetGeneratedAt = fleet?.generatedAt ?? ""

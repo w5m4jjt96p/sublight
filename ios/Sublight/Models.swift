@@ -186,6 +186,26 @@ struct SatellitesData: Codable {
     let satellites: [SatelliteRecord]
 }
 
+// MARK: - Deep sky (public/data/deepsky.json — images served from the site)
+
+struct DeepSkyObject: Codable, Identifiable {
+    let id: String
+    let name: String
+    let kind: String
+    let catalog: String
+    let distanceLy: Double
+    let file: String
+    let full: String
+    let sourceUrl: String
+    let credit: String
+    let note: String
+}
+
+struct DeepSkyData: Codable {
+    let generatedAt: String
+    let objects: [DeepSkyObject]
+}
+
 // MARK: - Space weather (public/data/spaceweather.json + live NOAA SWPC poll)
 
 struct SpaceWeather: Codable {
