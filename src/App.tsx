@@ -10,6 +10,7 @@ import { About } from './ui/About.tsx';
 import { Gallery } from './ui/Gallery.tsx';
 import { Traverse } from './ui/Traverse.tsx';
 import { NearEarth } from './ui/NearEarth.tsx';
+import { MarsGlobe } from './ui/MarsGlobe.tsx';
 import { SpaceWeather } from './ui/SpaceWeather.tsx';
 import { TweakPanel } from './ui/TweakPanel.tsx';
 import { useData } from './data/useData.ts';
@@ -41,10 +42,11 @@ export function App() {
     credit: string;
     owlt: number | null;
   } | null>(null);
-  const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse' | 'orbit'>(() => {
+  const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse' | 'orbit' | 'mars'>(() => {
     if (window.location.hash === '#about') return 'about';
     if (window.location.hash === '#gallery') return 'gallery';
     if (window.location.hash === '#orbit') return 'orbit';
+    if (window.location.hash === '#mars') return 'mars';
     if (window.location.hash.startsWith('#t/')) return 'traverse';
     return 'map';
   });
@@ -106,10 +108,11 @@ export function App() {
     }
   }
 
-  function navigate(v: 'map' | 'about' | 'gallery' | 'orbit') {
+  function navigate(v: 'map' | 'about' | 'gallery' | 'orbit' | 'mars') {
     if (v === 'about') window.location.hash = '#about';
     else if (v === 'gallery') window.location.hash = '#gallery';
     else if (v === 'orbit') window.location.hash = '#orbit';
+    else if (v === 'mars') window.location.hash = '#mars';
     else
       window.location.hash = selectedBodyId
         ? `#b/${selectedBodyId}`
@@ -134,6 +137,10 @@ export function App() {
       }
       if (h === '#orbit') {
         setView('orbit');
+        return;
+      }
+      if (h === '#mars') {
+        setView('mars');
         return;
       }
       const tm = h.match(/^#t\/(.+)$/);
@@ -195,6 +202,14 @@ export function App() {
     () => (model && selectedId ? model.craft.find((c) => c.entry.id === selectedId) ?? null : null),
     [model, selectedId],
   );
+
+  // Light-time to Mars right now, via Perseverance (positioned from Mars), for
+  // the Mars globe headline.
+  const marsLightSeconds = useMemo(() => {
+    if (!model || !generatedAt) return null;
+    const p = model.craft.find((c) => c.entry.id === 'perseverance');
+    return p ? owltAt(p.eph, generatedAt, now) : null;
+  }, [model, generatedAt, now]);
 
   const selOwlt = selected && generatedAt ? owltAt(selected.eph, generatedAt, now) : null;
   const selRange = selected && generatedAt ? rangeAt(selected.eph, generatedAt, now) : null;
@@ -412,6 +427,17 @@ export function App() {
             satellites={satellites}
             onBack={() => navigate('map')}
             onGoDeep={() => navigate('map')}
+          />
+        </div>
+      )}
+
+      {view === 'mars' && (
+        <div className="mars-overlay">
+          <MarsGlobe
+            tracks={tracks}
+            marsLightSeconds={marsLightSeconds}
+            onOpenTraverse={(id) => { window.location.hash = `#t/${id}`; }}
+            onBack={() => navigate('map')}
           />
         </div>
       )}

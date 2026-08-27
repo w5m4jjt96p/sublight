@@ -17,6 +17,7 @@
     "data:tracks": "tsx scripts/fetch-mars-tracks.ts",
     "data:satellites": "tsx scripts/fetch-satellites.ts",
     "data:weather": "tsx scripts/fetch-space-weather.ts",
+    "data:mars-globe": "tsx scripts/fetch-mars-globe.ts",
     "social": "tsx scripts/social.ts",
     "social:live": "tsx scripts/social.ts --live",
     "cf:harden": "tsx scripts/cloudflare-harden.ts",

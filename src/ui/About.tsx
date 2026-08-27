@@ -115,6 +115,17 @@ export function About({ model, onBack }: AboutProps) {
           )}
         </ul>
 
+        <h2>The Mars globe</h2>
+        <p>
+          The Mars view is a real globe, not a photo: an equirectangular Viking colour mosaic
+          (public domain, NASA/JPL/USGS) projected onto a sphere and shaded, drawn in plain 2D
+          with no 3D engine. Every place we have landed is plotted at its true coordinates, and the
+          two rovers are shown where they are driving today, taken from the same traverse data as
+          the surface maps. Tap a rover to walk its route. The one-way light time in the header is
+          Mars's current distance in light, via Perseverance, so the globe you are turning is
+          already several minutes old.
+        </p>
+
         <h2>The near-Earth view</h2>
         <p>
           The Near-Earth view plots a curated set of objects still circling Earth: the ISS,

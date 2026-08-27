@@ -1262,3 +1262,59 @@ a {
   border-radius: 5px; padding: 5px 9px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
 }
 .ne-heroes button:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.14); }
+
+/* --- Mars globe view ------------------------------------------------------ */
+.mars-overlay { position: fixed; inset: 0; z-index: 60; }
+.marsglobe { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--void); }
+.mg-bar {
+  display: flex; align-items: center; gap: 18px;
+  padding: 14px 20px; background: var(--panel);
+  border-bottom: 1px solid var(--rule); flex: 0 0 auto;
+}
+.mg-bar .back {
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--dim); background: none; border: none; cursor: pointer; padding: 0;
+}
+.mg-bar .back:hover { color: var(--txt); }
+.mg-title { display: flex; flex-direction: column; gap: 2px; }
+.mg-title .mg-name { font-family: var(--sans); font-size: 22px; color: var(--txt); }
+.mg-title .mg-sub { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+
+.mg-viewport { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.mg-viewport canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.mg-viewport canvas:active { cursor: grabbing; }
+.mg-age {
+  position: absolute; left: 0; right: 0; bottom: 18px; text-align: center;
+  font-family: var(--mono); font-size: 12px; color: var(--delay);
+  pointer-events: none; padding: 0 20px;
+}
+
+.mg-panel {
+  flex: 0 0 auto; max-height: 40%;
+  border-top: 1px solid var(--rule); background: var(--panel);
+  padding: 20px 22px; overflow-y: auto;
+}
+.mg-detail-name { font-family: var(--sans); font-size: 22px; color: var(--txt); }
+.mg-detail-sub { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-top: 3px; }
+.mg-note { color: var(--txt); font-size: 13.5px; line-height: 1.7; margin: 12px 0; max-width: 620px; }
+.mg-traverse {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12px; color: var(--signal);
+  background: rgba(143, 214, 230, 0.08); border: 1px solid var(--rule-2); border-radius: 6px;
+  padding: 10px 14px; cursor: pointer; margin-right: 10px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.mg-traverse:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.14); }
+.mg-clear {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dim); background: none; border: 1px solid var(--rule-2); border-radius: 5px;
+  padding: 9px 12px; cursor: pointer;
+}
+.mg-clear:hover { color: var(--txt); border-color: var(--dim); }
+.mg-intro p { color: var(--dim); font-size: 13.5px; line-height: 1.7; max-width: 640px; }
+.mg-legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+.mg-legend span { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.mg-legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.mg-k-rover { background: var(--delay); }
+.mg-k-lander { background: var(--signal); }
+.mg-k-feature { background: var(--txt); }
