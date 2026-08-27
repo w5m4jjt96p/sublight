@@ -26,6 +26,8 @@ struct ContentView: View {
     @State private var tab: NavTab = .map
     @State private var showSearch = false
     @State private var showNearEarth = false
+    @State private var showMars = false
+    @State private var marsTraverseTrack: RoverTrack?
 
     var body: some View {
         ZStack {
@@ -49,7 +51,9 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 if tab == .map {
-                    TopBar(onSearch: { showSearch = true }, onNearEarth: { showNearEarth = true })
+                    TopBar(onSearch: { showSearch = true },
+                           onNearEarth: { showNearEarth = true },
+                           onMars: { showMars = true })
                 }
                 Spacer()
                 NavBar(tab: $tab, onMapReset: { controller.reset() })
@@ -58,6 +62,24 @@ struct ContentView: View {
         .preferredColorScheme(.dark)
         .fullScreenCover(isPresented: $showNearEarth) {
             NearEarthView(store: store, onClose: { showNearEarth = false })
+        }
+        .fullScreenCover(isPresented: $showMars) {
+            MarsGlobeView(
+                store: store,
+                marsLightSeconds: store.craft.first(where: { $0.id == "perseverance" })?.eph.owltSeconds,
+                onOpenTraverse: { id in
+                    showMars = false
+                    if let t = store.tracks[id] {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { marsTraverseTrack = t }
+                    }
+                },
+                onClose: { showMars = false }
+            )
+        }
+        .fullScreenCover(item: $marsTraverseTrack) { track in
+            TraverseView(track: track,
+                         craftName: store.craft.first(where: { $0.id == track.id })?.name ?? track.label,
+                         onClose: { marsTraverseTrack = nil })
         }
         .sheet(item: $selection) { sel in
             switch sel {
@@ -82,6 +104,7 @@ struct ContentView: View {
 private struct TopBar: View {
     let onSearch: () -> Void
     let onNearEarth: () -> Void
+    let onMars: () -> Void
     var body: some View {
         HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -91,13 +114,8 @@ private struct TopBar: View {
                 }
             }
             Spacer()
-            Button(action: onNearEarth) {
-                Text("Near-Earth").font(.mono(11)).foregroundColor(Theme.txt)
-                    .padding(.horizontal, 13).frame(height: 40)
-                    .background(Capsule().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Capsule()))
-                    .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
-            }
-            .padding(.trailing, 8)
+            pill("Mars", action: onMars).padding(.trailing, 8)
+            pill("Near-Earth", action: onNearEarth).padding(.trailing, 8)
             Button(action: onSearch) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 15, weight: .medium))
@@ -109,6 +127,15 @@ private struct TopBar: View {
         }
         .padding(.horizontal, 18)
         .padding(.top, 6)
+    }
+
+    private func pill(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label).font(.mono(11)).foregroundColor(Theme.txt)
+                .padding(.horizontal, 13).frame(height: 40)
+                .background(Capsule().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Capsule()))
+                .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
+        }
     }
 
     private func utc(_ date: Date) -> String {

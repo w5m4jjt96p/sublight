@@ -14,6 +14,7 @@ cp public/data/fleet.json public/data/planets.json public/data/frames.json \
 cp public/frames/*.jpg ios/Resources/frames/
 cp public/bodies/*.jpg ios/Resources/bodies/
 cp public/sun.jpg ios/Resources/bodies/sun.jpg
+cp public/mars/globe.jpg ios/Resources/bodies/mars-globe.jpg
 cp public/tracks/*.jpg ios/Resources/tracks/
 
 echo "→ emitting editorial bodies.json"
