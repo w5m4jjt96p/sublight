@@ -300,8 +300,16 @@ struct MapView: View {
         }
     }
 
+    /// Icon-size multiplier so planets, the Sun and craft thumbnails grow with
+    /// zoom (1× at the default fit, up to 3× zoomed in). Without this only the
+    /// orbit rings scaled and the bodies felt "stuck".
+    private var mapZoom: CGFloat {
+        let z = fitScale > 0 ? effScale / fitScale : 1
+        return min(2.4, max(0.75, sqrt(z)))
+    }
+
     private func drawSun(_ ctx: GraphicsContext, at p: CGPoint) {
-        let r: CGFloat = 22
+        let r: CGFloat = 22 * mapZoom
         // Outer glow
         let glow = CGRect(x: p.x - r * 3, y: p.y - r * 3, width: r * 6, height: r * 6)
         ctx.fill(Path(ellipseIn: glow),
@@ -316,7 +324,7 @@ struct MapView: View {
 
     private func drawBody(_ ctx: GraphicsContext, id: String, at p: CGPoint) {
         guard let style = BODY_STYLES[id] else { return }
-        let r = style.radius
+        let r = style.radius * mapZoom
         if style.ring {
             // Saturn ring
             let rw = r * 2.7, rh = r * 0.95
@@ -347,7 +355,7 @@ struct MapView: View {
 
         if craft.isImaging, let url = store.heroThumb(for: id),
            let ui = ImageStore.shared.image(url) {
-            let side: CGFloat = selected ? 40 : 32
+            let side: CGFloat = (selected ? 40 : 32) * mapZoom
             let rect = CGRect(x: p.x - side / 2, y: p.y - side / 2, width: side, height: side)
             let clip = Path(roundedRect: rect, cornerRadius: 5)
             ctx.drawLayer { layer in
@@ -357,6 +365,8 @@ struct MapView: View {
             ctx.stroke(clip, with: .color(Theme.delay.opacity(selected ? 1 : 0.75)),
                        lineWidth: selected ? 2 : 1)
         } else {
+            // Non-imaging probes are position pins, not bodies: keep them a
+            // fixed screen size so they stay legible instead of ballooning.
             let c = markerColor(craft.reg.status)
             let side: CGFloat = selected ? 11 : 7
             let rect = CGRect(x: p.x - side / 2, y: p.y - side / 2, width: side, height: side)
@@ -365,7 +375,7 @@ struct MapView: View {
         }
 
         if selected {
-            drawSelectionRing(ctx, at: p, radius: (craft.isImaging ? 26 : 12))
+            drawSelectionRing(ctx, at: p, radius: craft.isImaging ? 26 * mapZoom : 12)
         }
         // Labels: always for imaging craft; otherwise only when zoomed in or selected.
         if selected || craft.isImaging || effScale > fitScale * 1.4 {
