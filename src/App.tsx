@@ -47,12 +47,16 @@ export function App() {
     if (window.location.hash === '#about') return 'about';
     if (window.location.hash === '#gallery') return 'gallery';
     if (window.location.hash === '#orbit') return 'orbit';
-    if (window.location.hash === '#mars') return 'mars';
+    if (window.location.hash.startsWith('#mars')) return 'mars';
     if (window.location.hash === '#deepsky') return 'deepsky';
     if (window.location.hash.startsWith('#t/')) return 'traverse';
     return 'map';
   });
   const [traverseId, setTraverseId] = useState<string | null>(null);
+  const [marsFocus, setMarsFocus] = useState<string | null>(() => {
+    const m = window.location.hash.match(/^#mars\/(.+)$/);
+    return m ? m[1]! : null;
+  });
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Reserve the info panel's width so a flown-to body is centred in the *visible*
@@ -142,7 +146,9 @@ export function App() {
         setView('orbit');
         return;
       }
-      if (h === '#mars') {
+      const mm = h.match(/^#mars(?:\/(.+))?$/);
+      if (mm) {
+        setMarsFocus(mm[1] && tracks[mm[1]] ? mm[1] : null);
         setView('mars');
         return;
       }
@@ -377,7 +383,7 @@ export function App() {
             onOpenArchive={() => openArchive(selected.entry.id)}
             onOpenTraverse={
               tracks[selected.entry.id]
-                ? () => { window.location.hash = `#t/${selected.entry.id}`; }
+                ? () => { window.location.hash = `#mars/${selected.entry.id}`; }
                 : undefined
             }
             onClose={() => setDetailOpen(false)}
@@ -445,6 +451,7 @@ export function App() {
           <MarsGlobe
             tracks={tracks}
             marsLightSeconds={marsLightSeconds}
+            focusId={marsFocus}
             onOpenTraverse={(id) => { window.location.hash = `#t/${id}`; }}
             onBack={() => navigate('map')}
           />

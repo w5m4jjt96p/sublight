@@ -182,7 +182,7 @@ export function DetailPanel({
           <span className="dt-ico" aria-hidden="true">⤳</span>
           <span className="dt-text">
             <b>Surface traverse</b>
-            <span>Every drive and photo, on the real map of Mars</span>
+            <span>See its driven route on the Mars globe</span>
           </span>
           <span className="dt-go" aria-hidden="true">→</span>
         </button>

@@ -16,6 +16,8 @@ const DEG = Math.PI / 180;
 interface MarsGlobeProps {
   tracks: Record<string, RoverTrack>;
   marsLightSeconds: number | null;
+  /** When set (and it's a rover with a track), open centred + zoomed on it. */
+  focusId?: string | null;
   onOpenTraverse: (craftId: string) => void;
   onBack: () => void;
 }
@@ -81,11 +83,14 @@ void main(){
   gl_FragColor = vec4(texture2D(uTex, vUv).rgb * (0.32 + 0.85 * d), 1.0);
 }`;
 
-export function MarsGlobe({ tracks, marsLightSeconds, onOpenTraverse, onBack }: MarsGlobeProps) {
+const MAX_ZOOM = 40;
+
+export function MarsGlobe({ tracks, marsLightSeconds, focusId, onOpenTraverse, onBack }: MarsGlobeProps) {
   const glRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  const focusTrack = focusId ? tracks[focusId] : undefined;
+  const [selected, setSelected] = useState<string | null>(focusTrack ? focusId! : null);
 
   const sites: PlacedSite[] = useMemo(
     () => MARS_SITES.map((s) => {
@@ -96,10 +101,25 @@ export function MarsGlobe({ tracks, marsLightSeconds, onOpenTraverse, onBack }: 
   );
   const selSite = selected ? sites.find((s) => s.id === selected) ?? null : null;
 
-  const view = useRef({ lon: 210, lat: 12, zoom: 1 });
+  const view = useRef(
+    focusTrack
+      ? { lon: focusTrack.current.lon, lat: focusTrack.current.lat, zoom: 26 }
+      : { lon: 210, lat: 12, zoom: 1 },
+  );
   const selectedRef = useRef<string | null>(null);
   selectedRef.current = selected;
   const light = [-0.4, 0.35, 0.85] as const;
+
+  // Apply the rover focus once its track is available (covers a cold deep-link
+  // where the tracks load after this mounts).
+  const focusApplied = useRef(false);
+  useEffect(() => {
+    if (focusTrack && !focusApplied.current) {
+      view.current = { lon: focusTrack.current.lon, lat: focusTrack.current.lat, zoom: 26 };
+      setSelected(focusId!);
+      focusApplied.current = true;
+    }
+  }, [focusTrack, focusId]);
 
   useEffect(() => {
     const glCanvas = glRef.current, overlay = overlayRef.current, wrap = wrapRef.current;
@@ -121,6 +141,26 @@ export function MarsGlobe({ tracks, marsLightSeconds, onOpenTraverse, onBack }: 
       octx.setTransform(dpr, 0, 0, dpr, 0, 0);
       octx.clearRect(0, 0, g.w, g.h);
       octx.textAlign = 'left';
+
+      // Rover driven paths on the surface (tiny at planet scale; they unfold as
+      // you zoom into a rover). Drawn under the markers.
+      octx.lineJoin = 'round'; octx.lineCap = 'round';
+      for (const s of sites) {
+        if (s.kind !== 'rover' || !s.craftId) continue;
+        const tr = tracks[s.craftId];
+        if (!tr?.waypoints?.length) continue;
+        const pts: Array<{ lat: number; lon: number }> = [...tr.waypoints, { lat: tr.current.lat, lon: tr.current.lon }];
+        octx.beginPath();
+        let started = false;
+        for (const wp of pts) {
+          const p = project(wp.lat, wp.lon, g);
+          if (!p.front) { started = false; continue; }
+          if (!started) { octx.moveTo(p.x, p.y); started = true; } else octx.lineTo(p.x, p.y);
+        }
+        octx.strokeStyle = 'rgba(0,0,0,0.55)'; octx.lineWidth = 4; octx.stroke(); // halo for contrast
+        octx.strokeStyle = PAL.signal; octx.lineWidth = 2; octx.stroke();
+      }
+
       for (const s of sites) {
         const p = project(s.plat, s.plon, g);
         if (!p.front) continue;
@@ -304,7 +344,7 @@ export function MarsGlobe({ tracks, marsLightSeconds, onOpenTraverse, onBack }: 
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pointers.size === 2 && pinchStart > 0) {
         const [a, b] = [...pointers.values()];
-        if (a && b) { view.current.zoom = Math.max(1, Math.min(6, zoomStart * (Math.hypot(a.x - b.x, a.y - b.y) / pinchStart))); didDrag = true; }
+        if (a && b) { view.current.zoom = Math.max(1, Math.min(MAX_ZOOM, zoomStart * (Math.hypot(a.x - b.x, a.y - b.y) / pinchStart))); didDrag = true; }
         return;
       }
       const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
@@ -314,7 +354,7 @@ export function MarsGlobe({ tracks, marsLightSeconds, onOpenTraverse, onBack }: 
       view.current.lat = Math.max(-80, Math.min(80, view.current.lat + (dy * 0.3) / view.current.zoom));
     };
     const onUp = (e: PointerEvent) => { pointers.delete(e.pointerId); if (pointers.size < 2) pinchStart = 0; };
-    const onWheel = (e: WheelEvent) => { e.preventDefault(); view.current.zoom = Math.max(1, Math.min(6, view.current.zoom * (1 - e.deltaY * 0.0012))); };
+    const onWheel = (e: WheelEvent) => { e.preventDefault(); view.current.zoom = Math.max(1, Math.min(MAX_ZOOM, view.current.zoom * (1 - e.deltaY * 0.0012))); };
     const onClick = (e: MouseEvent) => {
       if (didDrag) { didDrag = false; return; }
       const rect = overlay.getBoundingClientRect(), px = e.clientX - rect.left, py = e.clientY - rect.top, g = geom();
@@ -373,7 +413,7 @@ export function MarsGlobe({ tracks, marsLightSeconds, onOpenTraverse, onBack }: 
             <p className="mg-note">{selSite.note}</p>
             {selSite.craftId && tracks[selSite.craftId] && (
               <button className="mg-traverse" onClick={() => onOpenTraverse(selSite.craftId!)}>
-                View surface traverse →
+                Detailed map &amp; photos →
               </button>
             )}
             <button className="mg-clear" onClick={() => setSelected(null)}>Clear</button>
