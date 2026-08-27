@@ -6,7 +6,7 @@ name: refresh-data
 
 on:
   schedule:
-    - cron: '0 1 * * *' # 01:00 UTC daily
+    - cron: '17 1 * * *' # 01:17 UTC daily (off-peak minute = more punctual)
   workflow_dispatch: {}
 
 permissions:
