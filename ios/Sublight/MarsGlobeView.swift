@@ -140,7 +140,7 @@ struct MarsSceneView: UIViewRepresentable {
         let v = SCNView()
         v.backgroundColor = .clear
         v.antialiasingMode = .multisampling4X
-        v.allowsCameraControl = true
+        v.allowsCameraControl = false
         v.autoenablesDefaultLighting = false
 
         let scene = SCNScene()
@@ -173,6 +173,7 @@ struct MarsSceneView: UIViewRepresentable {
         cam.position = SCNVector3(0, 0, 3.4)
         scene.rootNode.addChildNode(cam)
         v.pointOfView = cam
+        context.coordinator.camNode = cam
 
         let key = SCNNode()
         key.light = SCNLight(); key.light!.type = .omni; key.light!.intensity = 1050
@@ -183,11 +184,16 @@ struct MarsSceneView: UIViewRepresentable {
         scene.rootNode.addChildNode(amb)
 
         // Face a nice hemisphere (Tharsis / rovers). Static so markers stay
-        // tappable; the user rotates with the built-in camera control.
+        // tappable; explicit gestures below handle rotate + zoom.
         globe.eulerAngles = SCNVector3(0, Float(200.0 * Double.pi / 180.0), 0)
 
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.onTap(_:)))
         v.addGestureRecognizer(tap)
+        let pan = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.onPan(_:)))
+        pan.maximumNumberOfTouches = 1 // leave two-finger gestures to pinch
+        v.addGestureRecognizer(pan)
+        let pinch = UIPinchGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.onPinch(_:)))
+        v.addGestureRecognizer(pinch)
         context.coordinator.scnView = v
         return v
     }
@@ -227,8 +233,24 @@ struct MarsSceneView: UIViewRepresentable {
         var parent: MarsSceneView
         weak var scnView: SCNView?
         weak var globe: SCNNode?
+        weak var camNode: SCNNode?
+        private var pinchStartZ: Float = 3.4
 
         init(_ parent: MarsSceneView) { self.parent = parent }
+
+        @objc func onPan(_ g: UIPanGestureRecognizer) {
+            guard let globe else { return }
+            let t = g.translation(in: g.view)
+            g.setTranslation(.zero, in: g.view)
+            globe.eulerAngles.y += Float(t.x) * 0.006
+            globe.eulerAngles.x = max(-1.4, min(1.4, globe.eulerAngles.x + Float(t.y) * 0.006))
+        }
+
+        @objc func onPinch(_ g: UIPinchGestureRecognizer) {
+            guard let cam = camNode else { return }
+            if g.state == .began { pinchStartZ = cam.position.z }
+            cam.position.z = max(2.0, min(5.0, pinchStartZ / Float(g.scale)))
+        }
 
         func apply(selected: String?) {
             guard let globe else { return }
