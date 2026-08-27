@@ -35,6 +35,30 @@ enum Fmt {
         return "\(d)d \(h)h"
     }
 
+    /// Light-time with a scale-appropriate unit: ms near Earth, then s, then the
+    /// compact duration form. Mirrors src/data/format.ts fmtLight.
+    static func lightScaled(_ seconds: Double) -> String {
+        guard seconds.isFinite, seconds >= 0 else { return "—" }
+        if seconds < 1 {
+            let ms = seconds * 1000
+            return String(format: seconds < 0.1 ? "%.1f ms" : "%.0f ms", ms)
+        }
+        if seconds < 60 {
+            return String(format: "%.2f s", seconds).replacingOccurrences(of: ".00 s", with: " s")
+        }
+        return lightTime(seconds)
+    }
+
+    /// Plain kilometres with thousands separators.
+    static func kmValue(_ km: Double) -> String {
+        guard km.isFinite else { return "—" }
+        if km < 10 { return String(format: "%.1f km", km) }
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.maximumFractionDigits = 0
+        return (f.string(from: NSNumber(value: km)) ?? "—") + " km"
+    }
+
     static func au(_ v: Double) -> String {
         if v >= 100 { return String(format: "%.0f AU", v) }
         if v >= 10 { return String(format: "%.1f AU", v) }

@@ -160,3 +160,42 @@ struct TracksData: Codable {
     let generatedAt: String
     let rovers: [String: RoverTrack]
 }
+
+// MARK: - Near-Earth satellites (public/data/satellites.json)
+
+struct SatelliteRecord: Codable, Identifiable {
+    let norad: Int
+    let name: String
+    let group: String
+    let band: String          // LEO | MEO | GEO | HEO
+    let note: String?
+    let epochMs: Double        // TLE epoch, ms since Unix epoch
+    let meanMotion: Double     // rev/day
+    let eccentricity: Double
+    let inclination: Double    // deg
+    let raan: Double
+    let argPerigee: Double
+    let meanAnomaly: Double
+    let meanMotionDot: Double
+    var id: Int { norad }
+    var isHero: Bool { group == "hero" }
+}
+
+struct SatellitesData: Codable {
+    let generatedAt: String
+    let satellites: [SatelliteRecord]
+}
+
+// MARK: - Space weather (public/data/spaceweather.json + live NOAA SWPC poll)
+
+struct SpaceWeather: Codable {
+    let generatedAt: String
+    let kp: Double?
+    let gScale: Double?
+    let rScale: Double?
+    let sScale: Double?
+    let windSpeed: Double?
+    let bz: Double?
+    let bt: Double?
+    let sampledAt: String?
+}

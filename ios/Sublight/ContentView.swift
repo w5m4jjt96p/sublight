@@ -21,9 +21,11 @@ enum NavTab { case gallery, map, settings }
 struct ContentView: View {
     @StateObject private var store = DataStore()
     @StateObject private var controller = MapController()
+    @StateObject private var weather = SpaceWeatherStore()
     @State private var selection: Selection?
     @State private var tab: NavTab = .map
     @State private var showSearch = false
+    @State private var showNearEarth = false
 
     var body: some View {
         ZStack {
@@ -38,13 +40,25 @@ struct ContentView: View {
                     .transition(.opacity)
             }
 
+            if tab == .map {
+                SpaceWeatherChip(weather: weather)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(.leading, 16).padding(.bottom, 96)
+                    .transition(.opacity)
+            }
+
             VStack(spacing: 0) {
-                if tab == .map { TopBar(onSearch: { showSearch = true }) }
+                if tab == .map {
+                    TopBar(onSearch: { showSearch = true }, onNearEarth: { showNearEarth = true })
+                }
                 Spacer()
                 NavBar(tab: $tab, onMapReset: { controller.reset() })
             }
         }
         .preferredColorScheme(.dark)
+        .fullScreenCover(isPresented: $showNearEarth) {
+            NearEarthView(store: store, onClose: { showNearEarth = false })
+        }
         .sheet(item: $selection) { sel in
             switch sel {
             case .craft(let id): CraftDetail(store: store, id: id)
@@ -67,6 +81,7 @@ struct ContentView: View {
 
 private struct TopBar: View {
     let onSearch: () -> Void
+    let onNearEarth: () -> Void
     var body: some View {
         HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -76,6 +91,13 @@ private struct TopBar: View {
                 }
             }
             Spacer()
+            Button(action: onNearEarth) {
+                Text("Near-Earth").font(.mono(11)).foregroundColor(Theme.txt)
+                    .padding(.horizontal, 13).frame(height: 40)
+                    .background(Capsule().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Capsule()))
+                    .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
+            }
+            .padding(.trailing, 8)
             Button(action: onSearch) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 15, weight: .medium))
@@ -94,6 +116,57 @@ private struct TopBar: View {
         f.dateFormat = "HH:mm:ss"
         f.timeZone = TimeZone(identifier: "UTC")
         return f.string(from: date)
+    }
+}
+
+// MARK: - Space-weather chip (map)
+
+private struct SpaceWeatherChip: View {
+    @ObservedObject var weather: SpaceWeatherStore
+    @State private var open = false
+
+    var body: some View {
+        if let w = weather.current {
+            let s = SpaceWeatherStore.stormLabel(w)
+            let dotColor: Color = s.level >= 3 ? Color(hex: "E5715B") : (s.level >= 1 ? Theme.delay : Theme.signal)
+            Button { withAnimation(.easeInOut(duration: 0.15)) { open.toggle() } } label: {
+                VStack(alignment: .leading, spacing: 9) {
+                    HStack(spacing: 8) {
+                        Circle().fill(dotColor).frame(width: 8, height: 8)
+                            .shadow(color: dotColor.opacity(0.6), radius: 4)
+                        Text(s.text).font(.mono(11)).foregroundColor(Theme.txt)
+                        Text("Kp \(kp(w.kp))").font(.mono(11)).foregroundColor(Theme.dim)
+                    }
+                    if open {
+                        HStack(spacing: 18) {
+                            metric("G\(Int(w.gScale ?? 0))", "storm")
+                            metric(w.windSpeed.map { "\(Int($0))" } ?? "—", "km/s wind")
+                            metric(w.bz.map { "\($0 > 0 ? "+" : "")\(Int($0))" } ?? "—", "nT Bz")
+                        }
+                        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .top)
+                        .padding(.top, 2)
+                    }
+                }
+                .padding(.horizontal, 13).padding(.vertical, 10)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Theme.panel.opacity(0.82))
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8)))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func metric(_ value: String, _ label: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(value).font(.monoMed(13)).foregroundColor(Theme.txt)
+            Text(label).font(.mono(9)).foregroundColor(Theme.dim2)
+        }
+        .padding(.top, 4)
+    }
+
+    private func kp(_ v: Double?) -> String {
+        guard let v else { return "—" }
+        return v.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(v)) : String(format: "%.1f", v)
     }
 }
 
