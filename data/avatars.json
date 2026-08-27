@@ -1,0 +1,18 @@
+{
+  "_comment": "Editorial, time-invariant. A profile picture for each craft: a public-domain NASA image of the spacecraft itself (photo or artist concept), center-cropped to a square avatar. Crafts with no suitable NASA image are omitted and fall back to a monogram. nasaId = NASA Image & Video Library id.",
+  "avatars": {
+    "perseverance": { "nasaId": "PIA24542", "credit": "NASA/JPL-Caltech/MSSS" },
+    "curiosity": { "nasaId": "PIA16239", "credit": "NASA/JPL-Caltech/MSSS" },
+    "ingenuity": { "nasaId": "PIA23882", "credit": "NASA/JPL-Caltech" },
+    "jwst": { "nasaId": "img_0247", "credit": "NASA" },
+    "dscovr": { "nasaId": "KSC-314D-0517_0108", "credit": "NASA" },
+    "parker-solar-probe": { "nasaId": "KSC-20180419-PH_KLS01_0047", "credit": "NASA/Kim Shiflett" },
+    "solar-orbiter": { "nasaId": "KSC-20200131-PH-JBS01_0039", "credit": "NASA/Ben Smegelsky" },
+    "europa-clipper": { "nasaId": "PIA24321", "credit": "NASA/JPL-Caltech" },
+    "psyche": { "nasaId": "PIA24473", "credit": "NASA/JPL-Caltech/ASU" },
+    "lucy": { "nasaId": "KSC-20210901-PH-GEB01_0004", "credit": "NASA/Kim Shiflett" },
+    "new-horizons": { "nasaId": "PIA22190", "credit": "NASA/JHUAPL/SwRI" },
+    "voyager-2": { "nasaId": "PIA14111", "credit": "NASA/JPL-Caltech" },
+    "voyager-1": { "nasaId": "PIA14111", "credit": "NASA/JPL-Caltech" }
+  }
+}

@@ -81,6 +81,12 @@ final class DataStore: ObservableObject {
         return Bundle.main.url(forResource: base, withExtension: ext, subdirectory: sub)
     }
 
+    /// A dedicated profile picture of the spacecraft itself (not its imagery),
+    /// bundled as avatar-<id>.jpg. Nil falls back to a monogram in the gallery.
+    func avatarURL(for id: String) -> URL? {
+        Bundle.main.url(forResource: "avatar-\(id)", withExtension: "jpg", subdirectory: "bodies")
+    }
+
     /// Best on-map / hero thumbnail URL for an imaging craft.
     func heroThumb(for id: String) -> URL? {
         if let f = frames[id] { return DataStore.imageURL(f.file) }

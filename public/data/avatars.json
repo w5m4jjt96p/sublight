@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-08-27T17:26:36.138Z",
+  "avatars": {
+    "perseverance": {
+      "credit": "NASA/JPL-Caltech/MSSS"
+    },
+    "curiosity": {
+      "credit": "NASA/JPL-Caltech/MSSS"
+    },
+    "ingenuity": {
+      "credit": "NASA/JPL-Caltech"
+    },
+    "jwst": {
+      "credit": "NASA"
+    },
+    "dscovr": {
+      "credit": "NASA"
+    },
+    "parker-solar-probe": {
+      "credit": "NASA/Kim Shiflett"
+    },
+    "solar-orbiter": {
+      "credit": "NASA/Ben Smegelsky"
+    },
+    "europa-clipper": {
+      "credit": "NASA/JPL-Caltech"
+    },
+    "psyche": {
+      "credit": "NASA/JPL-Caltech/ASU"
+    },
+    "lucy": {
+      "credit": "NASA/Kim Shiflett"
+    },
+    "new-horizons": {
+      "credit": "NASA/JHUAPL/SwRI"
+    },
+    "voyager-2": {
+      "credit": "NASA/JPL-Caltech"
+    },
+    "voyager-1": {
+      "credit": "NASA/JPL-Caltech"
+    }
+  }
+}

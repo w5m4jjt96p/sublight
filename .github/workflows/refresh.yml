@@ -80,6 +80,11 @@ jobs:
         continue-on-error: true
         run: npm run data:deep-sky 2>&1 | tee deepsky.log
 
+      - name: Fetch craft avatars (NASA library)
+        id: avatars
+        continue-on-error: true
+        run: npm run data:avatars 2>&1 | tee avatars.log
+
       - name: Regenerate Open Graph image
         continue-on-error: true
         run: npm run og 2>&1 | tee og.log
@@ -93,7 +98,7 @@ jobs:
         run: |
           git config user.name  "out-there-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/data public/frames public/bodies public/tracks public/mars public/deep-sky public/sun.jpg public/og.png
+          git add public/data public/frames public/bodies public/tracks public/mars public/deep-sky public/avatars public/sun.jpg public/og.png
           if git diff --cached --quiet; then
             echo "No data changes to commit."
           else

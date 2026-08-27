@@ -15,6 +15,7 @@ cp public/frames/*.jpg ios/Resources/frames/
 cp public/bodies/*.jpg ios/Resources/bodies/
 cp public/sun.jpg ios/Resources/bodies/sun.jpg
 cp public/mars/globe.jpg ios/Resources/bodies/mars-globe.jpg
+for f in public/avatars/*.jpg; do cp "$f" "ios/Resources/bodies/avatar-$(basename "$f")"; done
 cp public/tracks/*.jpg ios/Resources/tracks/
 
 echo "→ emitting editorial bodies.json"

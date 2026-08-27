@@ -37,7 +37,7 @@ struct GalleryView: View {
             let loc = c.reg.location
             let owlt = c.eph.owltSeconds
             let light = owlt > 0 ? "Its light took \(Fmt.lightTime(owlt)) to cross the void" : nil
-            let avatar = store.heroThumb(for: c.id)
+            let avatar = store.avatarURL(for: c.id)
             func solCap(_ sol: Int?, _ instrument: String) -> String {
                 sol.map { "Sol \($0) · \(instrument)" } ?? instrument
             }

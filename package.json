@@ -19,6 +19,7 @@
     "data:weather": "tsx scripts/fetch-space-weather.ts",
     "data:mars-globe": "tsx scripts/fetch-mars-globe.ts",
     "data:deep-sky": "tsx scripts/fetch-deep-sky.ts",
+    "data:avatars": "tsx scripts/fetch-avatars.ts",
     "social": "tsx scripts/social.ts",
     "social:live": "tsx scripts/social.ts --live",
     "cf:harden": "tsx scripts/cloudflare-harden.ts",
