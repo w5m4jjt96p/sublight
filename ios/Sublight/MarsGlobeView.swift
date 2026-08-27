@@ -159,6 +159,11 @@ struct MarsSceneView: UIViewRepresentable {
             mat.diffuse.contents = UIColor(Color(hex: "9A5334"))
         }
         mat.lightingModel = .lambert
+        // Sharpen the surface at oblique/zoomed angles (mipmaps + anisotropy).
+        mat.diffuse.mipFilter = .linear
+        mat.diffuse.magnificationFilter = .linear
+        mat.diffuse.minificationFilter = .linear
+        mat.diffuse.maxAnisotropy = 16
         sphere.firstMaterial = mat
         globe.addChildNode(SCNNode(geometry: sphere))
 
