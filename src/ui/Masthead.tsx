@@ -1,4 +1,4 @@
-type View = 'map' | 'about' | 'gallery';
+type View = 'map' | 'about' | 'gallery' | 'orbit';
 
 interface MastheadProps {
   trackingCount: number;
@@ -9,7 +9,7 @@ interface MastheadProps {
 }
 
 export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }: MastheadProps) {
-  const navLink = (target: 'gallery' | 'about', label: string) => (
+  const navLink = (target: 'gallery' | 'about' | 'orbit', label: string) => (
     <a
       className={`mast-link${view === target ? ' active' : ''}`}
       href={`#${target}`}
@@ -42,6 +42,7 @@ export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }:
         >
           Find <span className="kbd-hint">⌘K</span>
         </button>
+        {navLink('orbit', 'Near-Earth')}
         {navLink('gallery', 'Gallery')}
         {navLink('about', 'About')}
       </div>

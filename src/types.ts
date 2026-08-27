@@ -197,3 +197,64 @@ export interface TracksData {
   generatedAt: string;
   rovers: Record<string, RoverTrack>;
 }
+
+// --- Near-Earth satellites (public/data/satellites.json) -------------------
+// Orbit mean-elements (OMM) snapshotted daily from CelesTrak. The browser
+// propagates them live with a self-contained Keplerian + J2 model (no runtime
+// dependency), so positions and light-time move second by second between builds.
+// TLE mean elements are valid for days, so a daily snapshot is honest here.
+
+export type OrbitBand = 'LEO' | 'MEO' | 'GEO' | 'HEO';
+
+/** One object's mean orbital elements at its TLE epoch. */
+export interface SatelliteRecord {
+  norad: number;
+  name: string;
+  /** Curated group tag from the editorial catalog (e.g. "stations", "gps-ops"). */
+  group: string;
+  /** Coarse altitude band, computed from mean motion at fetch time. */
+  band: OrbitBand;
+  /** Editorial note, only for hand-picked "hero" objects. */
+  note?: string;
+  /** TLE epoch, ms since Unix epoch. */
+  epochMs: number;
+  /** Mean motion, revolutions per day. */
+  meanMotion: number;
+  eccentricity: number;
+  /** Degrees. */
+  inclination: number;
+  raan: number;
+  argPerigee: number;
+  meanAnomaly: number;
+  /** Drag term (rev/day^2), used only to rank decaying objects. */
+  meanMotionDot: number;
+}
+
+export interface SatellitesData {
+  generatedAt: string;
+  satellites: SatelliteRecord[];
+}
+
+// --- Space weather (public/data/spaceweather.json) -------------------------
+// Snapshotted daily from NOAA SWPC; the browser also polls it live (SWPC serves
+// Access-Control-Allow-Origin: *), exactly like the DSN feed.
+
+export interface SpaceWeather {
+  generatedAt: string;
+  /** Latest planetary K index (0-9), or null if unavailable. */
+  kp: number | null;
+  /** NOAA G-scale 0-5 (geomagnetic storm), derived from the scales product. */
+  gScale: number | null;
+  /** NOAA R-scale 0-5 (radio blackout). */
+  rScale: number | null;
+  /** NOAA S-scale 0-5 (solar radiation). */
+  sScale: number | null;
+  /** Solar wind bulk speed, km/s. */
+  windSpeed: number | null;
+  /** Interplanetary magnetic field Bz (GSM), nT — negative drives storms. */
+  bz: number | null;
+  /** Total IMF magnitude Bt, nT. */
+  bt: number | null;
+  /** Time of the most recent solar-wind sample, ISO. */
+  sampledAt: string | null;
+}

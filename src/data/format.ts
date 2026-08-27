@@ -13,6 +13,24 @@ export function fmtDuration(seconds: number | null | undefined): string {
   return `${m}m ${String(sec).padStart(2, '0')}s`;
 }
 
+/**
+ * Light-time with a unit that suits its scale: milliseconds for near-Earth
+ * (ISS ~1.4 ms), seconds up to a minute, then the compact duration form.
+ */
+export function fmtLight(seconds: number | null | undefined): string {
+  if (seconds == null || !isFinite(seconds)) return EMDASH;
+  if (seconds < 1) return `${(seconds * 1000).toFixed(seconds < 0.1 ? 1 : 0)} ms`;
+  if (seconds < 60) return `${seconds.toFixed(2).replace(/\.?0+$/, '')} s`;
+  return fmtDuration(seconds);
+}
+
+/** Kilometres with adaptive precision + thousands separators. */
+export function fmtKm(km: number | null | undefined): string {
+  if (km == null || !isFinite(km)) return EMDASH;
+  if (km < 10) return `${km.toFixed(1)} km`;
+  return `${Math.round(km).toLocaleString('en-US')} km`;
+}
+
 /** Seconds → clock-style age, e.g. "16:48" or "23:42:07". */
 export function fmtClock(seconds: number | null | undefined): string {
   if (seconds == null || !isFinite(seconds) || seconds < 0) return EMDASH;

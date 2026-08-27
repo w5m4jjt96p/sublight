@@ -60,6 +60,16 @@ jobs:
         continue-on-error: true
         run: npm run data:tracks 2>&1 | tee tracks.log
 
+      - name: Snapshot near-Earth satellites (CelesTrak)
+        id: satellites
+        continue-on-error: true
+        run: npm run data:satellites 2>&1 | tee satellites.log
+
+      - name: Snapshot space weather (NOAA SWPC)
+        id: weather
+        continue-on-error: true
+        run: npm run data:weather 2>&1 | tee weather.log
+
       - name: Regenerate Open Graph image
         continue-on-error: true
         run: npm run og 2>&1 | tee og.log

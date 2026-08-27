@@ -115,6 +115,30 @@ export function About({ model, onBack }: AboutProps) {
           )}
         </ul>
 
+        <h2>The near-Earth view</h2>
+        <p>
+          The Near-Earth view plots a curated set of objects still circling Earth: the ISS,
+          Hubble, Tiangong, weather and navigation satellites, a slice of Starlink. Their orbital
+          elements are snapshotted once a day from{' '}
+          <a href="https://celestrak.org/" target="_blank" rel="noreferrer">
+            CelesTrak
+          </a>
+          , and the browser propagates them live from there, so the dots move second by second.
+          Every number shown, altitude, speed, period and light-time, is derived from the object's
+          mean motion, and so is accurate to well within a light-millisecond. The exact on-screen
+          angle is a Keplerian approximation with the two largest Earth-oblateness drifts applied;
+          it omits the fine drag and short-period terms of a full model, which do not affect the
+          light-time. The same elements feed the decay watch, ranked by lowest perigee.
+        </p>
+        <p>
+          The space-weather readout on the map is the current planetary K index, storm scale, solar
+          wind speed and field, read live from{' '}
+          <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noreferrer">
+            NOAA's Space Weather Prediction Center
+          </a>
+          .
+        </p>
+
         <h2>Adding a craft</h2>
         <p>
           The fleet is one hand-edited file, <code>data/registry.json</code>. Add an entry with a

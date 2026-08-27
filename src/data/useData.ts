@@ -2,7 +2,7 @@
 // render model. A showcase never shows a network error, so failures degrade to
 // an empty-but-typed state and a console warning.
 import { useEffect, useState } from 'react';
-import type { FleetData, FramesData, PlanetsData, ArchiveData, TracksData } from '../types.ts';
+import type { FleetData, FramesData, PlanetsData, ArchiveData, TracksData, SatellitesData, SatelliteRecord } from '../types.ts';
 import { registry } from './registry.ts';
 import { buildModel, type MapModel } from '../map/model.ts';
 
@@ -14,6 +14,7 @@ export interface LoadedData {
   archive: ArchiveData;
   bodyPhotos: BodyPhotos;
   tracks: TracksData['rovers'];
+  satellites: SatelliteRecord[];
   generatedAt: string | null;
   loading: boolean;
 }
@@ -31,6 +32,7 @@ export function useData(): LoadedData {
     archive: {},
     bodyPhotos: {},
     tracks: {},
+    satellites: [],
     generatedAt: null,
     loading: true,
   });
@@ -40,17 +42,18 @@ export function useData(): LoadedData {
     const base = import.meta.env.BASE_URL;
     (async () => {
       try {
-        const [fleet, planets, frames, archive, bodyPhotos, tracks] = await Promise.all([
+        const [fleet, planets, frames, archive, bodyPhotos, tracks, sats] = await Promise.all([
           getJson<FleetData>(`${base}data/fleet.json`),
           getJson<PlanetsData>(`${base}data/planets.json`),
           getJson<FramesData>(`${base}data/frames.json`).catch(() => ({}) as FramesData),
           getJson<ArchiveData>(`${base}data/archive.json`).catch(() => ({}) as ArchiveData),
           getJson<BodyPhotos>(`${base}data/bodyphotos.json`).catch(() => ({}) as BodyPhotos),
           getJson<TracksData>(`${base}data/tracks.json`).catch(() => ({ generatedAt: '', rovers: {} }) as TracksData),
+          getJson<SatellitesData>(`${base}data/satellites.json`).catch(() => ({ generatedAt: '', satellites: [] }) as SatellitesData),
         ]);
         if (cancelled) return;
         const model = buildModel(registry, fleet.craft, planets.planets, fleet.generatedAt);
-        setState({ model, frames, archive, bodyPhotos, tracks: tracks.rovers, generatedAt: fleet.generatedAt, loading: false });
+        setState({ model, frames, archive, bodyPhotos, tracks: tracks.rovers, satellites: sats.satellites, generatedAt: fleet.generatedAt, loading: false });
       } catch (err) {
         console.warn('[sublight] data load failed:', err);
         if (!cancelled) setState((s) => ({ ...s, loading: false }));

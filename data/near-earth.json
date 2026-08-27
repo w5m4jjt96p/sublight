@@ -1,0 +1,18 @@
+{
+  "_comment": "Editorial, time-invariant. Which near-Earth objects the map plots. Heroes are named singletons pulled by NORAD id; groups are CelesTrak catalogues pulled and capped to keep the JSON small and the client propagation cheap. Bands are informational; the true band is recomputed from mean motion at fetch time.",
+  "heroes": [
+    { "norad": 25544, "name": "ISS", "note": "The International Space Station. Its signal reaches the ground below in about 1.4 milliseconds." },
+    { "norad": 48274, "name": "Tiangong", "note": "China's space station, crewed by Shenzhou missions." },
+    { "norad": 20580, "name": "Hubble", "note": "The Hubble Space Telescope, in low orbit since 1990." },
+    { "norad": 33591, "name": "NOAA-19", "note": "Polar weather satellite." },
+    { "norad": 25994, "name": "Terra", "note": "NASA Earth-observing flagship." }
+  ],
+  "groups": [
+    { "group": "stations", "cap": 8 },
+    { "group": "visual", "cap": 45 },
+    { "group": "starlink", "cap": 110 },
+    { "group": "gps-ops", "cap": 32 },
+    { "group": "galileo", "cap": 28 },
+    { "group": "geo", "cap": 80 }
+  ]
+}

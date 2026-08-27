@@ -9,10 +9,13 @@ import { Lightbox } from './ui/Lightbox.tsx';
 import { About } from './ui/About.tsx';
 import { Gallery } from './ui/Gallery.tsx';
 import { Traverse } from './ui/Traverse.tsx';
+import { NearEarth } from './ui/NearEarth.tsx';
+import { SpaceWeather } from './ui/SpaceWeather.tsx';
 import { TweakPanel } from './ui/TweakPanel.tsx';
 import { useData } from './data/useData.ts';
 import { useNow } from './data/useNow.ts';
 import { useDsn } from './data/useDsn.ts';
+import { useSpaceWeather } from './data/useSpaceWeather.ts';
 import { useMapEngine } from './map/useMapEngine.ts';
 import { owltAt, rangeAt } from './data/lightTime.ts';
 import type { MapCraft } from './map/model.ts';
@@ -22,9 +25,10 @@ export function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  const { model, frames, archive, bodyPhotos, tracks, generatedAt, loading } = useData();
+  const { model, frames, archive, bodyPhotos, tracks, satellites, generatedAt, loading } = useData();
   const now = useNow();
   const dsn = useDsn();
+  const spaceWeather = useSpaceWeather();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedBodyId, setSelectedBodyId] = useState<string | null>(null);
@@ -37,9 +41,10 @@ export function App() {
     credit: string;
     owlt: number | null;
   } | null>(null);
-  const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse'>(() => {
+  const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse' | 'orbit'>(() => {
     if (window.location.hash === '#about') return 'about';
     if (window.location.hash === '#gallery') return 'gallery';
+    if (window.location.hash === '#orbit') return 'orbit';
     if (window.location.hash.startsWith('#t/')) return 'traverse';
     return 'map';
   });
@@ -101,9 +106,10 @@ export function App() {
     }
   }
 
-  function navigate(v: 'map' | 'about' | 'gallery') {
+  function navigate(v: 'map' | 'about' | 'gallery' | 'orbit') {
     if (v === 'about') window.location.hash = '#about';
     else if (v === 'gallery') window.location.hash = '#gallery';
+    else if (v === 'orbit') window.location.hash = '#orbit';
     else
       window.location.hash = selectedBodyId
         ? `#b/${selectedBodyId}`
@@ -124,6 +130,10 @@ export function App() {
       }
       if (h === '#gallery') {
         setView('gallery');
+        return;
+      }
+      if (h === '#orbit') {
+        setView('orbit');
         return;
       }
       const tm = h.match(/^#t\/(.+)$/);
@@ -329,6 +339,8 @@ export function App() {
           }}
         />
 
+        <SpaceWeather w={spaceWeather} />
+
         {detailOpen && selected && (
           <DetailPanel
             craft={selected}
@@ -392,6 +404,16 @@ export function App() {
           }
           onBack={() => { window.location.hash = `#c/${traverseId}`; }}
         />
+      )}
+
+      {view === 'orbit' && (
+        <div className="orbit-overlay">
+          <NearEarth
+            satellites={satellites}
+            onBack={() => navigate('map')}
+            onGoDeep={() => navigate('map')}
+          />
+        </div>
       )}
 
       {lightbox && lightbox.frames.length > 0 && (
