@@ -248,7 +248,9 @@ struct MarsSceneView: UIViewRepresentable {
             let t = g.translation(in: g.view)
             g.setTranslation(.zero, in: g.view)
             globe.eulerAngles.y += Float(t.x) * 0.006
-            globe.eulerAngles.x = max(-1.4, min(1.4, globe.eulerAngles.x + Float(t.y) * 0.006))
+            // Grab-and-drag: pulling down should bring the surface down, so the
+            // vertical component is negated (SceneKit's +X rotation is the other way).
+            globe.eulerAngles.x = max(-1.4, min(1.4, globe.eulerAngles.x - Float(t.y) * 0.006))
         }
 
         @objc func onPinch(_ g: UIPinchGestureRecognizer) {
