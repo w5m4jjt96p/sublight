@@ -35,8 +35,6 @@ struct GalleryView: View {
     @ObservedObject var store: DataStore
     @State private var viewer: URL?
 
-    private let cols = [GridItem(.adaptive(minimum: 150), spacing: 8)]
-
     private var blocks: [CraftBlock] {
         var out: [CraftBlock] = []
         for c in store.craft {
@@ -77,7 +75,7 @@ struct GalleryView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(blocks) { block in
-                        RoverBlockView(block: block, cols: cols) { viewer = $0 }
+                        RoverBlockView(block: block) { viewer = $0 }
                     }
                 }
                 .padding(.bottom, 100)
@@ -87,21 +85,24 @@ struct GalleryView: View {
     }
 }
 
-// One craft's block. Opens with the bundled recent frames; for a rover, "Show
-// all photos" loads the full latest sol live and "Load earlier sols" pages back
-// through the archive, appending — the whole reach of the mission, not just the
-// day's frames. Everything stays ordered by arrival, newest first.
+// One craft's section: a vertical feed of posts (one card per photo), newest
+// arrival first. Cards reveal a page at a time — on scroll (the last card's
+// onAppear) or via the button — so nothing renders hundreds at once; "Load
+// older photos" pulls the next sol from the archive only when you reach the end.
 struct RoverBlockView: View {
     let block: CraftBlock
-    let cols: [GridItem]
     let onOpen: (URL?) -> Void
 
     @State private var live: [GalleryPhoto]?
+    @State private var visible = 8
     @State private var nextSol = 0
+    @State private var fetchedLatest = false
     @State private var loading = false
     @State private var done = false
 
-    private var photos: [GalleryPhoto] { live ?? block.initial }
+    private let page = 8
+    private var buffer: [GalleryPhoto] { live ?? block.initial }
+    private var shown: [GalleryPhoto] { Array(buffer.prefix(visible)) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -112,15 +113,21 @@ struct RoverBlockView: View {
                     Text(l).font(.mono(11)).foregroundColor(Theme.delay)
                 }
             }
-            LazyVGrid(columns: cols, spacing: 8) {
-                ForEach(photos) { p in tile(p) }
+            LazyVStack(spacing: 14) {
+                ForEach(Array(shown.enumerated()), id: \.element.id) { idx, p in
+                    card(p).onAppear {
+                        if idx >= visible - 2 && visible < buffer.count { visible = min(visible + page, buffer.count) }
+                    }
+                }
             }
-            if block.isLive && !done {
-                Button { Task { await loadMore() } } label: {
+            if visible < buffer.count || (block.isLive && !done) {
+                Button {
+                    if visible < buffer.count { visible = min(visible + page, buffer.count) }
+                    else { Task { await loadOlder() } }
+                } label: {
                     HStack(spacing: 8) {
                         if loading { ProgressView().tint(Theme.signal).scaleEffect(0.8) }
-                        Text(loading ? "Loading…"
-                             : (live == nil ? "Show all photos" : "Load earlier sols · \(photos.count) loaded"))
+                        Text(loading ? "Loading…" : (visible < buffer.count ? "Load more" : "Load older photos"))
                             .font(.mono(12)).foregroundColor(Theme.signal)
                     }
                     .padding(.horizontal, 16).padding(.vertical, 11)
@@ -148,41 +155,41 @@ struct RoverBlockView: View {
         }
     }
 
-    private func tile(_ p: GalleryPhoto) -> some View {
-        Button { onOpen(p.full) } label: {
-            ZStack(alignment: .bottomLeading) {
-                Rectangle().fill(Color.black).aspectRatio(4.0 / 3.0, contentMode: .fit)
-                    .overlay(photoImage(p)).clipped()
-                LinearGradient(colors: [.black.opacity(0.85), .clear], startPoint: .bottom, endPoint: .center)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(p.caption).font(.mono(10)).foregroundColor(Theme.txt).lineLimit(1)
-                    Text(p.isArchive ? "mission archive" : "arrived \(Fmt.ago(p.arrival ?? Date()))")
-                        .font(.mono(10)).foregroundColor(Theme.delay)
-                }
-                .padding(8)
+    private func card(_ p: GalleryPhoto) -> some View {
+        VStack(spacing: 0) {
+            Button { onOpen(p.full) } label: {
+                photoImage(p).frame(maxWidth: .infinity).background(Color.black)
+            }.buttonStyle(.plain)
+            HStack {
+                Text(p.caption).font(.mono(11)).foregroundColor(Theme.txt).lineLimit(1)
+                Spacer()
+                Text(p.isArchive ? "mission archive" : "arrived \(Fmt.ago(p.arrival ?? Date()))")
+                    .font(.mono(11)).foregroundColor(Theme.delay)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
-        }.buttonStyle(.plain)
+            .padding(.horizontal, 12).padding(.vertical, 10)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
     }
 
     @ViewBuilder private func photoImage(_ p: GalleryPhoto) -> some View {
         if p.isRemote {
             AsyncImage(url: p.thumb) { phase in
                 switch phase {
-                case .success(let img): img.resizable().aspectRatio(contentMode: .fill)
-                default: Rectangle().fill(Theme.rule)
+                case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
+                case .empty: Rectangle().fill(Theme.panel).frame(height: 220)
+                default: Rectangle().fill(Theme.rule).frame(height: 220)
                 }
             }
         } else {
-            BundleImage(url: p.thumb, contentMode: .fill)
+            BundleImage(url: p.thumb, contentMode: .fit)
         }
     }
 
-    private func loadMore() async {
+    private func loadOlder() async {
         guard !loading, !done, let latest = block.latestSol else { return }
         loading = true
-        var sol = live == nil ? latest : nextSol
+        var sol = fetchedLatest ? nextSol : latest
         var added: [RoverImage] = []
         var tries = 0
         while tries < 8 && sol >= 0 {
@@ -196,11 +203,15 @@ struct RoverBlockView: View {
             return GalleryPhoto(id: img.id.uuidString, thumb: img.thumb, full: img.full, caption: cap,
                                 arrival: Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt), isArchive: false, isRemote: true)
         }
-        var merged = live == nil ? mapped : (live! + mapped)
+        // The first pull swaps the bundled recent for the complete latest sol;
+        // the rest append the previous sol.
+        var merged = fetchedLatest ? ((live ?? []) + mapped) : mapped
         merged.sort { ($0.arrival ?? .distantPast) > ($1.arrival ?? .distantPast) }
         live = merged
+        fetchedLatest = true
         nextSol = sol - 1
         if sol - 1 < 0 { done = true }
+        visible = min(visible + page, merged.count)
         loading = false
     }
 }
