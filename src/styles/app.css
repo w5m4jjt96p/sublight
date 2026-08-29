@@ -1060,13 +1060,32 @@ a {
     --font-scale: 1;
   }
 
-  /* masthead: shrink brand, drop clock/tracking + the ⌘K hint, keep nav */
-  .masthead { padding: 0 14px; }
+  /* masthead: shrink brand, drop clock/tracking + the ⌘K hint. Six nav links
+     plus the brand can't fit inline on a phone, so the nav scrolls horizontally
+     *inside* the bar (clipped by the masthead) instead of pushing the whole
+     page sideways — that overflow was making the site feel broken and clipping
+     the rightmost links out of reach. */
+  .masthead { padding: 0 0 0 14px; overflow: hidden; }
+  .brand { flex: 0 0 auto; }
   .brand-logo { height: 18px; }
-  .mast-right { gap: 13px; font-size: 13px; letter-spacing: 0.04em; }
+  .mast-right {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 16px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 14px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  }
+  .mast-right::-webkit-scrollbar { display: none; }
   .mast-right > span { display: none; } /* UTC + TRACKING */
   .kbd-hint { display: none; }
-  .mast-link { letter-spacing: 0.08em; }
+  .mast-link { letter-spacing: 0.08em; white-space: nowrap; flex: 0 0 auto; }
 
   /* info panel: full-screen sheet under the masthead */
   .detail {
@@ -1431,7 +1450,7 @@ a {
 .story-who { display: flex; flex-direction: column; margin-right: auto; }
 .story-name { font-family: var(--mono); font-weight: 500; font-size: 14px; color: #fff; }
 .story-loc { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.6); }
-.story-close { pointer-events: auto; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 0 6px; line-height: 1; }
+.story-close { pointer-events: auto; background: rgba(0,0,0,0.35); border: none; color: #fff; font-size: 20px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; line-height: 1; display: flex; align-items: center; justify-content: center; margin: -6px -6px -6px 0; }
 
 .story-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .story-img { max-width: 100%; max-height: 100%; object-fit: contain; }
