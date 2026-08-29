@@ -101,7 +101,9 @@ struct RoverStoryView: View {
                 ProgressView().tint(.white)
             }
 
-            // Tap zones: left third = back, right two-thirds = forward.
+            // Tap zones: left third = back, right two-thirds = forward. Inset
+            // from the top/bottom so they never sit under the header (close
+            // button) or the footer caption — tapping those must not advance.
             GeometryReader { geo in
                 HStack(spacing: 0) {
                     Color.clear.contentShape(Rectangle())
@@ -111,6 +113,7 @@ struct RoverStoryView: View {
                         .onTapGesture { model.next() }
                 }
             }
+            .padding(.top, 96).padding(.bottom, 104)
 
             VStack(spacing: 0) {
                 topBar
