@@ -1473,3 +1473,33 @@ a {
 .story-caption { font-family: var(--mono); font-size: 13px; color: #fff; }
 .story-count { color: rgba(255,255,255,0.55); }
 .story-light { font-family: var(--mono); font-size: 12.5px; color: var(--delay); margin-top: 6px; }
+
+/* --- Gallery: one block per craft, ordered by arrival --------------------- */
+.craft-block { margin-top: 34px; padding-top: 24px; border-top: 1px solid var(--rule); }
+.cb-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.cb-head .ga-avatar { width: 44px; height: 44px; }
+.cb-who { display: flex; flex-direction: column; gap: 2px; margin-right: auto; }
+.cb-name { font-family: var(--sans); font-size: 20px; color: var(--txt); }
+.cb-loc { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--dim); text-transform: uppercase; }
+.cb-light { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
+
+.cb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.cb-tile {
+  position: relative; padding: 0; border: 1px solid var(--rule-2); border-radius: 6px;
+  overflow: hidden; background: #05070a; cursor: pointer; aspect-ratio: 4 / 3;
+}
+.cb-tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s ease; }
+.cb-tile:hover img { transform: scale(1.04); }
+.cb-tile:focus-visible { outline: 1px solid var(--signal); outline-offset: 2px; }
+.cb-tile-meta {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 1px;
+  padding: 20px 10px 8px; background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); pointer-events: none;
+}
+.cb-cap { font-family: var(--mono); font-size: 11px; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cb-arr { font-family: var(--mono); font-size: 11px; color: var(--delay); }
+
+@media (max-width: 560px) {
+  .cb-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .cb-name { font-size: 18px; }
+  .cb-light { font-size: 11px; width: 100%; }
+}
