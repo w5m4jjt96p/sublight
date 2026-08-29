@@ -1020,8 +1020,8 @@ a {
 .sol-panel-head > div { display: flex; flex-direction: column; gap: 1px; margin-right: auto; }
 .sol-panel-head b { font-family: var(--sans); font-size: 15px; color: var(--txt); }
 .sol-panel-head span { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--delay); }
-.sol-all { font-family: var(--mono); font-size: 11px; color: var(--signal); text-decoration: none; white-space: nowrap; }
-.sol-all:hover { text-decoration: underline; }
+.sol-all { font-family: var(--mono); font-size: 11px; color: var(--signal); text-decoration: none; white-space: nowrap; background: none; border: 1px solid var(--rule-2); border-radius: 5px; padding: 6px 10px; cursor: pointer; }
+.sol-all:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.08); }
 .sol-close {
   background: none; border: none; color: var(--dim);
   font-size: 14px; cursor: pointer; padding: 4px 6px;

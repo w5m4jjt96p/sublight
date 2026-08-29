@@ -9,6 +9,7 @@ import { Lightbox } from './ui/Lightbox.tsx';
 import { About } from './ui/About.tsx';
 import { Gallery } from './ui/Gallery.tsx';
 import { Traverse } from './ui/Traverse.tsx';
+import { RoverStory } from './ui/RoverStory.tsx';
 import { NearEarth } from './ui/NearEarth.tsx';
 import { MarsGlobe } from './ui/MarsGlobe.tsx';
 import { DeepSky } from './ui/DeepSky.tsx';
@@ -53,6 +54,9 @@ export function App() {
     return 'map';
   });
   const [traverseId, setTraverseId] = useState<string | null>(null);
+  // Full-screen rover "story": every raw frame of a sol, live, paging backward.
+  // App-level so the gallery rail and any traverse drive-stop can open it.
+  const [story, setStory] = useState<{ roverId: string; startSol: number } | null>(null);
   const [marsFocus, setMarsFocus] = useState<string | null>(() => {
     const m = window.location.hash.match(/^#mars\/(.+)$/);
     return m ? m[1]! : null;
@@ -417,6 +421,7 @@ export function App() {
           now={now}
           onOpen={(craftId, index) => openLightbox(craftId, index)}
           onOpenArchive={openArchive}
+          onOpenStory={(craftId, startSol) => setStory({ roverId: craftId, startSol })}
           onBack={() => navigate('map')}
         />
       )}
@@ -434,6 +439,7 @@ export function App() {
               owlt: null,
             })
           }
+          onOpenStory={(sol) => setStory({ roverId: traverseId, startSol: sol })}
           onBack={() => { window.location.hash = `#c/${traverseId}`; }}
         />
       )}
@@ -473,6 +479,24 @@ export function App() {
           onClose={() => setLightbox(null)}
         />
       )}
+
+      {story && (() => {
+        const craft = model?.craft.find((c) => c.entry.id === story.roverId);
+        if (!craft) return null;
+        const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+        return (
+          <RoverStory
+            roverId={story.roverId}
+            roverName={craft.entry.name}
+            avatarSrc={`${base}/avatars/${story.roverId}.jpg`}
+            location={craft.entry.location}
+            startSol={story.startSol}
+            owltSeconds={generatedAt ? (owltAt(craft.eph, generatedAt, now) ?? 0) : 0}
+            now={now}
+            onClose={() => setStory(null)}
+          />
+        );
+      })()}
 
       {paletteOpen && (
         <CommandPalette items={searchItems} onPick={onPick} onClose={() => setPaletteOpen(false)} />

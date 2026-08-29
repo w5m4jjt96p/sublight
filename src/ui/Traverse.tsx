@@ -7,6 +7,7 @@ interface TraverseProps {
   track: RoverTrack;
   craftName: string;
   onOpenImages: (frames: FrameThumb[], index: number, credit: string) => void;
+  onOpenStory: (sol: number) => void;
   onBack: () => void;
 }
 
@@ -17,7 +18,7 @@ const wyLat = (lat: number) =>
 
 interface Sel { lon: number; lat: number; sol: number }
 
-export function Traverse({ track, craftName, onOpenImages, onBack }: TraverseProps) {
+export function Traverse({ track, craftName, onOpenImages, onOpenStory, onBack }: TraverseProps) {
   const { w, h, frame: fr } = track;
   const viewportRef = useRef<HTMLDivElement>(null);
   const [vp, setVp] = useState({ w: 0, h: 0 });
@@ -280,7 +281,9 @@ export function Traverse({ track, craftName, onOpenImages, onBack }: TraversePro
                 </span>
               </div>
               {sol && sol.count > 0 && (
-                <a className="sol-all" href={sol.more} target="_blank" rel="noreferrer">See all {sol.count.toLocaleString()} ↗</a>
+                <button className="sol-all" onClick={() => onOpenStory(sel.sol)}>
+                  View all {sol.count.toLocaleString()} →
+                </button>
               )}
               <button className="sol-close" onClick={() => { setSel(null); setSol(null); }} aria-label="Close">✕</button>
             </div>

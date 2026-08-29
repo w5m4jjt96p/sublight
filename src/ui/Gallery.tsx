@@ -9,7 +9,6 @@ import type { MapModel } from '../map/model.ts';
 import { registry } from '../data/registry.ts';
 import { fmtSince, fmtDuration } from '../data/format.ts';
 import { owltAt } from '../data/lightTime.ts';
-import { RoverStory } from './RoverStory.tsx';
 
 const asset = (p: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}${p}`;
 const craftById = new Map(registry.map((c) => [c.id, c]));
@@ -45,6 +44,7 @@ interface GalleryProps {
   now: number;
   onOpen: (craftId: string, index: number) => void;
   onOpenArchive: (craftId: string) => void;
+  onOpenStory: (craftId: string, startSol: number) => void;
   onBack: () => void;
 }
 
@@ -65,28 +65,14 @@ function Avatar({ craftId, name }: { craftId: string; name: string }) {
   );
 }
 
-export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOpenArchive, onBack }: GalleryProps) {
-  const [storyId, setStoryId] = useState<string | null>(null);
-
+export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOpenArchive, onOpenStory, onBack }: GalleryProps) {
   // Craft with a live per-sol firehose (the Mars rovers): a captured sol number
   // is the tell. Each opens a full-screen "story" of all its raw frames.
   const stories = useMemo(() => {
-    const byId = new Map((model?.craft ?? []).map((c) => [c.entry.id, c]));
     return Object.entries(frames)
       .filter(([, f]) => f.sol != null)
-      .map(([id, f]) => {
-        const c = byId.get(id);
-        const owlt = c && generatedAt ? owltAt(c.eph, generatedAt, now) : 0;
-        return {
-          id,
-          name: c?.entry.name ?? craftById.get(id)?.name ?? id,
-          location: c?.entry.location ?? craftById.get(id)?.location ?? '',
-          sol: f.sol as number,
-          owlt: owlt ?? 0,
-        };
-      });
-  }, [frames, model, generatedAt, now]);
-  const story = stories.find((s) => s.id === storyId) ?? null;
+      .map(([id, f]) => ({ id, name: craftById.get(id)?.name ?? id, sol: f.sol as number }));
+  }, [frames]);
 
   // Grid tiles (desktop), newest light first.
   const tiles = useMemo(() => {
@@ -161,7 +147,7 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
         {stories.length > 0 && (
           <div className="stories-rail">
             {stories.map((s) => (
-              <button key={s.id} className="story-ring" onClick={() => setStoryId(s.id)}
+              <button key={s.id} className="story-ring" onClick={() => onOpenStory(s.id, s.sol)}
                 aria-label={`Open ${s.name} story — all raw frames`}>
                 <span className="story-ring-img">
                   <Avatar craftId={s.id} name={s.name} />
@@ -215,19 +201,6 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
 
         {tiles.length === 0 && feed.length === 0 && <p className="gallery-lede">No frames available right now.</p>}
       </div>
-
-      {story && (
-        <RoverStory
-          roverId={story.id}
-          roverName={story.name}
-          avatarSrc={asset(`/avatars/${story.id}.jpg`)}
-          location={story.location}
-          startSol={story.sol}
-          owltSeconds={story.owlt}
-          now={now}
-          onClose={() => setStoryId(null)}
-        />
-      )}
     </div>
   );
 }

@@ -79,7 +79,7 @@ struct ContentView: View {
             )
         }
         .fullScreenCover(item: $marsTraverseTrack) { track in
-            TraverseView(track: track,
+            TraverseView(store: store, track: track,
                          craftName: store.craft.first(where: { $0.id == track.id })?.name ?? track.label,
                          onClose: { marsTraverseTrack = nil })
         }

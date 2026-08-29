@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TraverseView: View {
+    @ObservedObject var store: DataStore
     let track: RoverTrack
     let craftName: String
     let onClose: () -> Void
@@ -15,6 +16,9 @@ struct TraverseView: View {
     @State private var sol: SolImages?
     @State private var loading = false
     @State private var lightbox: RoverImage?
+    @State private var storySol: StorySol?
+
+    private struct StorySol: Identifiable { let id: Int }
 
     private var region: String { track.id == "curiosity" ? "Gale Crater" : "Jezero Crater" }
     private let D2R = Double.pi / 180
@@ -89,6 +93,13 @@ struct TraverseView: View {
             }
         }
         .fullScreenCover(item: $lightbox) { img in RemotePhotoView(image: img) { lightbox = nil } }
+        .fullScreenCover(item: $storySol) { s in
+            let craft = store.craft.first { $0.id == track.id }
+            RoverStoryView(roverId: track.id, roverName: craftName,
+                           location: craft?.reg.location ?? region,
+                           avatarURL: store.avatarURL(for: track.id),
+                           startSol: s.id, owltSeconds: craft?.eph.owltSeconds ?? 0) { storySol = nil }
+        }
     }
 
     // MARK: - Header
@@ -223,6 +234,13 @@ struct TraverseView: View {
                         .font(.mono(10)).tracking(1).foregroundColor(Theme.delay)
                 }
                 Spacer()
+                if let sol, sol.count > 0 {
+                    Button { storySol = StorySol(id: s) } label: {
+                        Text("View all \(sol.count) →").font(.mono(11)).foregroundColor(Theme.signal)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.rule2, lineWidth: 1))
+                    }.buttonStyle(.plain)
+                }
                 Button { selSol = nil; sol = nil } label: {
                     Image(systemName: "xmark").font(.system(size: 13)).foregroundColor(Theme.dim)
                 }

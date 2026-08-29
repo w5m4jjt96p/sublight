@@ -106,7 +106,7 @@ struct CraftDetail: View {
         }
         .fullScreenCover(isPresented: $showTraverse) {
             if let track = store.tracks[id] {
-                TraverseView(track: track, craftName: craft?.name ?? track.label) { showTraverse = false }
+                TraverseView(store: store, track: track, craftName: craft?.name ?? track.label) { showTraverse = false }
             }
         }
     }
