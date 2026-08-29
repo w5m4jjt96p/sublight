@@ -6,7 +6,12 @@ name: refresh-data
 
 on:
   schedule:
-    - cron: '17 1 * * *' # 01:17 UTC daily (off-peak minute = more punctual)
+    # Three off-peak attempts a day. GitHub's scheduler is best-effort and skips
+    # runs under load, so the later two are backups; the guard job below makes
+    # sure only the first successful run of the day actually does the work.
+    - cron: '17 1 * * *'  # 01:17 UTC
+    - cron: '17 9 * * *'  # 09:17 UTC (backup)
+    - cron: '17 15 * * *' # 15:17 UTC (backup)
   workflow_dispatch: {}
 
 permissions:
@@ -18,7 +23,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Skip scheduled runs when today's data is already committed, so the backup
+  # crons are no-ops once the day's refresh has happened. A manual run always
+  # proceeds.
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.g.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: g
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "manual run — proceeding"; echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          LAST=$(git log -1 --format=%cI -- public/data/fleet.json 2>/dev/null | cut -c1-10)
+          TODAY=$(date -u +%F)
+          if [ "$LAST" = "$TODAY" ]; then
+            echo "already refreshed today ($LAST) — skipping"; echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "last refresh $LAST, today $TODAY — proceeding"; echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
   refresh:
+    needs: guard
+    if: needs.guard.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
