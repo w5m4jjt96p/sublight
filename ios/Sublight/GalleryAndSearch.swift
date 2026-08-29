@@ -26,6 +26,19 @@ struct GalleryView: View {
     @ObservedObject var store: DataStore
     @State private var lightbox: URL?
     @State private var tab: GalleryTab = .feed
+    @State private var storyRover: StoryID?
+
+    private struct StoryID: Identifiable { let id: String }
+
+    // Craft with a live per-sol firehose (the Mars rovers): a captured sol number
+    // is the tell. Each opens a full-screen "story" of all its raw frames.
+    private struct StoryCraft: Identifiable { let id: String; let name: String; let location: String; let sol: Int; let owlt: Double }
+    private var storyCraft: [StoryCraft] {
+        store.craft.compactMap { c in
+            guard let f = store.frames[c.id], let sol = f.sol else { return nil }
+            return StoryCraft(id: c.id, name: c.name, location: c.reg.location, sol: sol, owlt: c.eph.owltSeconds)
+        }
+    }
 
     private var allItems: [FeedItem] {
         var out: [FeedItem] = []
@@ -75,6 +88,7 @@ struct GalleryView: View {
                 tabBar
                 ScrollView {
                     LazyVStack(spacing: 0) {
+                        if tab == .feed && !storyCraft.isEmpty { storiesRail }
                         ForEach(shown) { item in card(item) }
                     }
                     .padding(.bottom, 100)
@@ -82,6 +96,51 @@ struct GalleryView: View {
             }
         }
         .fullScreenCover(item: $lightbox) { url in Lightbox(url: url) { lightbox = nil } }
+        .fullScreenCover(item: $storyRover) { s in storyView(for: s.id) }
+    }
+
+    private var storiesRail: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 16) {
+                ForEach(storyCraft) { s in
+                    Button { storyRover = StoryID(id: s.id) } label: {
+                        VStack(spacing: 7) {
+                            ZStack {
+                                Circle().fill(LinearGradient(colors: [Theme.signal, Theme.delay],
+                                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .frame(width: 64, height: 64)
+                                storyAvatar(s.id, s.name)
+                                    .frame(width: 58, height: 58).clipShape(Circle())
+                                    .overlay(Circle().stroke(Theme.void, lineWidth: 2.5))
+                            }
+                            Text(s.name).font(.mono(11)).foregroundColor(Theme.dim)
+                                .lineLimit(1).frame(maxWidth: 72)
+                        }
+                    }.buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 14)
+        }
+        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
+    }
+
+    private func storyAvatar(_ id: String, _ name: String) -> some View {
+        Group {
+            if let url = store.avatarURL(for: id) {
+                BundleImage(url: url, contentMode: .fill)
+            } else {
+                Circle().fill(Theme.rule2).overlay(
+                    Text(String(name.prefix(1))).font(.title(18)).foregroundColor(Theme.dim))
+            }
+        }
+    }
+
+    @ViewBuilder private func storyView(for id: String) -> some View {
+        if let s = storyCraft.first(where: { $0.id == id }) {
+            RoverStoryView(roverId: s.id, roverName: s.name, location: s.location,
+                           avatarURL: store.avatarURL(for: s.id), startSol: s.sol,
+                           owltSeconds: s.owlt) { storyRover = nil }
+        }
     }
 
     private var tabBar: some View {

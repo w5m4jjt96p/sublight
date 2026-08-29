@@ -25,7 +25,7 @@ enum RoverImages {
     private static var cache: [String: SolImages] = [:]
 
     static func fetch(roverId: String, sol: Int, limit: Int = 120) async -> SolImages {
-        let key = "\(roverId):\(sol)"
+        let key = "\(roverId):\(sol):\(limit)"
         if let hit = cache[key] { return hit }
         let result: SolImages
         if roverId == "curiosity" {

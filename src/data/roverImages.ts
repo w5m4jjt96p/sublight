@@ -20,7 +20,7 @@ export async function fetchSolImages(
   sol: number,
   limit = 120,
 ): Promise<SolImages> {
-  const key = `${roverId}:${sol}`;
+  const key = `${roverId}:${sol}:${limit}`;
   const hit = cache.get(key);
   if (hit) return hit;
 
