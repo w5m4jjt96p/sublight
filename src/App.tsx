@@ -419,9 +419,9 @@ export function App() {
           model={model}
           generatedAt={generatedAt}
           now={now}
-          onOpen={(craftId, index) => openLightbox(craftId, index)}
           onOpenArchive={openArchive}
-          onOpenStory={(craftId, startSol) => setStory({ roverId: craftId, startSol })}
+          onOpenList={(frameList, index, craftName, owlt) =>
+            setLightbox({ frames: frameList, index, craftName, credit: 'NASA/JPL-Caltech', owlt })}
           onBack={() => navigate('map')}
         />
       )}
