@@ -2,33 +2,17 @@ import SwiftUI
 
 // MARK: - Gallery
 
-private struct FeedItem: Identifiable {
-    let id: String
-    let craft: String
-    let location: String
-    let avatar: URL?
-    let thumb: URL?
-    let full: URL?
-    let caption: String
-    let timeAgo: String
-    let lightLine: String?
-    let lightSeconds: Double
-    let seq: Int
-    let isArchive: Bool
-}
-
-private enum GalleryTab { case feed, archives }
-
-// A feed of the arriving frames, styled like a social timeline: the rover is the
-// author, its location the place, the capture time the "posted" time, and the
-// light-travel delay the honest twist under every photo.
+// The wall of arriving light: one block per craft, each block's photos ordered
+// by when their light actually reached Earth (capture + light-travel delay),
+// newest arrival first; blocks ordered by their freshest arrival, archive-only
+// craft last. The age is the point — none of it is happening now.
 struct GalleryView: View {
     @ObservedObject var store: DataStore
     @State private var lightbox: URL?
-    @State private var tab: GalleryTab = .feed
     @State private var storyRover: StoryID?
 
     private struct StoryID: Identifiable { let id: String }
+    private let cols = [GridItem(.adaptive(minimum: 150), spacing: 8)]
 
     // Craft with a live per-sol firehose (the Mars rovers): a captured sol number
     // is the tell. Each opens a full-screen "story" of all its raw frames.
@@ -40,59 +24,67 @@ struct GalleryView: View {
         }
     }
 
-    private var allItems: [FeedItem] {
-        var out: [FeedItem] = []
-        var seq = 0
+    private struct BlockPhoto: Identifiable {
+        let id: String
+        let thumb: URL?
+        let full: URL?
+        let caption: String
+        let arrival: Date?   // nil for archive stills (no capture time)
+        let isArchive: Bool
+    }
+    private struct CraftBlock: Identifiable {
+        let id: String
+        let name: String
+        let location: String
+        let avatar: URL?
+        let lightLine: String?
+        let newestArrival: Date
+        let photos: [BlockPhoto]
+    }
+
+    private var blocks: [CraftBlock] {
+        var out: [CraftBlock] = []
         for c in store.craft {
-            let loc = c.reg.location
             let owlt = c.eph.owltSeconds
             let light = owlt > 0 ? "Its light took \(Fmt.lightTime(owlt)) to cross the void" : nil
             let avatar = store.avatarURL(for: c.id)
             func solCap(_ sol: Int?, _ instrument: String) -> String {
                 sol.map { "Sol \($0) · \(instrument)" } ?? instrument
             }
+            // Arrival = when the light reached Earth = capture + light-travel time.
+            func arrival(_ iso: String) -> Date? { Fmt.date(from: iso)?.addingTimeInterval(owlt) }
+
             if let f = store.frames[c.id] {
-                out.append(FeedItem(id: c.id + "-hero", craft: c.name, location: loc, avatar: avatar,
-                                    thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
-                                    caption: solCap(f.sol, f.instrument), timeAgo: Fmt.ago(f.capturedUtc),
-                                    lightLine: light, lightSeconds: owlt, seq: seq, isArchive: false)); seq += 1
+                var photos: [BlockPhoto] = [
+                    BlockPhoto(id: c.id + "-hero", thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
+                               caption: solCap(f.sol, f.instrument), arrival: arrival(f.capturedUtc), isArchive: false)
+                ]
                 for (i, r) in (f.recent ?? []).enumerated() {
-                    out.append(FeedItem(id: "\(c.id)-\(i)", craft: c.name, location: loc, avatar: avatar,
-                                        thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
-                                        caption: solCap(r.sol, r.instrument), timeAgo: Fmt.ago(r.capturedUtc),
-                                        lightLine: light, lightSeconds: owlt, seq: seq, isArchive: false)); seq += 1
+                    photos.append(BlockPhoto(id: "\(c.id)-\(i)", thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
+                                             caption: solCap(r.sol, r.instrument), arrival: arrival(r.capturedUtc), isArchive: false))
                 }
+                photos.sort { ($0.arrival ?? .distantPast) > ($1.arrival ?? .distantPast) }
+                out.append(CraftBlock(id: c.id, name: c.name, location: c.reg.location, avatar: avatar,
+                                      lightLine: light, newestArrival: photos.first?.arrival ?? .distantPast, photos: photos))
             } else if let a = store.archive[c.id] {
-                out.append(FeedItem(id: c.id + "-arch", craft: c.name, location: loc, avatar: avatar,
-                                    thumb: DataStore.imageURL(a.file), full: DataStore.imageURL(a.full),
-                                    caption: a.title, timeAgo: "mission archive",
-                                    lightLine: light, lightSeconds: owlt, seq: seq, isArchive: true)); seq += 1
+                out.append(CraftBlock(id: c.id, name: c.name, location: c.reg.location, avatar: avatar,
+                                      lightLine: light, newestArrival: .distantPast,
+                                      photos: [BlockPhoto(id: c.id + "-arch", thumb: DataStore.imageURL(a.file),
+                                                          full: DataStore.imageURL(a.full), caption: a.title, arrival: nil, isArchive: true)]))
             }
         }
-        // By the age of the arriving light: the most distant / oldest light first
-        // (Voyager down to DSCOVR). Within a craft, keep the curated round-robin
-        // order from frames.json (varied cameras) rather than re-grouping by time.
-        return out.sorted { a, b in
-            a.lightSeconds != b.lightSeconds ? a.lightSeconds > b.lightSeconds : a.seq < b.seq
-        }
-    }
-
-    private var shown: [FeedItem] {
-        allItems.filter { tab == .archives ? $0.isArchive : !$0.isArchive }
+        return out.sorted { $0.newestArrival > $1.newestArrival }
     }
 
     var body: some View {
         ZStack {
             Theme.void.ignoresSafeArea()
-            VStack(spacing: 0) {
-                tabBar
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        if tab == .feed && !storyCraft.isEmpty { storiesRail }
-                        ForEach(shown) { item in card(item) }
-                    }
-                    .padding(.bottom, 100)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if !storyCraft.isEmpty { storiesRail }
+                    ForEach(blocks) { block in blockView(block) }
                 }
+                .padding(.bottom, 100)
             }
         }
         .fullScreenCover(item: $lightbox) { url in Lightbox(url: url) { lightbox = nil } }
@@ -143,71 +135,55 @@ struct GalleryView: View {
         }
     }
 
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            tabButton("Feed", .feed)
-            tabButton("Archives", .archives)
-        }
-        .padding(.horizontal, 12).padding(.top, 8)
-        .background(Theme.void)
-        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
-    }
-
-    private func tabButton(_ title: String, _ t: GalleryTab) -> some View {
-        Button { tab = t } label: {
-            VStack(spacing: 8) {
-                Text(title).font(.monoMed(14)).foregroundColor(tab == t ? Theme.txt : Theme.dim)
-                Rectangle().fill(tab == t ? Theme.signal : Color.clear).frame(height: 2)
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func card(_ item: FeedItem) -> some View {
-        VStack(spacing: 0) {
+    private func blockView(_ b: CraftBlock) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 Group {
-                    if item.avatar != nil {
-                        BundleImage(url: item.avatar, contentMode: .fill)
+                    if b.avatar != nil {
+                        BundleImage(url: b.avatar, contentMode: .fill)
                     } else {
                         Circle().fill(Theme.rule2).overlay(
-                            Text(String(item.craft.prefix(1))).font(.title(15)).foregroundColor(Theme.dim))
+                            Text(String(b.name.prefix(1))).font(.title(16)).foregroundColor(Theme.dim))
                     }
                 }
-                .frame(width: 38, height: 38).clipShape(Circle())
+                .frame(width: 40, height: 40).clipShape(Circle())
                 .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.craft).font(.monoMed(14)).foregroundColor(Theme.txt)
-                    Text(item.location).font(.mono(11)).foregroundColor(Theme.dim)
+                    Text(b.name).font(.title(20)).foregroundColor(Theme.txt)
+                    Text(b.location.uppercased()).font(.mono(10)).tracking(1).foregroundColor(Theme.dim)
                 }
                 Spacer()
-                Text(item.timeAgo).font(.mono(11)).foregroundColor(Theme.dim2)
             }
-            .padding(.horizontal, 14).padding(.vertical, 11)
-
-            Button { lightbox = item.full } label: {
-                BundleImage(url: item.thumb, contentMode: .fit)
-                    .frame(maxWidth: .infinity)
-                    .frame(maxHeight: 460)
-                    .background(Color.black)
-            }
-            .buttonStyle(.plain)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(item.caption).font(.mono(12)).foregroundColor(Theme.txt)
-                if let l = item.lightLine {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
-                        Text(l).font(.mono(11)).foregroundColor(Theme.delay)
-                    }
+            if let l = b.lightLine {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
+                    Text(l).font(.mono(11)).foregroundColor(Theme.delay)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14).padding(.top, 10).padding(.bottom, 16)
-
-            Rectangle().fill(Theme.rule).frame(height: 1)
+            LazyVGrid(columns: cols, spacing: 8) {
+                ForEach(b.photos) { p in tile(p) }
+            }
         }
+        .padding(.horizontal, 14).padding(.top, 22).padding(.bottom, 8)
+        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .top)
+    }
+
+    private func tile(_ p: BlockPhoto) -> some View {
+        Button { lightbox = p.full } label: {
+            ZStack(alignment: .bottomLeading) {
+                Rectangle().fill(Color.black).aspectRatio(4.0 / 3.0, contentMode: .fit)
+                    .overlay(BundleImage(url: p.thumb, contentMode: .fill)).clipped()
+                LinearGradient(colors: [.black.opacity(0.85), .clear], startPoint: .bottom, endPoint: .center)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(p.caption).font(.mono(10)).foregroundColor(Theme.txt).lineLimit(1)
+                    Text(p.isArchive ? "mission archive" : "arrived \(Fmt.ago(p.arrival ?? Date()))")
+                        .font(.mono(10)).foregroundColor(Theme.delay)
+                }
+                .padding(8)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
+        }.buttonStyle(.plain)
     }
 }
 

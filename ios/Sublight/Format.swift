@@ -111,19 +111,27 @@ enum Fmt {
         return out.string(from: date)
     }
 
-    /// How long ago an ISO capture time was, in coarse human terms.
-    static func ago(_ iso: String, now: Date = Date()) -> String {
+    /// Parse an ISO capture time (with or without fractional seconds).
+    static func date(from iso: String) -> Date? {
         let df = ISO8601DateFormatter()
         df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        var d = df.date(from: iso)
-        if d == nil {
-            df.formatOptions = [.withInternetDateTime]
-            d = df.date(from: iso)
-        }
-        guard let date = d else { return "" }
+        if let d = df.date(from: iso) { return d }
+        df.formatOptions = [.withInternetDateTime]
+        return df.date(from: iso)
+    }
+
+    /// How long ago a moment was, in coarse human terms.
+    static func ago(_ date: Date, now: Date = Date()) -> String {
         let secs = now.timeIntervalSince(date)
+        if secs < 60 { return "just now" }
         if secs < 3600 { return "\(Int(secs / 60)) min ago" }
         if secs < 86400 { return "\(Int(secs / 3600)) h ago" }
         return "\(Int(secs / 86400)) d ago"
+    }
+
+    /// How long ago an ISO capture time was, in coarse human terms.
+    static func ago(_ iso: String, now: Date = Date()) -> String {
+        guard let d = date(from: iso) else { return "" }
+        return ago(d, now: now)
     }
 }
