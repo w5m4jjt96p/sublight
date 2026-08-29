@@ -24,7 +24,7 @@ struct SolImages {
 enum RoverImages {
     private static var cache: [String: SolImages] = [:]
 
-    static func fetch(roverId: String, sol: Int, limit: Int = 48) async -> SolImages {
+    static func fetch(roverId: String, sol: Int, limit: Int = 120) async -> SolImages {
         let key = "\(roverId):\(sol)"
         if let hit = cache[key] { return hit }
         let result: SolImages
@@ -83,23 +83,27 @@ enum RoverImages {
             let instrument: String?
             let date_taken: String?
             let sol: Int?
+            let is_thumbnail: Bool?
         }
         let items: [Item]
         let total: Int?
     }
 
     private static func fetchCuriosity(sol: Int, limit: Int) async throws -> SolImages {
-        let urlStr = "https://mars.nasa.gov/api/v1/raw_image_items/?order=sol+desc&per_page=\(limit)&page=0"
+        // Each full frame ships with a low-res `is_thumbnail` twin, so over-fetch
+        // and drop the thumbnails before trimming to `limit` full frames.
+        let urlStr = "https://mars.nasa.gov/api/v1/raw_image_items/?order=sol+desc&per_page=\(limit * 2)&page=0"
             + "&condition_1=msl%3Amission&condition_2=\(sol)%3Asol%3Agte&condition_3=\(sol)%3Asol%3Alte"
         let (data, _) = try await URLSession.shared.data(from: URL(string: urlStr)!)
         let d = try JSONDecoder().decode(MSLResponse.self, from: data)
-        let images: [RoverImage] = d.items.compactMap { im in
+        let full = d.items.filter { $0.is_thumbnail != true }
+        let images: [RoverImage] = full.prefix(limit).compactMap { im in
             guard let s = im.url, let u = URL(string: s) else { return nil }
             return RoverImage(thumb: u, full: u, sourceUrl: u,
                               instrument: im.instrument ?? "CAMERA",
                               capturedUtc: im.date_taken ?? "", sol: im.sol ?? sol)
         }
         let more = URL(string: "https://mars.nasa.gov/msl/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=\(sol)&end_sol=\(sol)")
-        return SolImages(sol: sol, count: d.total ?? images.count, images: images, moreURL: more)
+        return SolImages(sol: sol, count: full.count, images: images, moreURL: more)
     }
 }

@@ -18,7 +18,7 @@ const cache = new Map<string, SolImages>();
 export async function fetchSolImages(
   roverId: string,
   sol: number,
-  limit = 48,
+  limit = 120,
 ): Promise<SolImages> {
   const key = `${roverId}:${sol}`;
   const hit = cache.get(key);
@@ -60,13 +60,15 @@ async function fetchPerseverance(sol: number, limit: number): Promise<SolImages>
 }
 
 async function fetchCuriosity(sol: number, limit: number): Promise<SolImages> {
+  // Each full frame has a low-res `is_thumbnail` twin, so over-fetch and drop
+  // the thumbnails before trimming to `limit` full-resolution frames.
   const url =
-    `https://mars.nasa.gov/api/v1/raw_image_items/?order=sol+desc&per_page=${limit}&page=0` +
+    `https://mars.nasa.gov/api/v1/raw_image_items/?order=sol+desc&per_page=${limit * 2}&page=0` +
     `&condition_1=msl%3Amission&condition_2=${sol}%3Asol%3Agte&condition_3=${sol}%3Asol%3Alte`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`msl sol ${sol}: HTTP ${res.status}`);
   const data = await res.json();
-  const items: any[] = data.items ?? [];
+  const items: any[] = (data.items ?? []).filter((im: any) => !im.is_thumbnail);
   const frames: FrameThumb[] = items.map((im) => ({
     file: im.url,
     full: im.url,
@@ -74,10 +76,10 @@ async function fetchCuriosity(sol: number, limit: number): Promise<SolImages> {
     instrument: im.instrument ?? 'CAMERA',
     capturedUtc: im.date_taken ?? '',
     sol: im.sol ?? sol,
-  })).filter((f) => f.file);
+  })).filter((f) => f.file).slice(0, limit);
   return {
     sol,
-    count: data.total ?? frames.length,
+    count: items.length,
     frames,
     more: `https://mars.nasa.gov/msl/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=${sol}&end_sol=${sol}`,
   };

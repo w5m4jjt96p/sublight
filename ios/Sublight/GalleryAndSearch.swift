@@ -13,19 +13,11 @@ private struct FeedItem: Identifiable {
     let timeAgo: String
     let lightLine: String?
     let lightSeconds: Double
-    let sortDate: Date
+    let seq: Int
     let isArchive: Bool
 }
 
 private enum GalleryTab { case feed, archives }
-
-private func parseUTC(_ iso: String) -> Date? {
-    let f = ISO8601DateFormatter()
-    f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    if let d = f.date(from: iso) { return d }
-    f.formatOptions = [.withInternetDateTime]
-    return f.date(from: iso)
-}
 
 // A feed of the arriving frames, styled like a social timeline: the rover is the
 // author, its location the place, the capture time the "posted" time, and the
@@ -37,6 +29,7 @@ struct GalleryView: View {
 
     private var allItems: [FeedItem] {
         var out: [FeedItem] = []
+        var seq = 0
         for c in store.craft {
             let loc = c.reg.location
             let owlt = c.eph.owltSeconds
@@ -49,24 +42,25 @@ struct GalleryView: View {
                 out.append(FeedItem(id: c.id + "-hero", craft: c.name, location: loc, avatar: avatar,
                                     thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
                                     caption: solCap(f.sol, f.instrument), timeAgo: Fmt.ago(f.capturedUtc),
-                                    lightLine: light, lightSeconds: owlt, sortDate: parseUTC(f.capturedUtc) ?? .distantPast, isArchive: false))
+                                    lightLine: light, lightSeconds: owlt, seq: seq, isArchive: false)); seq += 1
                 for (i, r) in (f.recent ?? []).enumerated() {
                     out.append(FeedItem(id: "\(c.id)-\(i)", craft: c.name, location: loc, avatar: avatar,
                                         thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
                                         caption: solCap(r.sol, r.instrument), timeAgo: Fmt.ago(r.capturedUtc),
-                                        lightLine: light, lightSeconds: owlt, sortDate: parseUTC(r.capturedUtc) ?? .distantPast, isArchive: false))
+                                        lightLine: light, lightSeconds: owlt, seq: seq, isArchive: false)); seq += 1
                 }
             } else if let a = store.archive[c.id] {
                 out.append(FeedItem(id: c.id + "-arch", craft: c.name, location: loc, avatar: avatar,
                                     thumb: DataStore.imageURL(a.file), full: DataStore.imageURL(a.full),
                                     caption: a.title, timeAgo: "mission archive",
-                                    lightLine: light, lightSeconds: owlt, sortDate: .distantPast, isArchive: true))
+                                    lightLine: light, lightSeconds: owlt, seq: seq, isArchive: true)); seq += 1
             }
         }
         // By the age of the arriving light: the most distant / oldest light first
-        // (Voyager down to DSCOVR), newest capture breaking ties within a craft.
+        // (Voyager down to DSCOVR). Within a craft, keep the curated round-robin
+        // order from frames.json (varied cameras) rather than re-grouping by time.
         return out.sorted { a, b in
-            a.lightSeconds != b.lightSeconds ? a.lightSeconds > b.lightSeconds : a.sortDate > b.sortDate
+            a.lightSeconds != b.lightSeconds ? a.lightSeconds > b.lightSeconds : a.seq < b.seq
         }
     }
 

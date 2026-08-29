@@ -32,7 +32,7 @@ interface FeedPost {
   timeAgo: string;
   lightLine: string | null;
   lightSeconds: number;
-  sortMs: number;
+  seq: number;
   open: () => void;
 }
 
@@ -88,12 +88,8 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
 
   // Feed posts (mobile): frames + archive stills, interleaved craft by craft.
   const feed = useMemo(() => {
-    const byCraft: Record<string, FeedPost[]> = {};
-    const order: string[] = [];
-    const push = (p: FeedPost) => {
-      if (!byCraft[p.craftId]) { byCraft[p.craftId] = []; order.push(p.craftId); }
-      byCraft[p.craftId]!.push(p);
-    };
+    const out: FeedPost[] = [];
+    let seq = 0;
     for (const c of model?.craft ?? []) {
       const id = c.entry.id;
       const owlt = generatedAt ? owltAt(c.eph, generatedAt, now) : 0;
@@ -102,26 +98,25 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
       if (f) {
         const list = f.recent?.length ? f.recent : [{ file: f.file, instrument: f.instrument, capturedUtc: f.capturedUtc, sol: f.sol }];
         list.forEach((t, index) => {
-          push({
+          out.push({
             key: `${id}-${index}`, craftId: id, craftName: c.entry.name, location: c.entry.location,
             file: t.file, caption: t.sol != null ? `Sol ${t.sol} · ${t.instrument}` : t.instrument,
             timeAgo: fmtSince(t.capturedUtc, now), lightLine: light, lightSeconds: owlt ?? 0,
-            sortMs: Date.parse(t.capturedUtc) || 0, open: () => onOpen(id, index),
+            seq: seq++, open: () => onOpen(id, index),
           });
         });
       } else if (archive[id]) {
-        push({
+        out.push({
           key: `${id}-arch`, craftId: id, craftName: c.entry.name, location: c.entry.location,
           file: archive[id]!.file, caption: archive[id]!.title, timeAgo: 'mission archive',
-          lightLine: light, lightSeconds: owlt ?? 0, sortMs: 0, open: () => onOpenArchive(id),
+          lightLine: light, lightSeconds: owlt ?? 0, seq: seq++, open: () => onOpenArchive(id),
         });
       }
     }
     // By the age of the arriving light: most distant / oldest light first
-    // (Voyager down to DSCOVR), newest capture breaking ties within a craft.
-    const out: FeedPost[] = [];
-    for (const id of order) out.push(...byCraft[id]!);
-    return out.sort((a, b) => (b.lightSeconds - a.lightSeconds) || (b.sortMs - a.sortMs));
+    // (Voyager down to DSCOVR). Within a craft, keep the curated round-robin
+    // order from frames.json (varied cameras) rather than re-grouping by time.
+    return out.sort((a, b) => (b.lightSeconds - a.lightSeconds) || (a.seq - b.seq));
   }, [frames, archive, model, generatedAt, now, onOpen, onOpenArchive]);
 
   return (

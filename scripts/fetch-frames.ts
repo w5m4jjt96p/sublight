@@ -32,7 +32,7 @@ const SUN_URL = 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0171.jpg
 const MAX_AGE_DAYS = 30;
 const THUMB_WIDTH = 720; // map chip / HUD / strip
 const FULL_WIDTH = 1600; // full-screen viewer + one-click HQ download
-const RECENT_COUNT = 12;
+const RECENT_COUNT = 30;
 const UA = { 'User-Agent': 'out-there/0.4 (static site build)' };
 
 /** Surface cameras make better hero frames than sky/engineering cams. */
@@ -54,10 +54,6 @@ function slug(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-function isPreferred(f: Frame): boolean {
-  return PREFERRED.some((p) => f.instrument.toUpperCase().includes(p));
-}
-
 /** Collision-proof basename (no extension) for a frame. */
 function frameBase(craftId: string, f: Frame): string {
   const h = createHash('sha1').update(f.url).digest('hex').slice(0, 6);
@@ -65,25 +61,61 @@ function frameBase(craftId: string, f: Frame): string {
 }
 
 /**
- * Order frames for display: newest preferred-camera frames first, then the rest.
- * The first entry becomes the hero; up to RECENT_COUNT feed the detail strip.
+ * Order frames for display: the newest surface-camera frame leads (it becomes
+ * the hero), then a round-robin across every camera so the wall stays varied
+ * instead of showing a burst from one instrument. A sol can carry 500+ frames
+ * dominated by a single camera; interleaving keeps the colour Mastcam-Z / Navcam
+ * views in the mix. The first RECENT_COUNT entries feed the gallery strip.
  */
 function orderFrames(frames: Frame[]): Frame[] {
-  const preferred = frames.filter(isPreferred);
-  const rest = frames.filter((f) => !isPreferred(f));
+  // De-dupe, newest first.
   const seen = new Set<string>();
-  return [...preferred, ...rest].filter((f) => {
-    if (seen.has(f.url)) return false;
-    seen.add(f.url);
-    return true;
+  const uniq = frames
+    .filter((f) => {
+      if (seen.has(f.url)) return false;
+      seen.add(f.url);
+      return true;
+    })
+    .sort((a, b) => Date.parse(b.capturedUtc) - Date.parse(a.capturedUtc));
+
+  // Bucket by camera, each bucket already newest-first.
+  const buckets = new Map<string, Frame[]>();
+  for (const f of uniq) {
+    const cam = f.instrument.toUpperCase();
+    const b = buckets.get(cam);
+    if (b) b.push(f);
+    else buckets.set(cam, [f]);
+  }
+
+  // Camera order: surface cameras first (ranked by their newest frame), so the
+  // hero is a real landscape, not a sky/engineering shot.
+  const cams = [...buckets.keys()].sort((a, b) => {
+    const pa = PREFERRED.some((p) => a.includes(p)) ? 0 : 1;
+    const pb = PREFERRED.some((p) => b.includes(p)) ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    return Date.parse(buckets.get(b)![0]!.capturedUtc) - Date.parse(buckets.get(a)![0]!.capturedUtc);
   });
+
+  // Round-robin: one frame from each camera per pass.
+  const out: Frame[] = [];
+  for (let i = 0, added = true; added; i++) {
+    added = false;
+    for (const cam of cams) {
+      const bucket = buckets.get(cam)!;
+      if (i < bucket.length) {
+        out.push(bucket[i]!);
+        added = true;
+      }
+    }
+  }
+  return out;
 }
 
 // ---- source adapters -------------------------------------------------------
 
 async function fetchMars2020(): Promise<Frame[]> {
   const url =
-    'https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=40&order=sol+desc';
+    'https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=120&order=sol+desc';
   const res = await fetch(url, { headers: UA });
   if (!res.ok) throw new Error(`mars2020 feed HTTP ${res.status}`);
   const json = (await res.json()) as {
@@ -117,15 +149,17 @@ async function fetchMars2020(): Promise<Frame[]> {
 
 async function fetchMsl(): Promise<Frame[]> {
   const url =
-    'https://mars.nasa.gov/api/v1/raw_image_items/?order=sol+desc&per_page=40&condition_1=msl:mission';
+    'https://mars.nasa.gov/api/v1/raw_image_items/?order=sol+desc&per_page=120&condition_1=msl:mission';
   const res = await fetch(url, { headers: UA });
   if (!res.ok) throw new Error(`msl feed HTTP ${res.status}`);
   const json = (await res.json()) as {
     // this endpoint names the capture time `date_taken` (already UTC ISO).
-    items?: { sol?: number; instrument?: string; date_taken?: string; url?: string }[];
+    // Every full frame ships with a low-res `is_thumbnail` twin; keep only the
+    // full ones so the wall isn't half grainy previews.
+    items?: { sol?: number; instrument?: string; date_taken?: string; url?: string; is_thumbnail?: boolean }[];
   };
   return (json.items ?? [])
-    .filter((im) => im.date_taken && im.instrument && im.url)
+    .filter((im) => im.date_taken && im.instrument && im.url && !im.is_thumbnail)
     .map((im) => ({
       sol: im.sol ?? null,
       instrument: im.instrument!,
