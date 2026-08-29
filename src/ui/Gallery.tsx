@@ -98,14 +98,16 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchiv
                 </div>
                 {b.lightLine && <span className="cb-light">↗ {b.lightLine}</span>}
               </header>
-              <div className="cb-grid">
-                <button className="cb-tile" onClick={() => onOpenArchive(b.craftId)} aria-label={`${b.craftName} — ${b.archiveTitle}`}>
-                  <img src={asset(b.archiveFile!)} alt={`${b.craftName} — ${b.archiveTitle}`} loading="lazy" />
-                  <div className="cb-tile-meta">
-                    <span className="cb-cap">{b.archiveTitle}</span>
-                    <span className="cb-arr">mission archive</span>
+              <div className="cb-feed">
+                <article className="cbf-post">
+                  <button className="cbf-photo" onClick={() => onOpenArchive(b.craftId)} aria-label={`${b.craftName} — ${b.archiveTitle}`}>
+                    <img src={asset(b.archiveFile!)} alt={`${b.craftName} — ${b.archiveTitle}`} loading="lazy" />
+                  </button>
+                  <div className="cbf-meta">
+                    <span className="cbf-cap">{b.archiveTitle}</span>
+                    <span className="cbf-arr">mission archive</span>
                   </div>
-                </button>
+                </article>
               </div>
             </section>
           ) : (
