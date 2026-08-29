@@ -14,7 +14,10 @@ private struct FeedItem: Identifiable {
     let lightLine: String?
     let lightSeconds: Double
     let sortDate: Date
+    let isArchive: Bool
 }
+
+private enum GalleryTab { case feed, archives }
 
 private func parseUTC(_ iso: String) -> Date? {
     let f = ISO8601DateFormatter()
@@ -29,10 +32,10 @@ private func parseUTC(_ iso: String) -> Date? {
 // light-travel delay the honest twist under every photo.
 struct GalleryView: View {
     @ObservedObject var store: DataStore
-    let onClose: () -> Void
     @State private var lightbox: URL?
+    @State private var tab: GalleryTab = .feed
 
-    private var items: [FeedItem] {
+    private var allItems: [FeedItem] {
         var out: [FeedItem] = []
         for c in store.craft {
             let loc = c.reg.location
@@ -46,18 +49,18 @@ struct GalleryView: View {
                 out.append(FeedItem(id: c.id + "-hero", craft: c.name, location: loc, avatar: avatar,
                                     thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
                                     caption: solCap(f.sol, f.instrument), timeAgo: Fmt.ago(f.capturedUtc),
-                                    lightLine: light, lightSeconds: owlt, sortDate: parseUTC(f.capturedUtc) ?? .distantPast))
+                                    lightLine: light, lightSeconds: owlt, sortDate: parseUTC(f.capturedUtc) ?? .distantPast, isArchive: false))
                 for (i, r) in (f.recent ?? []).enumerated() {
                     out.append(FeedItem(id: "\(c.id)-\(i)", craft: c.name, location: loc, avatar: avatar,
                                         thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
                                         caption: solCap(r.sol, r.instrument), timeAgo: Fmt.ago(r.capturedUtc),
-                                        lightLine: light, lightSeconds: owlt, sortDate: parseUTC(r.capturedUtc) ?? .distantPast))
+                                        lightLine: light, lightSeconds: owlt, sortDate: parseUTC(r.capturedUtc) ?? .distantPast, isArchive: false))
                 }
             } else if let a = store.archive[c.id] {
                 out.append(FeedItem(id: c.id + "-arch", craft: c.name, location: loc, avatar: avatar,
                                     thumb: DataStore.imageURL(a.file), full: DataStore.imageURL(a.full),
                                     caption: a.title, timeAgo: "mission archive",
-                                    lightLine: light, lightSeconds: owlt, sortDate: .distantPast))
+                                    lightLine: light, lightSeconds: owlt, sortDate: .distantPast, isArchive: true))
             }
         }
         // By the age of the arriving light: the most distant / oldest light first
@@ -67,20 +70,45 @@ struct GalleryView: View {
         }
     }
 
+    private var shown: [FeedItem] {
+        allItems.filter { tab == .archives ? $0.isArchive : !$0.isArchive }
+    }
+
     var body: some View {
         ZStack {
             Theme.void.ignoresSafeArea()
             VStack(spacing: 0) {
-                header
+                tabBar
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(items) { item in card(item) }
+                        ForEach(shown) { item in card(item) }
                     }
                     .padding(.bottom, 100)
                 }
             }
         }
         .fullScreenCover(item: $lightbox) { url in Lightbox(url: url) { lightbox = nil } }
+    }
+
+    private var tabBar: some View {
+        HStack(spacing: 0) {
+            tabButton("Feed", .feed)
+            tabButton("Archives", .archives)
+        }
+        .padding(.horizontal, 12).padding(.top, 8)
+        .background(Theme.void)
+        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
+    }
+
+    private func tabButton(_ title: String, _ t: GalleryTab) -> some View {
+        Button { tab = t } label: {
+            VStack(spacing: 8) {
+                Text(title).font(.monoMed(14)).foregroundColor(tab == t ? Theme.txt : Theme.dim)
+                Rectangle().fill(tab == t ? Theme.signal : Color.clear).frame(height: 2)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
     }
 
     private func card(_ item: FeedItem) -> some View {
@@ -127,24 +155,6 @@ struct GalleryView: View {
 
             Rectangle().fill(Theme.rule).frame(height: 1)
         }
-    }
-
-    private var header: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Arriving light").font(.title(22)).foregroundColor(Theme.txt)
-                Text("Every frame is as old as its journey here")
-                    .font(.mono(10)).foregroundColor(Theme.dim)
-            }
-            Spacer()
-            Button(action: onClose) {
-                Image(systemName: "xmark").font(.system(size: 15, weight: .medium))
-                    .foregroundColor(Theme.txt).padding(10)
-            }
-        }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .background(Theme.panel)
-        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
     }
 }
 
