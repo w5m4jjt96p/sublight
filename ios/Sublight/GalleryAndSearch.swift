@@ -12,6 +12,7 @@ private struct FeedItem: Identifiable {
     let caption: String
     let timeAgo: String
     let lightLine: String?
+    let lightSeconds: Double
     let sortDate: Date
 }
 
@@ -45,40 +46,25 @@ struct GalleryView: View {
                 out.append(FeedItem(id: c.id + "-hero", craft: c.name, location: loc, avatar: avatar,
                                     thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
                                     caption: solCap(f.sol, f.instrument), timeAgo: Fmt.ago(f.capturedUtc),
-                                    lightLine: light, sortDate: parseUTC(f.capturedUtc) ?? .distantPast))
+                                    lightLine: light, lightSeconds: owlt, sortDate: parseUTC(f.capturedUtc) ?? .distantPast))
                 for (i, r) in (f.recent ?? []).enumerated() {
                     out.append(FeedItem(id: "\(c.id)-\(i)", craft: c.name, location: loc, avatar: avatar,
                                         thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
                                         caption: solCap(r.sol, r.instrument), timeAgo: Fmt.ago(r.capturedUtc),
-                                        lightLine: light, sortDate: parseUTC(r.capturedUtc) ?? .distantPast))
+                                        lightLine: light, lightSeconds: owlt, sortDate: parseUTC(r.capturedUtc) ?? .distantPast))
                 }
             } else if let a = store.archive[c.id] {
                 out.append(FeedItem(id: c.id + "-arch", craft: c.name, location: loc, avatar: avatar,
                                     thumb: DataStore.imageURL(a.file), full: DataStore.imageURL(a.full),
                                     caption: a.title, timeAgo: "mission archive",
-                                    lightLine: light, sortDate: .distantPast))
+                                    lightLine: light, lightSeconds: owlt, sortDate: .distantPast))
             }
         }
-        // Newest first per craft, then interleave craft by craft so the feed
-        // opens with variety (one from each) instead of a run of one source.
-        let sorted = out.sorted { $0.sortDate > $1.sortDate }
-        var byCraft: [String: [FeedItem]] = [:]
-        var order: [String] = []
-        for item in sorted {
-            if byCraft[item.craft] == nil { order.append(item.craft) }
-            byCraft[item.craft, default: []].append(item)
+        // By the age of the arriving light: the most distant / oldest light first
+        // (Voyager down to DSCOVR), newest capture breaking ties within a craft.
+        return out.sorted { a, b in
+            a.lightSeconds != b.lightSeconds ? a.lightSeconds > b.lightSeconds : a.sortDate > b.sortDate
         }
-        var result: [FeedItem] = []
-        var i = 0
-        while true {
-            var added = false
-            for craft in order {
-                if let arr = byCraft[craft], i < arr.count { result.append(arr[i]); added = true }
-            }
-            if !added { break }
-            i += 1
-        }
-        return result
     }
 
     var body: some View {

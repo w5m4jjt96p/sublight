@@ -31,6 +31,7 @@ interface FeedPost {
   caption: string;
   timeAgo: string;
   lightLine: string | null;
+  lightSeconds: number;
   sortMs: number;
   open: () => void;
 }
@@ -95,8 +96,8 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
     };
     for (const c of model?.craft ?? []) {
       const id = c.entry.id;
-      const owlt = generatedAt ? owltAt(c.eph, generatedAt, now) : null;
-      const light = owlt && owlt > 0 ? `Its light took ${fmtDuration(owlt)} to cross the void` : null;
+      const owlt = generatedAt ? owltAt(c.eph, generatedAt, now) : 0;
+      const light = owlt > 0 ? `Its light took ${fmtDuration(owlt)} to cross the void` : null;
       const f = frames[id];
       if (f) {
         const list = f.recent?.length ? f.recent : [{ file: f.file, instrument: f.instrument, capturedUtc: f.capturedUtc, sol: f.sol }];
@@ -104,7 +105,7 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
           push({
             key: `${id}-${index}`, craftId: id, craftName: c.entry.name, location: c.entry.location,
             file: t.file, caption: t.sol != null ? `Sol ${t.sol} · ${t.instrument}` : t.instrument,
-            timeAgo: fmtSince(t.capturedUtc, now), lightLine: light,
+            timeAgo: fmtSince(t.capturedUtc, now), lightLine: light, lightSeconds: owlt ?? 0,
             sortMs: Date.parse(t.capturedUtc) || 0, open: () => onOpen(id, index),
           });
         });
@@ -112,24 +113,15 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpen, onOp
         push({
           key: `${id}-arch`, craftId: id, craftName: c.entry.name, location: c.entry.location,
           file: archive[id]!.file, caption: archive[id]!.title, timeAgo: 'mission archive',
-          lightLine: light, sortMs: 0, open: () => onOpenArchive(id),
+          lightLine: light, lightSeconds: owlt ?? 0, sortMs: 0, open: () => onOpenArchive(id),
         });
       }
     }
-    // sort each craft's posts newest-first, then round-robin for variety
-    for (const id of order) byCraft[id]!.sort((a, b) => b.sortMs - a.sortMs);
+    // By the age of the arriving light: most distant / oldest light first
+    // (Voyager down to DSCOVR), newest capture breaking ties within a craft.
     const out: FeedPost[] = [];
-    for (let i = 0; ; i++) {
-      let added = false;
-      for (const id of order) {
-        const arr = byCraft[id]!;
-        if (i < arr.length) { out.push(arr[i]!); added = true; }
-      }
-      if (!added) break;
-    }
-    // craft with the newest post leads
-    order.sort((a, b) => (byCraft[b]![0]?.sortMs ?? 0) - (byCraft[a]![0]?.sortMs ?? 0));
-    return out;
+    for (const id of order) out.push(...byCraft[id]!);
+    return out.sort((a, b) => (b.lightSeconds - a.lightSeconds) || (b.sortMs - a.sortMs));
   }, [frames, archive, model, generatedAt, now, onOpen, onOpenArchive]);
 
   return (
