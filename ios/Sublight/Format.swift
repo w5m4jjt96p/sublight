@@ -111,13 +111,17 @@ enum Fmt {
         return out.string(from: date)
     }
 
-    /// Parse an ISO capture time (with or without fractional seconds).
+    /// Parse an ISO capture time (with or without fractional seconds). Some
+    /// feeds omit the timezone (mars2020 sends "2026-08-21T08:13:39.468"); those
+    /// are UTC, so retry with a trailing Z rather than failing.
     static func date(from iso: String) -> Date? {
         let df = ISO8601DateFormatter()
         df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let d = df.date(from: iso) { return d }
         df.formatOptions = [.withInternetDateTime]
-        return df.date(from: iso)
+        if let d = df.date(from: iso) { return d }
+        if !iso.hasSuffix("Z") && !iso.contains("+") { return date(from: iso + "Z") }
+        return nil
     }
 
     /// How long ago a moment was, in coarse human terms.

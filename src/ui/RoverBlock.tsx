@@ -9,7 +9,10 @@ import { fetchSolImages } from '../data/roverImages.ts';
 import { fmtSince } from '../data/format.ts';
 
 const asset = (p: string) => (/^https?:/.test(p) ? p : `${import.meta.env.BASE_URL.replace(/\/$/, '')}${p}`);
-const byArrivalDesc = (a: FrameThumb, b: FrameThumb) => (Date.parse(b.capturedUtc) || 0) - (Date.parse(a.capturedUtc) || 0);
+// Some feeds (mars2020) omit the timezone; those times are UTC, so append Z
+// instead of letting Date.parse read them as local time.
+const capMs = (utc: string) => Date.parse(/(Z|[+-]\d\d:?\d\d)$/.test(utc) ? utc : `${utc}Z`) || 0;
+const byArrivalDesc = (a: FrameThumb, b: FrameThumb) => capMs(b.capturedUtc) - capMs(a.capturedUtc);
 
 interface RoverBlockProps {
   craftId: string;
@@ -57,7 +60,7 @@ export function RoverBlock({
     }
   }
 
-  const arrivedAgo = (utc: string) => fmtSince(new Date((Date.parse(utc) || 0) + owlt * 1000).toISOString(), now);
+  const arrivedAgo = (utc: string) => fmtSince(new Date(capMs(utc) + owlt * 1000).toISOString(), now);
 
   return (
     <section className="craft-block">

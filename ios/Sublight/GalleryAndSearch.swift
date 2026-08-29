@@ -6,41 +6,36 @@ import SwiftUI
 // by when their light actually reached Earth (capture + light-travel delay),
 // newest arrival first; blocks ordered by their freshest arrival, archive-only
 // craft last. The age is the point — none of it is happening now.
+// A photo on the wall: bundled ones resolve to a local file (BundleImage);
+// live ones are remote mars.nasa.gov URLs (AsyncImage).
+struct GalleryPhoto: Identifiable {
+    let id: String
+    let thumb: URL?
+    let full: URL?
+    let caption: String
+    let arrival: Date?   // when its light reached Earth; nil for archive stills
+    let isArchive: Bool
+    let isRemote: Bool
+}
+
+struct CraftBlock: Identifiable {
+    let id: String
+    let name: String
+    let location: String
+    let avatar: URL?
+    let lightLine: String?
+    let isLive: Bool          // a rover we can page back through, sol by sol
+    let latestSol: Int?
+    let owlt: Double
+    let newestArrival: Date
+    let initial: [GalleryPhoto]
+}
+
 struct GalleryView: View {
     @ObservedObject var store: DataStore
-    @State private var lightbox: URL?
-    @State private var storyRover: StoryID?
+    @State private var viewer: URL?
 
-    private struct StoryID: Identifiable { let id: String }
     private let cols = [GridItem(.adaptive(minimum: 150), spacing: 8)]
-
-    // Craft with a live per-sol firehose (the Mars rovers): a captured sol number
-    // is the tell. Each opens a full-screen "story" of all its raw frames.
-    private struct StoryCraft: Identifiable { let id: String; let name: String; let location: String; let sol: Int; let owlt: Double }
-    private var storyCraft: [StoryCraft] {
-        store.craft.compactMap { c in
-            guard let f = store.frames[c.id], let sol = f.sol else { return nil }
-            return StoryCraft(id: c.id, name: c.name, location: c.reg.location, sol: sol, owlt: c.eph.owltSeconds)
-        }
-    }
-
-    private struct BlockPhoto: Identifiable {
-        let id: String
-        let thumb: URL?
-        let full: URL?
-        let caption: String
-        let arrival: Date?   // nil for archive stills (no capture time)
-        let isArchive: Bool
-    }
-    private struct CraftBlock: Identifiable {
-        let id: String
-        let name: String
-        let location: String
-        let avatar: URL?
-        let lightLine: String?
-        let newestArrival: Date
-        let photos: [BlockPhoto]
-    }
 
     private var blocks: [CraftBlock] {
         var out: [CraftBlock] = []
@@ -51,26 +46,26 @@ struct GalleryView: View {
             func solCap(_ sol: Int?, _ instrument: String) -> String {
                 sol.map { "Sol \($0) · \(instrument)" } ?? instrument
             }
-            // Arrival = when the light reached Earth = capture + light-travel time.
             func arrival(_ iso: String) -> Date? { Fmt.date(from: iso)?.addingTimeInterval(owlt) }
 
             if let f = store.frames[c.id] {
-                var photos: [BlockPhoto] = [
-                    BlockPhoto(id: c.id + "-hero", thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
-                               caption: solCap(f.sol, f.instrument), arrival: arrival(f.capturedUtc), isArchive: false)
+                var photos: [GalleryPhoto] = [
+                    GalleryPhoto(id: c.id + "-hero", thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
+                                 caption: solCap(f.sol, f.instrument), arrival: arrival(f.capturedUtc), isArchive: false, isRemote: false)
                 ]
                 for (i, r) in (f.recent ?? []).enumerated() {
-                    photos.append(BlockPhoto(id: "\(c.id)-\(i)", thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
-                                             caption: solCap(r.sol, r.instrument), arrival: arrival(r.capturedUtc), isArchive: false))
+                    photos.append(GalleryPhoto(id: "\(c.id)-\(i)", thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
+                                               caption: solCap(r.sol, r.instrument), arrival: arrival(r.capturedUtc), isArchive: false, isRemote: false))
                 }
                 photos.sort { ($0.arrival ?? .distantPast) > ($1.arrival ?? .distantPast) }
-                out.append(CraftBlock(id: c.id, name: c.name, location: c.reg.location, avatar: avatar,
-                                      lightLine: light, newestArrival: photos.first?.arrival ?? .distantPast, photos: photos))
+                out.append(CraftBlock(id: c.id, name: c.name, location: c.reg.location, avatar: avatar, lightLine: light,
+                                      isLive: f.sol != nil, latestSol: f.sol, owlt: owlt,
+                                      newestArrival: photos.first?.arrival ?? .distantPast, initial: photos))
             } else if let a = store.archive[c.id] {
-                out.append(CraftBlock(id: c.id, name: c.name, location: c.reg.location, avatar: avatar,
-                                      lightLine: light, newestArrival: .distantPast,
-                                      photos: [BlockPhoto(id: c.id + "-arch", thumb: DataStore.imageURL(a.file),
-                                                          full: DataStore.imageURL(a.full), caption: a.title, arrival: nil, isArchive: true)]))
+                out.append(CraftBlock(id: c.id, name: c.name, location: c.reg.location, avatar: avatar, lightLine: light,
+                                      isLive: false, latestSol: nil, owlt: owlt, newestArrival: .distantPast,
+                                      initial: [GalleryPhoto(id: c.id + "-arch", thumb: DataStore.imageURL(a.file), full: DataStore.imageURL(a.full),
+                                                             caption: a.title, arrival: nil, isArchive: true, isRemote: false)]))
             }
         }
         return out.sorted { $0.newestArrival > $1.newestArrival }
@@ -81,98 +76,83 @@ struct GalleryView: View {
             Theme.void.ignoresSafeArea()
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    if !storyCraft.isEmpty { storiesRail }
-                    ForEach(blocks) { block in blockView(block) }
+                    ForEach(blocks) { block in
+                        RoverBlockView(block: block, cols: cols) { viewer = $0 }
+                    }
                 }
                 .padding(.bottom, 100)
             }
         }
-        .fullScreenCover(item: $lightbox) { url in Lightbox(url: url) { lightbox = nil } }
-        .fullScreenCover(item: $storyRover) { s in storyView(for: s.id) }
+        .fullScreenCover(item: $viewer) { url in PhotoViewer(url: url) { viewer = nil } }
     }
+}
 
-    private var storiesRail: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 16) {
-                ForEach(storyCraft) { s in
-                    Button { storyRover = StoryID(id: s.id) } label: {
-                        VStack(spacing: 7) {
-                            ZStack {
-                                Circle().fill(LinearGradient(colors: [Theme.signal, Theme.delay],
-                                                             startPoint: .topLeading, endPoint: .bottomTrailing))
-                                    .frame(width: 64, height: 64)
-                                storyAvatar(s.id, s.name)
-                                    .frame(width: 58, height: 58).clipShape(Circle())
-                                    .overlay(Circle().stroke(Theme.void, lineWidth: 2.5))
-                            }
-                            Text(s.name).font(.mono(11)).foregroundColor(Theme.dim)
-                                .lineLimit(1).frame(maxWidth: 72)
-                        }
-                    }.buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 14)
-        }
-        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
-    }
+// One craft's block. Opens with the bundled recent frames; for a rover, "Show
+// all photos" loads the full latest sol live and "Load earlier sols" pages back
+// through the archive, appending — the whole reach of the mission, not just the
+// day's frames. Everything stays ordered by arrival, newest first.
+struct RoverBlockView: View {
+    let block: CraftBlock
+    let cols: [GridItem]
+    let onOpen: (URL?) -> Void
 
-    private func storyAvatar(_ id: String, _ name: String) -> some View {
-        Group {
-            if let url = store.avatarURL(for: id) {
-                BundleImage(url: url, contentMode: .fill)
-            } else {
-                Circle().fill(Theme.rule2).overlay(
-                    Text(String(name.prefix(1))).font(.title(18)).foregroundColor(Theme.dim))
-            }
-        }
-    }
+    @State private var live: [GalleryPhoto]?
+    @State private var nextSol = 0
+    @State private var loading = false
+    @State private var done = false
 
-    @ViewBuilder private func storyView(for id: String) -> some View {
-        if let s = storyCraft.first(where: { $0.id == id }) {
-            RoverStoryView(roverId: s.id, roverName: s.name, location: s.location,
-                           avatarURL: store.avatarURL(for: s.id), startSol: s.sol,
-                           owltSeconds: s.owlt) { storyRover = nil }
-        }
-    }
+    private var photos: [GalleryPhoto] { live ?? block.initial }
 
-    private func blockView(_ b: CraftBlock) -> some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Group {
-                    if b.avatar != nil {
-                        BundleImage(url: b.avatar, contentMode: .fill)
-                    } else {
-                        Circle().fill(Theme.rule2).overlay(
-                            Text(String(b.name.prefix(1))).font(.title(16)).foregroundColor(Theme.dim))
-                    }
-                }
-                .frame(width: 40, height: 40).clipShape(Circle())
-                .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(b.name).font(.title(20)).foregroundColor(Theme.txt)
-                    Text(b.location.uppercased()).font(.mono(10)).tracking(1).foregroundColor(Theme.dim)
-                }
-                Spacer()
-            }
-            if let l = b.lightLine {
+            header
+            if let l = block.lightLine {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
                     Text(l).font(.mono(11)).foregroundColor(Theme.delay)
                 }
             }
             LazyVGrid(columns: cols, spacing: 8) {
-                ForEach(b.photos) { p in tile(p) }
+                ForEach(photos) { p in tile(p) }
+            }
+            if block.isLive && !done {
+                Button { Task { await loadMore() } } label: {
+                    HStack(spacing: 8) {
+                        if loading { ProgressView().tint(Theme.signal).scaleEffect(0.8) }
+                        Text(loading ? "Loading…"
+                             : (live == nil ? "Show all photos" : "Load earlier sols · \(photos.count) loaded"))
+                            .font(.mono(12)).foregroundColor(Theme.signal)
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 11)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
+                }
+                .buttonStyle(.plain).disabled(loading)
             }
         }
         .padding(.horizontal, 14).padding(.top, 22).padding(.bottom, 8)
         .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .top)
     }
 
-    private func tile(_ p: BlockPhoto) -> some View {
-        Button { lightbox = p.full } label: {
+    private var header: some View {
+        HStack(spacing: 10) {
+            Group {
+                if block.avatar != nil { BundleImage(url: block.avatar, contentMode: .fill) }
+                else { Circle().fill(Theme.rule2).overlay(Text(String(block.name.prefix(1))).font(.title(16)).foregroundColor(Theme.dim)) }
+            }
+            .frame(width: 40, height: 40).clipShape(Circle()).overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(block.name).font(.title(20)).foregroundColor(Theme.txt)
+                Text(block.location.uppercased()).font(.mono(10)).tracking(1).foregroundColor(Theme.dim)
+            }
+            Spacer()
+        }
+    }
+
+    private func tile(_ p: GalleryPhoto) -> some View {
+        Button { onOpen(p.full) } label: {
             ZStack(alignment: .bottomLeading) {
                 Rectangle().fill(Color.black).aspectRatio(4.0 / 3.0, contentMode: .fit)
-                    .overlay(BundleImage(url: p.thumb, contentMode: .fill)).clipped()
+                    .overlay(photoImage(p)).clipped()
                 LinearGradient(colors: [.black.opacity(0.85), .clear], startPoint: .bottom, endPoint: .center)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(p.caption).font(.mono(10)).foregroundColor(Theme.txt).lineLimit(1)
@@ -184,6 +164,73 @@ struct GalleryView: View {
             .clipShape(RoundedRectangle(cornerRadius: 6))
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
         }.buttonStyle(.plain)
+    }
+
+    @ViewBuilder private func photoImage(_ p: GalleryPhoto) -> some View {
+        if p.isRemote {
+            AsyncImage(url: p.thumb) { phase in
+                switch phase {
+                case .success(let img): img.resizable().aspectRatio(contentMode: .fill)
+                default: Rectangle().fill(Theme.rule)
+                }
+            }
+        } else {
+            BundleImage(url: p.thumb, contentMode: .fill)
+        }
+    }
+
+    private func loadMore() async {
+        guard !loading, !done, let latest = block.latestSol else { return }
+        loading = true
+        var sol = live == nil ? latest : nextSol
+        var added: [RoverImage] = []
+        var tries = 0
+        while tries < 8 && sol >= 0 {
+            let d = await RoverImages.fetch(roverId: block.id, sol: sol, limit: 600)
+            if !d.images.isEmpty { added = d.images; break }
+            sol -= 1; tries += 1
+        }
+        let owlt = block.owlt
+        let mapped: [GalleryPhoto] = added.map { img in
+            let cap = img.sol > 0 ? "Sol \(img.sol) · \(img.instrument)" : img.instrument
+            return GalleryPhoto(id: img.id.uuidString, thumb: img.thumb, full: img.full, caption: cap,
+                                arrival: Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt), isArchive: false, isRemote: true)
+        }
+        var merged = live == nil ? mapped : (live! + mapped)
+        merged.sort { ($0.arrival ?? .distantPast) > ($1.arrival ?? .distantPast) }
+        live = merged
+        nextSol = sol - 1
+        if sol - 1 < 0 { done = true }
+        loading = false
+    }
+}
+
+// Full-screen photo viewer that works for both local (bundled) and remote
+// (live) URLs, unlike the ImageStore-backed Lightbox.
+private struct PhotoViewer: View {
+    let url: URL?
+    let onClose: () -> Void
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
+                case .empty: ProgressView().tint(.white)
+                default: Text("Couldn't load image").font(.mono(12)).foregroundColor(Theme.dim)
+                }
+            }
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.system(size: 15, weight: .medium)).foregroundColor(.white)
+                            .padding(10).background(Circle().fill(Color.black.opacity(0.5)))
+                    }
+                }
+                Spacer()
+            }.padding(16)
+        }
     }
 }
 
