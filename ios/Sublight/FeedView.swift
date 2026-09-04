@@ -41,15 +41,137 @@ struct PhotoViewer: View {
 
 struct FeedPost: Identifiable {
     let id: String
+    let craftId: String
     let craftName: String
     let location: String
     let avatar: URL?
     let thumb: URL?
     let full: URL?
     let caption: String        // "Sol 1969 · MCZ_RIGHT"
+    let sol: Int?              // the rover's own day — the grouping key
     let arrival: Date?         // when its light reached Earth
     let lightLine: String?
     let isRemote: Bool
+}
+
+/// Every frame a craft sent on the same day is one publication, swipeable —
+/// a rover doesn't post 48 times, it posts a day's worth of looking around.
+struct FeedGroup: Identifiable {
+    let id: String             // craftId + arrival day
+    let craftName: String
+    let location: String
+    let avatar: URL?
+    let lightLine: String?
+    let newest: Date?
+    let posts: [FeedPost]      // newest first within the day
+}
+
+/// One publication: a craft's frames from a single day, swiped like an
+/// Instagram carousel. The caption and the light line follow the current slide.
+struct FeedGroupCard: View {
+    let group: FeedGroup
+    let onOpen: (URL?) -> Void
+    @State private var page = 0
+
+    private var index: Int { min(max(page, 0), group.posts.count - 1) }
+    private var current: FeedPost? { group.posts.indices.contains(index) ? group.posts[index] : nil }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            carousel
+            footer
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 10) {
+            Group {
+                if group.avatar != nil { BundleImage(url: group.avatar, contentMode: .fill) }
+                else { Circle().fill(Theme.rule2).overlay(Text(String(group.craftName.prefix(1))).font(.title(15)).foregroundColor(Theme.dim)) }
+            }
+            .frame(width: 36, height: 36).clipShape(Circle())
+            .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(group.craftName).font(.monoMed(14)).foregroundColor(Theme.txt)
+                Text(group.location).font(.mono(11)).foregroundColor(Theme.dim)
+            }
+            Spacer()
+            if let n = group.newest {
+                Text(Fmt.ago(n)).font(.mono(11)).foregroundColor(Theme.dim2)
+            }
+        }
+        .padding(.horizontal, 14).padding(.bottom, 10)
+    }
+
+    private var carousel: some View {
+        TabView(selection: $page) {
+            ForEach(Array(group.posts.enumerated()), id: \.element.id) { i, p in
+                Button { onOpen(p.full) } label: {
+                    FeedPhoto(post: p).frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .buttonStyle(.plain)
+                .tag(i)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .frame(height: 380)
+        .background(Color.black)
+        .overlay(alignment: .topTrailing) {
+            if group.posts.count > 1 {
+                Text("\(index + 1)/\(group.posts.count)")
+                    .font(.mono(11)).foregroundColor(.white)
+                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .background(Capsule().fill(Color.black.opacity(0.55)))
+                    .padding(10)
+            }
+        }
+    }
+
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if group.posts.count > 1 && group.posts.count <= 10 {
+                HStack(spacing: 5) {
+                    ForEach(0..<group.posts.count, id: \.self) { i in
+                        Circle()
+                            .fill(i == index ? Theme.txt : Theme.rule2)
+                            .frame(width: 5, height: 5)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 8)
+            }
+            if let p = current {
+                Text(p.caption).font(.mono(12)).foregroundColor(Theme.txt)
+            }
+            if let l = group.lightLine {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
+                    Text(l).font(.mono(11)).foregroundColor(Theme.delay)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14).padding(.top, 10)
+    }
+}
+
+/// A single frame: bundled ones come from the app bundle, live ones over the wire.
+struct FeedPhoto: View {
+    let post: FeedPost
+    var body: some View {
+        if post.isRemote {
+            AsyncImage(url: post.thumb) { phase in
+                switch phase {
+                case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
+                case .empty: ProgressView().tint(Theme.dim)
+                default: Rectangle().fill(Theme.rule)
+                }
+            }
+        } else {
+            BundleImage(url: post.thumb, contentMode: .fit)
+        }
+    }
 }
 
 /// A live rover we can page backwards through, sol by sol.
@@ -62,20 +184,52 @@ private struct RoverCursor {
 
 @MainActor
 final class FeedStore: ObservableObject {
-    @Published private(set) var posts: [FeedPost] = []
+    @Published private(set) var groups: [FeedGroup] = []
     @Published private(set) var loading = false
-    @Published var visible = 6
+    @Published var visible = 4
 
     private var byCraft: [String: [FeedPost]] = [:]
     private var cursors: [String: RoverCursor] = [:]
     private var seeded = false
-    let page = 6
+    let page = 4
 
     var canLoadOlder: Bool { cursors.values.contains { !$0.done } }
 
+    private static let dayFmt: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f
+    }()
+
+    /// Flatten every craft's posts into one stream, newest arrival first, then
+    /// fold each craft's same-day frames into a single swipeable publication.
     private func remerge() {
-        posts = byCraft.values.flatMap { $0 }
+        let flat = byCraft.values.flatMap { $0 }
             .sorted { ($0.arrival ?? .distantPast) > ($1.arrival ?? .distantPast) }
+
+        var buckets: [String: [FeedPost]] = [:]
+        var order: [String] = []
+        for p in flat {
+            // A sol is the rover's own day; anything without one (EPIC) falls
+            // back to the calendar day. Grouping on the sol also stops a batch
+            // from being split in two by an arbitrary UTC midnight.
+            let day = p.sol.map { "sol\($0)" }
+                ?? p.arrival.map { Self.dayFmt.string(from: $0) }
+                ?? "archive"
+            let key = "\(p.craftId)|\(day)"
+            if buckets[key] == nil { order.append(key) }
+            buckets[key, default: []].append(p)
+        }
+        // `flat` is newest-first, so first appearance orders the groups and each
+        // bucket is already newest-first inside its day.
+        groups = order.compactMap { key in
+            guard let items = buckets[key], let head = items.first else { return nil }
+            return FeedGroup(id: key, craftName: head.craftName, location: head.location,
+                             avatar: head.avatar, lightLine: head.lightLine,
+                             newest: head.arrival, posts: items)
+        }
+        if visible > groups.count { visible = max(page, groups.count) }
     }
 
     /// Instant first paint from the bundled snapshot.
@@ -92,15 +246,15 @@ final class FeedStore: ObservableObject {
                 sol.map { "Sol \($0) · \(instrument)" } ?? instrument
             }
             var list: [FeedPost] = [
-                FeedPost(id: c.id + "-hero", craftName: c.name, location: c.reg.location, avatar: avatar,
+                FeedPost(id: c.id + "-hero", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
                          thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
-                         caption: cap(f.sol, f.instrument), arrival: arrival(f.capturedUtc),
+                         caption: cap(f.sol, f.instrument), sol: f.sol, arrival: arrival(f.capturedUtc),
                          lightLine: light, isRemote: false)
             ]
             for (i, r) in (f.recent ?? []).enumerated() {
-                list.append(FeedPost(id: "\(c.id)-\(i)", craftName: c.name, location: c.reg.location, avatar: avatar,
+                list.append(FeedPost(id: "\(c.id)-\(i)", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
                                      thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
-                                     caption: cap(r.sol, r.instrument), arrival: arrival(r.capturedUtc),
+                                     caption: cap(r.sol, r.instrument), sol: r.sol, arrival: arrival(r.capturedUtc),
                                      lightLine: light, isRemote: false))
             }
             byCraft[c.id] = list
@@ -150,23 +304,23 @@ final class FeedStore: ObservableObject {
             cursors[c.id] = cur
         }
         remerge()
-        visible = min(visible + page, posts.count)
+        visible = min(visible + page, groups.count)
     }
 
     private func post(from img: RoverImage, craft: Craft, store: DataStore) -> FeedPost {
         let owlt = craft.eph.owltSeconds
         let caption = img.sol > 0 ? "Sol \(img.sol) · \(img.instrument)" : img.instrument
         return FeedPost(
-            id: img.id.uuidString, craftName: craft.name, location: craft.reg.location,
+            id: img.id.uuidString, craftId: craft.id, craftName: craft.name, location: craft.reg.location,
             avatar: store.avatarURL(for: craft.id), thumb: img.thumb, full: img.full,
-            caption: caption,
+            caption: caption, sol: img.sol > 0 ? img.sol : nil,
             arrival: Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt),
             lightLine: owlt > 0 ? "Its light took \(Fmt.lightTime(owlt)) to cross the void" : nil,
             isRemote: true)
     }
 
     func revealMore() {
-        if visible < posts.count { visible = min(visible + page, posts.count) }
+        if visible < groups.count { visible = min(visible + page, groups.count) }
     }
 }
 
@@ -175,19 +329,18 @@ struct FeedView: View {
     @StateObject private var feed = FeedStore()
     @State private var viewer: URL?
 
-    private var shown: [FeedPost] { Array(feed.posts.prefix(feed.visible)) }
+    private var shown: [FeedGroup] { Array(feed.groups.prefix(feed.visible)) }
 
     var body: some View {
         ZStack {
             Theme.void.ignoresSafeArea()
             ScrollView {
-                LazyVStack(spacing: 18) {
-                    ForEach(Array(shown.enumerated()), id: \.element.id) { idx, p in
-                        card(p).onAppear {
-                            if idx >= feed.visible - 2 { feed.revealMore() }
-                        }
+                LazyVStack(spacing: 22) {
+                    ForEach(Array(shown.enumerated()), id: \.element.id) { idx, g in
+                        FeedGroupCard(group: g) { viewer = $0 }
+                            .onAppear { if idx >= feed.visible - 2 { feed.revealMore() } }
                     }
-                    if feed.visible < feed.posts.count || feed.canLoadOlder { loadButton }
+                    if feed.visible < feed.groups.count || feed.canLoadOlder { loadButton }
                     archiveSection
                 }
                 .padding(.bottom, 100)
@@ -200,68 +353,14 @@ struct FeedView: View {
         .fullScreenCover(item: $viewer) { url in PhotoViewer(url: url) { viewer = nil } }
     }
 
-    // MARK: - Post
-
-    private func card(_ p: FeedPost) -> some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 10) {
-                Group {
-                    if p.avatar != nil { BundleImage(url: p.avatar, contentMode: .fill) }
-                    else { Circle().fill(Theme.rule2).overlay(Text(String(p.craftName.prefix(1))).font(.title(15)).foregroundColor(Theme.dim)) }
-                }
-                .frame(width: 36, height: 36).clipShape(Circle())
-                .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(p.craftName).font(.monoMed(14)).foregroundColor(Theme.txt)
-                    Text(p.location).font(.mono(11)).foregroundColor(Theme.dim)
-                }
-                Spacer()
-                if let a = p.arrival {
-                    Text(Fmt.ago(a)).font(.mono(11)).foregroundColor(Theme.dim2)
-                }
-            }
-            .padding(.horizontal, 14).padding(.bottom, 10)
-
-            Button { viewer = p.full } label: {
-                photoImage(p).frame(maxWidth: .infinity).background(Color.black)
-            }.buttonStyle(.plain)
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(p.caption).font(.mono(12)).foregroundColor(Theme.txt)
-                if let l = p.lightLine {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
-                        Text(l).font(.mono(11)).foregroundColor(Theme.delay)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14).padding(.top, 10)
-        }
-    }
-
-    @ViewBuilder private func photoImage(_ p: FeedPost) -> some View {
-        if p.isRemote {
-            AsyncImage(url: p.thumb) { phase in
-                switch phase {
-                case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
-                case .empty: Rectangle().fill(Theme.panel).frame(height: 240)
-                default: Rectangle().fill(Theme.rule).frame(height: 240)
-                }
-            }
-        } else {
-            BundleImage(url: p.thumb, contentMode: .fit)
-        }
-    }
-
     private var loadButton: some View {
         Button {
-            if feed.visible < feed.posts.count { feed.revealMore() }
+            if feed.visible < feed.groups.count { feed.revealMore() }
             else { Task { await feed.loadOlder(from: store) } }
         } label: {
             HStack(spacing: 8) {
                 if feed.loading { ProgressView().tint(Theme.signal).scaleEffect(0.8) }
-                Text(feed.loading ? "Loading…" : (feed.visible < feed.posts.count ? "Load more" : "Load older photos"))
+                Text(feed.loading ? "Loading…" : (feed.visible < feed.groups.count ? "Load more" : "Load older photos"))
                     .font(.mono(12)).foregroundColor(Theme.signal)
             }
             .padding(.horizontal, 16).padding(.vertical, 11)
