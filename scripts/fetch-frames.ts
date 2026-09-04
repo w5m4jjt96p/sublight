@@ -32,7 +32,10 @@ const SUN_URL = 'https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_0171.jpg
 const MAX_AGE_DAYS = 30;
 const THUMB_WIDTH = 720; // map chip / HUD / strip
 const FULL_WIDTH = 1600; // full-screen viewer + one-click HQ download
-const RECENT_COUNT = 30;
+// The bundled snapshot is only the instant/offline first paint now — the feed
+// pulls the truly fresh frames live from mars.nasa.gov on open — so keep it
+// small. It refreshes 4x a day, and every frame here is committed to the repo.
+const RECENT_COUNT = 12;
 const UA = { 'User-Agent': 'out-there/0.4 (static site build)' };
 
 /** Surface cameras make better hero frames than sky/engineering cams. */

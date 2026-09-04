@@ -1,17 +1,19 @@
 name: refresh-data
 
-# Daily data refresh. A frozen-on-yesterday site beats a broken one, so a failing
-# fetch never fails the run — it opens an issue with the log and commits whatever
-# good data we still have.
+# Data refresh, four times a day. A frozen-on-yesterday site beats a broken one,
+# so a failing fetch never fails the run — it opens an issue with the log and
+# commits whatever good data we still have.
 
 on:
   schedule:
-    # Three off-peak attempts a day. GitHub's scheduler is best-effort and skips
-    # runs under load, so the later two are backups; the guard job below makes
-    # sure only the first successful run of the day actually does the work.
-    - cron: '17 1 * * *'  # 01:17 UTC
-    - cron: '17 9 * * *'  # 09:17 UTC (backup)
-    - cron: '17 15 * * *' # 15:17 UTC (backup)
+    # NASA publishes raw frames in bursts through the day, not once: measured on
+    # ~1400 frames, Curiosity's `date_received` lands across ~15 UTC hours
+    # (peaks 01-02, 09, 22-23) and Perseverance's in bursts at 02-03, 05-06, 16.
+    # So we refresh four times a day, just after those peaks, instead of once.
+    - cron: '20 3 * * *'  # 03:20 UTC — after Curiosity 01-02 + Perseverance 02-03
+    - cron: '20 7 * * *'  # 07:20 UTC — after Perseverance 05-06
+    - cron: '20 12 * * *' # 12:20 UTC — after Curiosity 09-11
+    - cron: '40 23 * * *' # 23:40 UTC — after Perseverance 16 + Curiosity 22-23
   workflow_dispatch: {}
 
 permissions:
@@ -23,33 +25,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Skip scheduled runs when today's data is already committed, so the backup
-  # crons are no-ops once the day's refresh has happened. A manual run always
-  # proceeds.
-  guard:
-    runs-on: ubuntu-latest
-    outputs:
-      run: ${{ steps.g.outputs.run }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: g
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "manual run — proceeding"; echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
-          fi
-          LAST=$(git log -1 --format=%cI -- public/data/fleet.json 2>/dev/null | cut -c1-10)
-          TODAY=$(date -u +%F)
-          if [ "$LAST" = "$TODAY" ]; then
-            echo "already refreshed today ($LAST) — skipping"; echo "run=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "last refresh $LAST, today $TODAY — proceeding"; echo "run=true" >> "$GITHUB_OUTPUT"
-          fi
-
+  # Every scheduled run does the work now: the old "already refreshed today"
+  # guard collapsed all the crons into a single daily refresh, which left the
+  # bundled snapshot several sols behind what NASA had already published.
+  # The commit step below is still a no-op when nothing actually changed.
   refresh:
-    needs: guard
-    if: needs.guard.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -139,8 +119,11 @@ jobs:
 
       # Generate the day's post and open a GitHub issue with it, ready to
       # copy-paste to X by hand (X's API now charges per post, so we skip it).
+      # Data refreshes four times a day, but the post is still a daily ritual:
+      # only the midday run (and a manual one) opens the issue.
       - name: Generate daily post
         id: post
+        if: github.event.schedule == '20 12 * * *' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: npm run social -- --out social-post.txt
 

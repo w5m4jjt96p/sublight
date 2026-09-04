@@ -24,6 +24,57 @@ struct SolImages {
 enum RoverImages {
     private static var cache: [String: SolImages] = [:]
 
+    // ---- newest published frames --------------------------------------------
+    // The bundled snapshot is only as fresh as the last data refresh, and NASA
+    // publishes in bursts through the day, so the feed asks for the most
+    // recently *published* frames (ordered by date_received) rather than
+    // guessing a sol.
+    private static var latestCache: [String: (at: Date, images: [RoverImage])] = [:]
+    private static let latestTTL: TimeInterval = 300
+
+    static func fetchLatest(roverId: String, limit: Int = 48) async -> [RoverImage] {
+        let key = "\(roverId):\(limit)"
+        if let hit = latestCache[key], Date().timeIntervalSince(hit.at) < latestTTL { return hit.images }
+        let images: [RoverImage]
+        if roverId == "curiosity" {
+            images = (try? await latestCuriosity(limit: limit)) ?? []
+        } else {
+            images = (try? await latestPerseverance(limit: limit)) ?? []
+        }
+        if !images.isEmpty { latestCache[key] = (Date(), images) }
+        return images
+    }
+
+    private static func latestPerseverance(limit: Int) async throws -> [RoverImage] {
+        let urlStr = "https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json"
+            + "&num=\(limit)&page=0&order=date_received+desc"
+        let (data, _) = try await URLSession.shared.data(from: URL(string: urlStr)!)
+        let d = try JSONDecoder().decode(M20Response.self, from: data)
+        return d.images.compactMap { im in
+            let f = im.image_files
+            guard let thumbS = f?.small ?? f?.medium ?? f?.large ?? f?.full_res,
+                  let thumb = URL(string: thumbS) else { return nil }
+            let fullS = f?.large ?? f?.full_res ?? f?.medium ?? thumbS
+            return RoverImage(thumb: thumb, full: URL(string: fullS) ?? thumb,
+                              sourceUrl: URL(string: im.link ?? fullS) ?? thumb,
+                              instrument: im.camera?.instrument ?? "CAMERA",
+                              capturedUtc: im.date_taken_utc ?? "", sol: im.sol ?? 0)
+        }
+    }
+
+    private static func latestCuriosity(limit: Int) async throws -> [RoverImage] {
+        let urlStr = "https://mars.nasa.gov/api/v1/raw_image_items/?order=date_received+desc"
+            + "&per_page=\(limit * 2)&page=0&condition_1=msl%3Amission"
+        let (data, _) = try await URLSession.shared.data(from: URL(string: urlStr)!)
+        let d = try JSONDecoder().decode(MSLResponse.self, from: data)
+        return d.items.filter { $0.is_thumbnail != true }.prefix(limit).compactMap { im in
+            guard let s = im.url, let u = URL(string: s) else { return nil }
+            return RoverImage(thumb: u, full: u, sourceUrl: u,
+                              instrument: im.instrument ?? "CAMERA",
+                              capturedUtc: im.date_taken ?? "", sol: im.sol ?? 0)
+        }
+    }
+
     static func fetch(roverId: String, sol: Int, limit: Int = 120) async -> SolImages {
         let key = "\(roverId):\(sol):\(limit)"
         if let hit = cache[key] { return hit }

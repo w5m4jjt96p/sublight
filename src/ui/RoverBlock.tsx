@@ -4,7 +4,7 @@
 // when you reach the end. Every card is stamped with when its light arrived.
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { FrameThumb } from '../types.ts';
-import { fetchSolImages } from '../data/roverImages.ts';
+import { fetchSolImages, fetchLatestFrames } from '../data/roverImages.ts';
 import { fmtSince } from '../data/format.ts';
 
 const asset = (p: string) => (/^https?:/.test(p) ? p : `${import.meta.env.BASE_URL.replace(/\/$/, '')}${p}`);
@@ -34,11 +34,28 @@ export function RoverBlock({
 }: RoverBlockProps) {
   const [buffer, setBuffer] = useState<FrameThumb[]>(initial);
   const [visible, setVisible] = useState(PAGE);
+  const [topSol, setTopSol] = useState(latestSol);
   const [nextSol, setNextSol] = useState(latestSol ?? 0);
   const [fetchedLatest, setFetchedLatest] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
+
+  // Live-first: the bundled snapshot is only as fresh as the last data refresh
+  // and NASA publishes in bursts all day, so on open we swap in the frames it
+  // has published most recently. The bundle stays the instant/offline paint.
+  useEffect(() => {
+    if (!isLive) return;
+    let cancelled = false;
+    fetchLatestFrames(craftId, 48)
+      .then((fresh) => {
+        if (cancelled || !fresh.length) return;
+        setBuffer(fresh.slice().sort(byArrivalDesc));
+        setTopSol(fresh.reduce((m, f) => Math.max(m, f.sol ?? 0), 0) || latestSol);
+      })
+      .catch(() => { /* offline or feed down: keep the bundled frames */ });
+    return () => { cancelled = true; };
+  }, [craftId, isLive, latestSol]);
 
   // Reveal more of what's already loaded as the end scrolls into view — bounded
   // by the buffer, so the section never grows on its own past what's fetched
@@ -54,10 +71,12 @@ export function RoverBlock({
   }, [buffer.length]);
 
   async function loadOlder() {
-    if (loading || done || !isLive || latestSol == null) return;
+    if (loading || done || !isLive || topSol == null) return;
     setLoading(true);
     try {
-      let sol = fetchedLatest ? nextSol : latestSol;
+      // Page back from the newest sol we've actually seen (live), not the one
+      // the bundled snapshot happened to capture.
+      let sol = fetchedLatest ? nextSol : topSol;
       let added: FrameThumb[] = [];
       // Descend past the occasional empty sol so a gap never dead-ends the feed.
       for (let tries = 0; tries < 8 && sol >= 0; tries++, sol--) {
