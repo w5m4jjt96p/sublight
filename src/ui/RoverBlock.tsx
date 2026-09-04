@@ -190,14 +190,17 @@ function PublicationCard({
   const clamp = (i: number) => Math.min(Math.max(i, 0), count - 1);
   const current = pub.photos[clamp(index)]!;
 
-  // Preload the whole sequence, otherwise scrubbing flashes empty frames
-  // instead of playing.
+  // Preload a window around the current frame so scrubbing stays smooth. Doing
+  // the *whole* sequence up front meant every visible publication fired all its
+  // frames at once — over a hundred full-size JPEGs racing the one image you're
+  // actually looking at, which is enough to leave the stage blank on a slow link.
   useEffect(() => {
-    for (const p of pub.photos) {
-      const im = new Image();
-      im.src = asset(p.file);
+    const here = clamp(index);
+    for (let i = Math.max(0, here - 5); i <= Math.min(count - 1, here + 5); i++) {
+      const p = pub.photos[i];
+      if (p) { const im = new Image(); im.src = asset(p.file); }
     }
-  }, [pub]);
+  }, [pub, index, count]);
 
   useEffect(() => {
     if (!playing || count < 2) return;
@@ -262,7 +265,20 @@ function PublicationCard({
         onPointerUp={onStageUp}
         onPointerCancel={onStageUp}
       >
-        <img className="pub-img" src={asset(current.file)} alt={`${craftName} — ${current.instrument}`} draggable={false} />
+        <img
+          className="pub-img"
+          src={asset(current.file)}
+          alt={`${craftName} — ${current.instrument}`}
+          draggable={false}
+          onError={(e) => {
+            // A dropped frame leaves the stage blank; give it one retry.
+            const el = e.currentTarget;
+            if (el.dataset.retried) return;
+            el.dataset.retried = '1';
+            const src = el.src;
+            window.setTimeout(() => { el.src = src; }, 600);
+          }}
+        />
         {count > 1 && (
           <>
             <span className="pub-count">{index + 1}/{count}</span>
@@ -289,11 +305,9 @@ function PublicationCard({
           onPointerLeave={endScrub}
         >
           {pub.photos.map((p, i) => (
-            <span
-              key={`${p.file}-${i}`}
-              className={`pub-thumb${i === clamp(index) ? ' is-on' : ''}`}
-              style={{ backgroundImage: `url(${asset(p.file)})` }}
-            />
+            <span key={`${p.file}-${i}`} className={`pub-thumb${i === clamp(index) ? ' is-on' : ''}`}>
+              <img src={asset(p.file)} alt="" loading="lazy" decoding="async" draggable={false} />
+            </span>
           ))}
         </div>
       )}

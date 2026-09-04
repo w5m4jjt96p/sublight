@@ -1523,10 +1523,13 @@ a {
   overflow-x: auto; scrollbar-width: none; touch-action: none; cursor: ew-resize;
 }
 .pub-strip::-webkit-scrollbar { display: none; }
+/* A real <img loading="lazy"> rather than a background, so the strips of
+   publications you haven't scrolled to fetch nothing at all. */
 .pub-thumb {
   flex: 1 1 0; min-width: 9px; height: 34px; border-radius: 2px;
-  background-size: cover; background-position: center; opacity: 0.4;
+  overflow: hidden; background: var(--rule); opacity: 0.4;
 }
+.pub-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .pub-thumb.is-on { opacity: 1; outline: 1px solid var(--signal); outline-offset: -1px; }
 
 .pub-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px; }
