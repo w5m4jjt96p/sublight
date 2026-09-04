@@ -149,9 +149,12 @@ struct FeedGroupCard: View {
             }
         }
         // Dragging across the photo scrubs; a tap opens the full-screen viewer.
-        .gesture(
-            DragGesture(minimumDistance: 8)
+        // `simultaneousGesture` + a horizontal-dominance guard so a vertical
+        // swipe on a photo still scrolls the feed instead of being swallowed.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 12)
                 .onChanged { v in
+                    guard abs(v.translation.width) > abs(v.translation.height) else { return }
                     if dragAnchor == nil { dragAnchor = clamp(index); playing = false }
                     index = clamp((dragAnchor ?? 0) + Int((-v.translation.width / 26).rounded()))
                 }
