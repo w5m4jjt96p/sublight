@@ -36,7 +36,7 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             if tab == .gallery {
-                GalleryView(store: store)
+                FeedView(store: store)
                     .transition(.opacity)
             } else if tab == .settings {
                 SettingsView(store: store)
