@@ -66,21 +66,37 @@ struct FeedGroup: Identifiable {
     let posts: [FeedPost]      // newest first within the day
 }
 
-/// One publication: a craft's frames from a single day, swiped like an
-/// Instagram carousel. The caption and the light line follow the current slide.
+/// One publication: a craft's frames from a single sol. These are usually a
+/// real sequence — EPIC watching the Earth turn through a day, a rover camera
+/// sweeping a scene — so the frame is swapped in place with no transition at
+/// all: run through them and they read as motion, the way a flipbook does.
+/// Drag the thumbnail strip (or the photo) to scrub, or hit play to let it run.
 struct FeedGroupCard: View {
     let group: FeedGroup
     let onOpen: (URL?) -> Void
-    @State private var page = 0
 
-    private var index: Int { min(max(page, 0), group.posts.count - 1) }
-    private var current: FeedPost? { group.posts.indices.contains(index) ? group.posts[index] : nil }
+    @State private var index = 0
+    @State private var playing = false
+    @State private var dragAnchor: Int?
+
+    private var count: Int { group.posts.count }
+    private func clamp(_ i: Int) -> Int { min(max(i, 0), max(count - 1, 0)) }
+    private var current: FeedPost? { group.posts.indices.contains(clamp(index)) ? group.posts[clamp(index)] : nil }
 
     var body: some View {
         VStack(spacing: 0) {
             header
-            carousel
+            stage
+            if count > 1 { strip }
             footer
+        }
+        // Only ticks while playing, and restarts cleanly when it's toggled.
+        .task(id: playing) {
+            guard playing, count > 1 else { return }
+            while !Task.isCancelled && playing {
+                try? await Task.sleep(nanoseconds: 110_000_000)
+                if playing { index = (clamp(index) + 1) % count }
+            }
         }
     }
 
@@ -104,43 +120,79 @@ struct FeedGroupCard: View {
         .padding(.horizontal, 14).padding(.bottom, 10)
     }
 
-    private var carousel: some View {
-        TabView(selection: $page) {
-            ForEach(Array(group.posts.enumerated()), id: \.element.id) { i, p in
-                Button { onOpen(p.full) } label: {
-                    FeedPhoto(post: p).frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                .buttonStyle(.plain)
-                .tag(i)
-            }
+    private var stage: some View {
+        ZStack {
+            Color.black
+            if let p = current { FeedPhoto(post: p) }
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
         .frame(height: 380)
-        .background(Color.black)
+        .clipped()
+        .contentShape(Rectangle())
         .overlay(alignment: .topTrailing) {
-            if group.posts.count > 1 {
-                Text("\(index + 1)/\(group.posts.count)")
+            if count > 1 {
+                Text("\(clamp(index) + 1)/\(count)")
                     .font(.mono(11)).foregroundColor(.white)
                     .padding(.horizontal, 9).padding(.vertical, 5)
                     .background(Capsule().fill(Color.black.opacity(0.55)))
                     .padding(10)
             }
         }
+        .overlay(alignment: .bottomLeading) {
+            if count > 1 {
+                Button { playing.toggle() } label: {
+                    Image(systemName: playing ? "pause.fill" : "play.fill")
+                        .font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(Color.black.opacity(0.55)))
+                }
+                .buttonStyle(.plain).padding(10)
+            }
+        }
+        // Dragging across the photo scrubs; a tap opens the full-screen viewer.
+        .gesture(
+            DragGesture(minimumDistance: 8)
+                .onChanged { v in
+                    if dragAnchor == nil { dragAnchor = clamp(index); playing = false }
+                    index = clamp((dragAnchor ?? 0) + Int((-v.translation.width / 26).rounded()))
+                }
+                .onEnded { _ in dragAnchor = nil }
+        )
+        .onTapGesture { if let p = current { onOpen(p.full) } }
+    }
+
+    /// The whole sequence at a glance; drag anywhere along it to run through.
+    private var strip: some View {
+        GeometryReader { geo in
+            HStack(spacing: 2) {
+                ForEach(Array(group.posts.enumerated()), id: \.element.id) { i, p in
+                    FeedPhoto(post: p, contentMode: .fill)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 34)
+                        .clipped()
+                        .opacity(i == clamp(index) ? 1 : 0.4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 2)
+                                .stroke(i == clamp(index) ? Theme.signal : .clear, lineWidth: 1)
+                        )
+                }
+            }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { v in
+                        playing = false
+                        let ratio = max(0, min(1, v.location.x / max(geo.size.width, 1)))
+                        index = Int((ratio * CGFloat(max(count - 1, 1))).rounded())
+                    }
+            )
+        }
+        .frame(height: 34)
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(Color.black.opacity(0.55))
     }
 
     private var footer: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if group.posts.count > 1 && group.posts.count <= 10 {
-                HStack(spacing: 5) {
-                    ForEach(0..<group.posts.count, id: \.self) { i in
-                        Circle()
-                            .fill(i == index ? Theme.txt : Theme.rule2)
-                            .frame(width: 5, height: 5)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 8)
-            }
             if let p = current {
                 Text(p.caption).font(.mono(12)).foregroundColor(Theme.txt)
             }
@@ -159,17 +211,18 @@ struct FeedGroupCard: View {
 /// A single frame: bundled ones come from the app bundle, live ones over the wire.
 struct FeedPhoto: View {
     let post: FeedPost
+    var contentMode: ContentMode = .fit
     var body: some View {
         if post.isRemote {
             AsyncImage(url: post.thumb) { phase in
                 switch phase {
-                case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
+                case .success(let img): img.resizable().aspectRatio(contentMode: contentMode)
                 case .empty: ProgressView().tint(Theme.dim)
                 default: Rectangle().fill(Theme.rule)
                 }
             }
         } else {
-            BundleImage(url: post.thumb, contentMode: .fit)
+            BundleImage(url: post.thumb, contentMode: contentMode)
         }
     }
 }

@@ -164,7 +164,13 @@ export function RoverBlock({
   );
 }
 
-/** One sol, swiped like a carousel: the caption follows the current slide. */
+/**
+ * One sol as a filmstrip. These frames are usually a real sequence — EPIC
+ * watching the Earth turn through a day, a rover camera sweeping a scene — so
+ * the frame is swapped in place with no transition at all: run through them and
+ * they read as motion, the way a flipbook does. Scrub the thumbnail strip to
+ * move fast, or hit play to let it run.
+ */
 function PublicationCard({
   pub, craftName, owlt, arrivedAgo, onOpenList,
 }: {
@@ -174,21 +180,68 @@ function PublicationCard({
   arrivedAgo: (utc: string) => string;
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
 }) {
-  const [index, setIndex] = useState(0);
-  const track = useRef<HTMLDivElement>(null);
   const count = pub.photos.length;
-  const current = pub.photos[Math.min(index, count - 1)]!;
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const strip = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ x: number; i: number } | null>(null);
+  const scrubbing = useRef(false);
 
-  // Scroll-snap drives the carousel: native swipe on touch, arrows on desktop.
-  const onScroll = () => {
-    const el = track.current;
-    if (!el || !el.clientWidth) return;
-    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+  const clamp = (i: number) => Math.min(Math.max(i, 0), count - 1);
+  const current = pub.photos[clamp(index)]!;
+
+  // Preload the whole sequence, otherwise scrubbing flashes empty frames
+  // instead of playing.
+  useEffect(() => {
+    for (const p of pub.photos) {
+      const im = new Image();
+      im.src = asset(p.file);
+    }
+  }, [pub]);
+
+  useEffect(() => {
+    if (!playing || count < 2) return;
+    const t = window.setInterval(() => setIndex((i) => (i + 1) % count), 110);
+    return () => window.clearInterval(t);
+  }, [playing, count]);
+
+  // Scrub: map the pointer's position along the strip straight to a frame.
+  const scrub = (clientX: number) => {
+    const el = strip.current;
+    if (!el || count < 2) return;
+    const r = el.getBoundingClientRect();
+    const x = clientX - r.left + el.scrollLeft;
+    setIndex(clamp(Math.round((x / el.scrollWidth) * (count - 1))));
   };
-  const go = (d: number) => {
-    const el = track.current;
-    if (!el) return;
-    el.scrollTo({ left: Math.min(Math.max(index + d, 0), count - 1) * el.clientWidth, behavior: 'smooth' });
+  // Gate the drag on our own flag rather than pointer capture: capture can be
+  // refused (synthetic pointers, some browsers) and scrubbing would go dead.
+  const onStripDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setPlaying(false);
+    scrubbing.current = true;
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* capture is a nicety */ }
+    scrub(e.clientX);
+  };
+  const onStripMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!scrubbing.current) return;
+    scrub(e.clientX);
+  };
+  const endScrub = () => { scrubbing.current = false; };
+
+  // Dragging across the photo itself scrubs too; a tap opens the viewer.
+  const onStageDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    setPlaying(false);
+    drag.current = { x: e.clientX, i: clamp(index) };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* capture is a nicety */ }
+  };
+  const onStageMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    setIndex(clamp(d.i + Math.round((d.x - e.clientX) / 26)));
+  };
+  const onStageUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    drag.current = null;
+    if (d && Math.abs(e.clientX - d.x) < 5) onOpenList(pub.photos, clamp(index), craftName, owlt);
   };
 
   return (
@@ -202,31 +255,52 @@ function PublicationCard({
         <span className="pub-when">arrived {arrivedAgo(current.capturedUtc)} ago</span>
       </header>
 
-      <div className="pub-stage">
-        <div className="pub-track" ref={track} onScroll={onScroll}>
-          {pub.photos.map((p, i) => (
-            <button
-              key={`${p.file}-${i}`}
-              className="pub-slide"
-              onClick={() => onOpenList(pub.photos, i, craftName, owlt)}
-              aria-label={`${craftName} — ${p.instrument}`}
-            >
-              <img src={asset(p.file)} alt={`${craftName} — ${p.instrument}`} loading="lazy" />
-            </button>
-          ))}
-        </div>
+      <div
+        className="pub-stage"
+        onPointerDown={onStageDown}
+        onPointerMove={onStageMove}
+        onPointerUp={onStageUp}
+        onPointerCancel={onStageUp}
+      >
+        <img className="pub-img" src={asset(current.file)} alt={`${craftName} — ${current.instrument}`} draggable={false} />
         {count > 1 && (
           <>
             <span className="pub-count">{index + 1}/{count}</span>
-            <button className="pub-nav pub-prev" onClick={() => go(-1)} disabled={index === 0} aria-label="Previous photo">‹</button>
-            <button className="pub-nav pub-next" onClick={() => go(1)} disabled={index >= count - 1} aria-label="Next photo">›</button>
+            <button
+              className="pub-play"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? 'Pause sequence' : 'Play sequence'}
+            >
+              {playing ? '❚❚' : '▶'}
+            </button>
           </>
         )}
       </div>
 
+      {count > 1 && (
+        <div
+          className="pub-strip"
+          ref={strip}
+          onPointerDown={onStripDown}
+          onPointerMove={onStripMove}
+          onPointerUp={endScrub}
+          onPointerCancel={endScrub}
+          onPointerLeave={endScrub}
+        >
+          {pub.photos.map((p, i) => (
+            <span
+              key={`${p.file}-${i}`}
+              className={`pub-thumb${i === clamp(index) ? ' is-on' : ''}`}
+              style={{ backgroundImage: `url(${asset(p.file)})` }}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="pub-foot">
         <span className="pub-cap">{current.instrument.replace(/_/g, ' ')}</span>
-        {count > 1 && <span className="pub-of">{count.toLocaleString()} photos</span>}
+        {count > 1 && <span className="pub-of">{count.toLocaleString()} frames</span>}
       </div>
     </article>
   );
