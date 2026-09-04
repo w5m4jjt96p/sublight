@@ -1483,15 +1483,51 @@ a {
 .cb-loc { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--dim); text-transform: uppercase; }
 .cb-light { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
 
-/* Vertical feed of posts (one card per photo), constrained like a real feed. */
-.cb-feed { display: flex; flex-direction: column; gap: 14px; max-width: 620px; }
+/* Vertical feed of publications, constrained like a real feed. */
+.cb-feed { display: flex; flex-direction: column; gap: 18px; max-width: 620px; }
+.cb-sentinel { height: 1px; }
+
+/* A single publication: one sol, swiped like a carousel. */
+.pub { border: 1px solid var(--rule-2); border-radius: 8px; overflow: hidden; background: #05070a; }
+.pub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px; }
+.pub-sol { font-family: var(--mono); font-size: 12.5px; color: var(--txt); }
+.pub-when { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
+
+.pub-stage { position: relative; background: #000; }
+.pub-track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.pub-track::-webkit-scrollbar { display: none; }
+.pub-slide { flex: 0 0 100%; scroll-snap-align: center; display: block; padding: 0; border: none; background: #000; cursor: pointer; }
+.pub-slide img { display: block; width: 100%; height: 380px; object-fit: contain; }
+.pub-count {
+  position: absolute; top: 10px; right: 10px; pointer-events: none;
+  font-family: var(--mono); font-size: 11px; color: #fff;
+  background: rgba(0, 0, 0, 0.55); padding: 4px 9px; border-radius: 999px;
+}
+.pub-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: rgba(0, 0, 0, 0.5); color: #fff; font-size: 20px; line-height: 1;
+  cursor: pointer; opacity: 0; transition: opacity 0.15s ease;
+}
+.pub-stage:hover .pub-nav { opacity: 1; }
+.pub-nav:disabled { opacity: 0 !important; cursor: default; }
+.pub-prev { left: 8px; }
+.pub-next { right: 8px; }
+
+.pub-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px; }
+.pub-cap { font-family: var(--mono); font-size: 12px; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pub-of { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; }
+
+/* The archive block still shows a single still, not a carousel. */
 .cbf-post { border: 1px solid var(--rule-2); border-radius: 8px; overflow: hidden; background: #05070a; }
 .cbf-photo { display: block; width: 100%; padding: 0; border: none; background: #000; cursor: pointer; }
 .cbf-photo img { display: block; width: 100%; max-height: 68vh; object-fit: contain; }
 .cbf-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px 12px; }
 .cbf-cap { font-family: var(--mono); font-size: 12px; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cbf-arr { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
-.cb-sentinel { height: 1px; }
 
 .cb-more {
   margin-top: 16px; font-family: var(--mono); font-size: 12px; color: var(--signal);

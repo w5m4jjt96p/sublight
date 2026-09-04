@@ -1,8 +1,9 @@
-// One craft's section on the wall: a vertical feed of posts (one card per
-// photo), newest arrival first. Cards reveal a page at a time as you scroll —
-// no bulk load — and "Load older photos" pulls the next sol from the archive
-// when you reach the end. Every card is stamped with when its light arrived.
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+// One craft's section on the wall. Its frames are folded into publications —
+// everything from the same sol is one swipeable post, the way the rover
+// actually works: it doesn't post 48 times a day, it posts a day of looking
+// around. Publications reveal a page at a time as you scroll, and "Load older
+// photos" pulls the next sol from the archive when you reach the end.
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { FrameThumb } from '../types.ts';
 import { fetchSolImages, fetchLatestFrames } from '../data/roverImages.ts';
 import { fmtSince } from '../data/format.ts';
@@ -13,7 +14,32 @@ const asset = (p: string) => (/^https?:/.test(p) ? p : `${import.meta.env.BASE_U
 const capMs = (utc: string) => Date.parse(/(Z|[+-]\d\d:?\d\d)$/.test(utc) ? utc : `${utc}Z`) || 0;
 const byArrivalDesc = (a: FrameThumb, b: FrameThumb) => capMs(b.capturedUtc) - capMs(a.capturedUtc);
 
-const PAGE = 8;
+const PAGE = 3; // publications revealed per step
+
+interface Publication {
+  key: string;
+  sol: number | null;
+  newestMs: number;
+  photos: FrameThumb[];
+}
+
+/** Fold frames (newest first) into one publication per sol. */
+function intoPublications(frames: FrameThumb[]): Publication[] {
+  const buckets = new Map<string, FrameThumb[]>();
+  const order: string[] = [];
+  for (const f of frames) {
+    // The sol is the rover's own day, and grouping on it keeps a single batch
+    // from being split in two by an arbitrary UTC midnight. Craft without a sol
+    // (EPIC) fall back to the calendar day.
+    const key = f.sol != null ? `sol${f.sol}` : new Date(capMs(f.capturedUtc)).toISOString().slice(0, 10);
+    if (!buckets.has(key)) { buckets.set(key, []); order.push(key); }
+    buckets.get(key)!.push(f);
+  }
+  return order.map((key) => {
+    const photos = buckets.get(key)!;
+    return { key, sol: photos[0]!.sol ?? null, newestMs: capMs(photos[0]!.capturedUtc), photos };
+  });
+}
 
 interface RoverBlockProps {
   craftId: string;
@@ -21,9 +47,9 @@ interface RoverBlockProps {
   location: string;
   owlt: number;
   lightLine: string | null;
-  isLive: boolean; // a rover with a per-sol feed we can page back through
+  isLive: boolean;
   latestSol: number | null;
-  initial: FrameThumb[]; // bundled recent frames, already arrival-sorted
+  initial: FrameThumb[];
   now: number;
   avatar: ReactNode;
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
@@ -41,6 +67,8 @@ export function RoverBlock({
   const [done, setDone] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
 
+  const pubs = useMemo(() => intoPublications(buffer), [buffer]);
+
   // Live-first: the bundled snapshot is only as fresh as the last data refresh
   // and NASA publishes in bursts all day, so on open we swap in the frames it
   // has published most recently. The bundle stays the instant/offline paint.
@@ -57,18 +85,17 @@ export function RoverBlock({
     return () => { cancelled = true; };
   }, [craftId, isLive, latestSol]);
 
-  // Reveal more of what's already loaded as the end scrolls into view — bounded
-  // by the buffer, so the section never grows on its own past what's fetched
-  // (and the next craft below stays reachable).
+  // Reveal more publications as the end scrolls into view — bounded by what's
+  // loaded, so the section never grows past it and the next craft stays reachable.
   useEffect(() => {
     const el = sentinel.current;
     if (!el) return;
     const obs = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) setVisible((v) => Math.min(v + PAGE, buffer.length));
+      if (entries[0]?.isIntersecting) setVisible((v) => Math.min(v + PAGE, pubs.length));
     }, { rootMargin: '200px' });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [buffer.length]);
+  }, [pubs.length]);
 
   async function loadOlder() {
     if (loading || done || !isLive || topSol == null) return;
@@ -83,8 +110,7 @@ export function RoverBlock({
         const d = await fetchSolImages(craftId, sol, 600);
         if (d.frames.length) { added = d.frames; break; }
       }
-      // The first pull swaps the bundled recent for the complete latest sol; the
-      // rest append the previous sol.
+      // The first pull completes the newest sol; the rest append the previous one.
       setBuffer((prev) => [...(fetchedLatest ? prev : []), ...added].sort(byArrivalDesc));
       setFetchedLatest(true);
       setNextSol(sol - 1);
@@ -98,7 +124,7 @@ export function RoverBlock({
   }
 
   const arrivedAgo = (utc: string) => fmtSince(new Date(capMs(utc) + owlt * 1000).toISOString(), now);
-  const shown = buffer.slice(0, visible);
+  const shown = pubs.slice(0, visible);
 
   return (
     <section className="craft-block">
@@ -112,29 +138,96 @@ export function RoverBlock({
       </header>
 
       <div className="cb-feed">
-        {shown.map((p, i) => (
-          <article key={`${p.file}-${i}`} className="cbf-post">
-            <button className="cbf-photo" onClick={() => onOpenList(buffer, i, craftName, owlt)} aria-label={`${craftName} — ${p.instrument}`}>
-              <img src={asset(p.file)} alt={`${craftName} — ${p.instrument}`} loading="lazy" />
-            </button>
-            <div className="cbf-meta">
-              <span className="cbf-cap">{p.sol != null ? `Sol ${p.sol} · ${p.instrument}` : p.instrument}</span>
-              <span className="cbf-arr">arrived {arrivedAgo(p.capturedUtc)} ago</span>
-            </div>
-          </article>
+        {shown.map((pub) => (
+          <PublicationCard
+            key={pub.key}
+            pub={pub}
+            craftName={craftName}
+            owlt={owlt}
+            arrivedAgo={arrivedAgo}
+            onOpenList={onOpenList}
+          />
         ))}
         <div ref={sentinel} className="cb-sentinel" aria-hidden />
       </div>
 
-      {(visible < buffer.length || (isLive && !done)) && (
+      {(visible < pubs.length || (isLive && !done)) && (
         <button
           className="cb-more"
-          onClick={() => (visible < buffer.length ? setVisible((v) => v + PAGE) : loadOlder())}
+          onClick={() => (visible < pubs.length ? setVisible((v) => v + PAGE) : loadOlder())}
           disabled={loading}
         >
-          {loading ? 'Loading…' : visible < buffer.length ? 'Load more' : 'Load older photos'}
+          {loading ? 'Loading…' : visible < pubs.length ? 'Load more' : 'Load older photos'}
         </button>
       )}
     </section>
+  );
+}
+
+/** One sol, swiped like a carousel: the caption follows the current slide. */
+function PublicationCard({
+  pub, craftName, owlt, arrivedAgo, onOpenList,
+}: {
+  pub: Publication;
+  craftName: string;
+  owlt: number;
+  arrivedAgo: (utc: string) => string;
+  onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const track = useRef<HTMLDivElement>(null);
+  const count = pub.photos.length;
+  const current = pub.photos[Math.min(index, count - 1)]!;
+
+  // Scroll-snap drives the carousel: native swipe on touch, arrows on desktop.
+  const onScroll = () => {
+    const el = track.current;
+    if (!el || !el.clientWidth) return;
+    setIndex(Math.round(el.scrollLeft / el.clientWidth));
+  };
+  const go = (d: number) => {
+    const el = track.current;
+    if (!el) return;
+    el.scrollTo({ left: Math.min(Math.max(index + d, 0), count - 1) * el.clientWidth, behavior: 'smooth' });
+  };
+
+  return (
+    <article className="pub">
+      <header className="pub-head">
+        <span className="pub-sol">
+          {pub.sol != null
+            ? `Sol ${pub.sol.toLocaleString()}`
+            : new Date(pub.newestMs).toISOString().slice(0, 10)}
+        </span>
+        <span className="pub-when">arrived {arrivedAgo(current.capturedUtc)} ago</span>
+      </header>
+
+      <div className="pub-stage">
+        <div className="pub-track" ref={track} onScroll={onScroll}>
+          {pub.photos.map((p, i) => (
+            <button
+              key={`${p.file}-${i}`}
+              className="pub-slide"
+              onClick={() => onOpenList(pub.photos, i, craftName, owlt)}
+              aria-label={`${craftName} — ${p.instrument}`}
+            >
+              <img src={asset(p.file)} alt={`${craftName} — ${p.instrument}`} loading="lazy" />
+            </button>
+          ))}
+        </div>
+        {count > 1 && (
+          <>
+            <span className="pub-count">{index + 1}/{count}</span>
+            <button className="pub-nav pub-prev" onClick={() => go(-1)} disabled={index === 0} aria-label="Previous photo">‹</button>
+            <button className="pub-nav pub-next" onClick={() => go(1)} disabled={index >= count - 1} aria-label="Next photo">›</button>
+          </>
+        )}
+      </div>
+
+      <div className="pub-foot">
+        <span className="pub-cap">{current.instrument.replace(/_/g, ' ')}</span>
+        {count > 1 && <span className="pub-of">{count.toLocaleString()} photos</span>}
+      </div>
+    </article>
   );
 }
