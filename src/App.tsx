@@ -8,6 +8,7 @@ import { BODIES } from './data/bodies.ts';
 import { Lightbox } from './ui/Lightbox.tsx';
 import { About } from './ui/About.tsx';
 import { Gallery } from './ui/Gallery.tsx';
+import { BottomNav } from './ui/BottomNav.tsx';
 import { Traverse } from './ui/Traverse.tsx';
 import { RoverStory } from './ui/RoverStory.tsx';
 import { NearEarth } from './ui/NearEarth.tsx';
@@ -497,6 +498,17 @@ export function App() {
           />
         );
       })()}
+
+      <BottomNav
+        view={view}
+        onNavigate={navigate}
+        onHome={() => {
+          setSelectedId(null);
+          setSelectedBodyId(null);
+          window.location.hash = '#map';
+          controls.reset();
+        }}
+      />
 
       {paletteOpen && (
         <CommandPalette items={searchItems} onPick={onPick} onClose={() => setPaletteOpen(false)} />

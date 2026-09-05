@@ -1060,32 +1060,13 @@ a {
     --font-scale: 1;
   }
 
-  /* masthead: shrink brand, drop clock/tracking + the ⌘K hint. Six nav links
-     plus the brand can't fit inline on a phone, so the nav scrolls horizontally
-     *inside* the bar (clipped by the masthead) instead of pushing the whole
-     page sideways — that overflow was making the site feel broken and clipping
-     the rightmost links out of reach. */
-  .masthead { padding: 0 0 0 14px; overflow: hidden; }
-  .brand { flex: 0 0 auto; }
+  /* masthead: shrink the brand and the readouts. It no longer carries the nav
+     (that moved to the floating bar), so it has room and no longer overflows. */
+  .masthead { padding: 0 12px; }
   .brand-logo { height: 18px; }
-  .mast-right {
-    flex: 1 1 auto;
-    min-width: 0;
-    gap: 16px;
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 0 14px;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
-  }
-  .mast-right::-webkit-scrollbar { display: none; }
-  .mast-right > span { display: none; } /* UTC + TRACKING */
+  .mast-status { gap: 12px; }
+  .mast-stat em { display: none; }
   .kbd-hint { display: none; }
-  .mast-link { letter-spacing: 0.08em; white-space: nowrap; flex: 0 0 auto; }
 
   /* info panel: full-screen sheet under the masthead */
   .detail {
@@ -1554,4 +1535,70 @@ a {
 
 @media (max-width: 560px) {
   .post-craft { font-size: 13.5px; }
+}
+
+
+/* ---------- masthead readouts ---------- */
+.mast-status { display: flex; align-items: center; gap: 20px; margin-left: 22px; margin-right: auto; }
+.mast-stat { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 12px; color: var(--dim); }
+.mast-stat b { color: var(--txt); font-weight: 400; font-variant-numeric: tabular-nums; }
+.mast-stat em {
+  font-style: normal; font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--dim-2);
+}
+.mast-icon { width: 15px; height: 15px; color: var(--dim-2); flex: 0 0 auto; }
+.mast-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: none; border: 1px solid var(--rule-2); color: var(--dim); cursor: pointer;
+}
+.mast-icon-btn:hover { color: var(--txt); border-color: var(--dim-2); }
+.mast-icon-btn:hover .mast-icon { color: var(--txt); }
+
+/* ---------- floating navigation ---------- */
+.bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 130;
+  display: flex; justify-content: center; pointer-events: none;
+  padding: 0 12px calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.bn-capsule {
+  pointer-events: auto; display: flex; align-items: center; gap: 4px; padding: 7px 10px;
+  border-radius: 999px; border: 1px solid var(--rule-2);
+  background: rgba(12, 15, 21, 0.82); backdrop-filter: blur(14px);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.55);
+}
+.bn-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  min-width: 68px; padding: 6px 8px; border: none; background: none;
+  color: var(--dim); cursor: pointer;
+}
+.bn-item svg { width: 21px; height: 21px; }
+.bn-item span {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; white-space: nowrap;
+}
+.bn-item:hover { color: var(--txt); }
+.bn-item.is-on { color: var(--signal); }
+
+/* The Sun sits at the centre: the map everything else orbits. */
+.bn-home {
+  display: flex; align-items: center; justify-content: center;
+  width: 54px; height: 54px; margin: 0 4px; border-radius: 50%;
+  border: none; cursor: pointer; color: var(--txt); background: var(--rule-2);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.bn-home svg { width: 26px; height: 26px; }
+.bn-home.is-on { background: var(--delay); color: var(--void); box-shadow: 0 0 18px rgba(229, 181, 113, 0.45); }
+.bn-home:hover { color: #fff; }
+.bn-home.is-on:hover { color: var(--void); }
+
+/* Keep the floating bar from sitting on top of scrollable content. */
+.gallery, .deepsky-overlay > *, .orbit-overlay > * { padding-bottom: 110px; }
+
+@media (max-width: 560px) {
+  .bn-item { min-width: 0; padding: 6px 5px; }
+  .bn-item span { font-size: 8px; letter-spacing: 0.02em; }
+  .bn-item svg { width: 19px; height: 19px; }
+  .bn-home { width: 48px; height: 48px; }
+  .bn-home svg { width: 23px; height: 23px; }
+  .bn-capsule { gap: 0; padding: 6px 8px; }
 }
