@@ -89,7 +89,9 @@ struct RoverStoryView: View {
             Color.black.ignoresSafeArea()
 
             if let cur = model.current {
-                AsyncImage(url: cur.full) { phase in
+                // The mid size, not the raw frame: a NAVCAM original is 536 KB
+                // and this is a flipbook you scrub through.
+                AsyncImage(url: cur.view) { phase in
                     switch phase {
                     case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
                     case .empty: ProgressView().tint(.white)

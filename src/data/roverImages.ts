@@ -6,6 +6,13 @@
 // Every frame stays linked; none is hosted or invented.
 import type { FrameThumb } from '../types.ts';
 
+// mars.nasa.gov serves size variants of every MSL frame by suffix, and the
+// saving is dramatic: a NAVCAM frame is 536 KB raw, 113 KB as -br, 8 KB as
+// -thm. Serving the raw frame into a 34px filmstrip cell was what made the
+// feed feel slow. Verified present on every MSL camera.
+const mslVariant = (url: string, suffix: string) =>
+  url.replace(/\.(jpg|JPG)$/, (ext) => `${suffix}${ext}`);
+
 export interface SolImages {
   sol: number;
   count: number;      // total frames that sol (may exceed the loaded sample)
@@ -40,7 +47,10 @@ export async function fetchLatestFrames(roverId: string, limit = 48): Promise<Fr
       ? ((data.items ?? []) as any[])
           .filter((im) => !im.is_thumbnail && im.url)
           .map((im) => ({
-            file: im.url, full: im.url, sourceUrl: im.url,
+            file: mslVariant(im.url, '-thm'),
+            view: mslVariant(im.url, '-br'),
+            full: im.url,
+            sourceUrl: im.url,
             instrument: im.instrument ?? 'CAMERA',
             capturedUtc: im.date_taken ?? '',
             sol: im.sol ?? null,
@@ -51,6 +61,7 @@ export async function fetchLatestFrames(roverId: string, limit = 48): Promise<Fr
             const f = im.image_files ?? {};
             return {
               file: f.small ?? f.medium ?? f.large ?? f.full_res,
+              view: f.medium ?? f.large ?? f.small,
               full: f.large ?? f.full_res ?? f.medium ?? f.small,
               sourceUrl: im.link ?? f.full_res ?? f.large,
               instrument: im.camera?.instrument ?? 'CAMERA',
@@ -93,6 +104,7 @@ async function fetchPerseverance(sol: number, limit: number): Promise<SolImages>
     const f = im.image_files ?? {};
     return {
       file: f.small ?? f.medium ?? f.large ?? f.full_res,
+      view: f.medium ?? f.large ?? f.small,
       full: f.large ?? f.full_res ?? f.medium ?? f.small,
       sourceUrl: im.link ?? f.full_res ?? f.large,
       instrument: im.camera?.instrument ?? 'CAMERA',
@@ -119,7 +131,8 @@ async function fetchCuriosity(sol: number, limit: number): Promise<SolImages> {
   const data = await res.json();
   const items: any[] = (data.items ?? []).filter((im: any) => !im.is_thumbnail);
   const frames: FrameThumb[] = items.map((im) => ({
-    file: im.url,
+    file: mslVariant(im.url, '-thm'),
+    view: mslVariant(im.url, '-br'),
     full: im.url,
     sourceUrl: im.url,
     instrument: im.instrument ?? 'CAMERA',

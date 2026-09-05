@@ -258,6 +258,10 @@ function PublicationCard({
 
   const clamp = (i: number) => Math.min(Math.max(i, 0), count - 1);
   const current = pub.photos[clamp(index)]!;
+  // The stage is 380px tall, so it takes the mid size; the strip takes the
+  // smallest. Bundled frames have no mid size — their `file` is already a local
+  // 720px render, which serves the stage fine.
+  const stageSrc = (p: FrameThumb) => asset(p.view ?? p.file);
 
   // Evenly spaced sample of the sequence, always including first and last: at a
   // couple of hundred frames every thumbnail is under 2px and costs a request.
@@ -279,7 +283,7 @@ function PublicationCard({
     const here = clamp(index);
     for (let i = Math.max(0, here - 5); i <= Math.min(count - 1, here + 5); i++) {
       const p = pub.photos[i];
-      if (p) { const im = new Image(); im.src = asset(p.file); }
+      if (p) { const im = new Image(); im.src = stageSrc(p); }
     }
   }, [pub, index, count]);
 
@@ -345,7 +349,7 @@ function PublicationCard({
       >
         <img
           className="pub-img"
-          src={asset(current.file)}
+          src={stageSrc(current)}
           alt={`${pub.craftName} — ${current.instrument}`}
           draggable={false}
           onError={(e) => {

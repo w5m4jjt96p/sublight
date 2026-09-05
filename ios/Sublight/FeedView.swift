@@ -45,7 +45,11 @@ struct FeedPost: Identifiable {
     let craftName: String
     let location: String
     let avatar: URL?
+    /// Smallest size: the scrub strip.
     let thumb: URL?
+    /// Mid size for the stage. Bundled frames leave this nil — their `file` is
+    /// already a local render that serves the stage fine.
+    let view: URL?
     let full: URL?
     let caption: String        // "Sol 1969 · MCZ_RIGHT"
     let sol: Int?              // the rover's own day — the grouping key
@@ -137,7 +141,7 @@ struct FeedGroupCard: View {
     private var stage: some View {
         ZStack {
             Color.black
-            if let p = current { FeedPhoto(post: p) }
+            if let p = current { FeedPhoto(post: p, large: true) }
         }
         .frame(height: 380)
         .clipped()
@@ -238,9 +242,12 @@ struct FeedGroupCard: View {
 struct FeedPhoto: View {
     let post: FeedPost
     var contentMode: ContentMode = .fit
+    /// The stage wants the mid size; the strip wants the smallest.
+    var large = false
+    private var src: URL? { large ? (post.view ?? post.thumb) : post.thumb }
     var body: some View {
         if post.isRemote {
-            AsyncImage(url: post.thumb) { phase in
+            AsyncImage(url: src) { phase in
                 switch phase {
                 case .success(let img): img.resizable().aspectRatio(contentMode: contentMode)
                 case .empty: ProgressView().tint(Theme.dim)
@@ -248,7 +255,7 @@ struct FeedPhoto: View {
                 }
             }
         } else {
-            BundleImage(url: post.thumb, contentMode: contentMode)
+            BundleImage(url: src, contentMode: contentMode)
         }
     }
 }
@@ -326,13 +333,13 @@ final class FeedStore: ObservableObject {
             }
             var list: [FeedPost] = [
                 FeedPost(id: c.id + "-hero", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
-                         thumb: DataStore.imageURL(f.file), full: DataStore.imageURL(f.full),
+                         thumb: DataStore.imageURL(f.file), view: nil, full: DataStore.imageURL(f.full),
                          caption: cap(f.sol, f.instrument), sol: f.sol, arrival: arrival(f.capturedUtc),
                          lightLine: light, isRemote: false)
             ]
             for (i, r) in (f.recent ?? []).enumerated() {
                 list.append(FeedPost(id: "\(c.id)-\(i)", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
-                                     thumb: DataStore.imageURL(r.file), full: DataStore.imageURL(r.full),
+                                     thumb: DataStore.imageURL(r.file), view: nil, full: DataStore.imageURL(r.full),
                                      caption: cap(r.sol, r.instrument), sol: r.sol, arrival: arrival(r.capturedUtc),
                                      lightLine: light, isRemote: false))
             }
@@ -406,7 +413,7 @@ final class FeedStore: ObservableObject {
         let caption = img.sol > 0 ? "Sol \(img.sol) · \(img.instrument)" : img.instrument
         return FeedPost(
             id: img.id.uuidString, craftId: craft.id, craftName: craft.name, location: craft.reg.location,
-            avatar: store.avatarURL(for: craft.id), thumb: img.thumb, full: img.full,
+            avatar: store.avatarURL(for: craft.id), thumb: img.thumb, view: img.view, full: img.full,
             caption: caption, sol: img.sol > 0 ? img.sol : nil,
             arrival: Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt),
             lightLine: owlt > 0 ? "Its light took \(Fmt.lightTime(owlt)) to cross the void" : nil,

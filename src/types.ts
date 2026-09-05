@@ -109,9 +109,12 @@ export interface PlanetsData {
 // --------------------------- generated: frames.json -------------------------
 
 export interface FrameThumb {
-  /** Small local thumbnail (~720px) for the map chip / HUD / strip. */
+  /** Smallest size: the scrub strip and map chips. */
   file: string;
-  /** Large local image (~1600px) for the full-screen viewer + HQ download. */
+  /** Mid size for the feed stage. Absent on bundled frames, where `file` is
+   *  already a local 720px render and serves fine. */
+  view?: string;
+  /** Large image for the full-screen viewer + HQ download. */
   full: string;
   /** Original full-resolution image at the source (NASA), for "view original". */
   sourceUrl: string;

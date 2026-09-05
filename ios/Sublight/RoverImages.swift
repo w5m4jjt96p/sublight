@@ -4,9 +4,24 @@ import Foundation
 // The full archive is enormous, so nothing is bundled; we fetch a sample of a
 // sol's frames from the public NASA feeds when the user taps a drive stop.
 
+// mars.nasa.gov serves size variants of every MSL frame by suffix, and the
+// saving is dramatic: a NAVCAM frame is 536 KB raw, 113 KB as -br, 8 KB as
+// -thm. Feeding the raw frame into a 34pt filmstrip cell was what made images
+// feel slow to arrive. Verified present on every MSL camera.
+func mslVariant(_ url: URL, _ suffix: String) -> URL {
+    let s = url.absoluteString
+    guard let dot = s.range(of: ".", options: .backwards), dot.lowerBound > s.startIndex else { return url }
+    let ext = String(s[dot.lowerBound...])
+    guard ext.lowercased() == ".jpg" else { return url }
+    return URL(string: String(s[s.startIndex..<dot.lowerBound]) + suffix + ext) ?? url
+}
+
 struct RoverImage: Identifiable {
     let id = UUID()
+    /// Smallest size: the scrub strip.
     let thumb: URL
+    /// Mid size for the feed stage.
+    let view: URL
     let full: URL
     let sourceUrl: URL
     let instrument: String
@@ -55,7 +70,8 @@ enum RoverImages {
             guard let thumbS = f?.small ?? f?.medium ?? f?.large ?? f?.full_res,
                   let thumb = URL(string: thumbS) else { return nil }
             let fullS = f?.large ?? f?.full_res ?? f?.medium ?? thumbS
-            return RoverImage(thumb: thumb, full: URL(string: fullS) ?? thumb,
+            let viewS = f?.medium ?? f?.large ?? thumbS
+            return RoverImage(thumb: thumb, view: URL(string: viewS) ?? thumb, full: URL(string: fullS) ?? thumb,
                               sourceUrl: URL(string: im.link ?? fullS) ?? thumb,
                               instrument: im.camera?.instrument ?? "CAMERA",
                               capturedUtc: im.date_taken_utc ?? "", sol: im.sol ?? 0)
@@ -69,7 +85,7 @@ enum RoverImages {
         let d = try JSONDecoder().decode(MSLResponse.self, from: data)
         return d.items.filter { $0.is_thumbnail != true }.prefix(limit).compactMap { im in
             guard let s = im.url, let u = URL(string: s) else { return nil }
-            return RoverImage(thumb: u, full: u, sourceUrl: u,
+            return RoverImage(thumb: mslVariant(u, "-thm"), view: mslVariant(u, "-br"), full: u, sourceUrl: u,
                               instrument: im.instrument ?? "CAMERA",
                               capturedUtc: im.date_taken ?? "", sol: im.sol ?? 0)
         }
@@ -114,8 +130,10 @@ enum RoverImages {
             guard let thumbS = f?.small ?? f?.medium ?? f?.large ?? f?.full_res,
                   let thumb = URL(string: thumbS) else { return nil }
             let fullS = f?.large ?? f?.full_res ?? f?.medium ?? thumbS
+            let viewS = f?.medium ?? f?.large ?? thumbS
             return RoverImage(
                 thumb: thumb,
+                view: URL(string: viewS) ?? thumb,
                 full: URL(string: fullS) ?? thumb,
                 sourceUrl: URL(string: im.link ?? fullS) ?? thumb,
                 instrument: im.camera?.instrument ?? "CAMERA",
@@ -150,7 +168,7 @@ enum RoverImages {
         let full = d.items.filter { $0.is_thumbnail != true }
         let images: [RoverImage] = full.prefix(limit).compactMap { im in
             guard let s = im.url, let u = URL(string: s) else { return nil }
-            return RoverImage(thumb: u, full: u, sourceUrl: u,
+            return RoverImage(thumb: mslVariant(u, "-thm"), view: mslVariant(u, "-br"), full: u, sourceUrl: u,
                               instrument: im.instrument ?? "CAMERA",
                               capturedUtc: im.date_taken ?? "", sol: im.sol ?? sol)
         }
