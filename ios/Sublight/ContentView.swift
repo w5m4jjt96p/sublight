@@ -16,7 +16,7 @@ struct SublightApp: App {
     }
 }
 
-enum NavTab { case gallery, map, settings }
+enum NavTab { case gallery, mars, map, deepSky, settings }
 
 struct ContentView: View {
     @StateObject private var store = DataStore()
@@ -26,8 +26,6 @@ struct ContentView: View {
     @State private var tab: NavTab = .map
     @State private var showSearch = false
     @State private var showNearEarth = false
-    @State private var showMars = false
-    @State private var showDeepSky = false
     @State private var marsTraverseTrack: RoverTrack?
 
     var body: some View {
@@ -41,6 +39,21 @@ struct ContentView: View {
             } else if tab == .settings {
                 SettingsView(store: store)
                     .transition(.opacity)
+            } else if tab == .deepSky {
+                DeepSkyView(store: store, onClose: { tab = .map })
+                    .transition(.opacity)
+            } else if tab == .mars {
+                MarsGlobeView(
+                    store: store,
+                    marsLightSeconds: store.craft.first(where: { $0.id == "perseverance" })?.eph.owltSeconds,
+                    onOpenTraverse: { id in
+                        if let t = store.tracks[id] {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { marsTraverseTrack = t }
+                        }
+                    },
+                    onClose: { tab = .map }
+                )
+                .transition(.opacity)
             }
 
             if tab == .map {
@@ -53,9 +66,7 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 if tab == .map {
                     TopBar(onSearch: { showSearch = true },
-                           onNearEarth: { showNearEarth = true },
-                           onMars: { showMars = true },
-                           onDeepSky: { showDeepSky = true })
+                           onNearEarth: { showNearEarth = true })
                 }
                 Spacer()
                 NavBar(tab: $tab, onMapReset: { controller.reset() })
@@ -65,26 +76,10 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showNearEarth) {
             NearEarthView(store: store, onClose: { showNearEarth = false })
         }
-        .fullScreenCover(isPresented: $showMars) {
-            MarsGlobeView(
-                store: store,
-                marsLightSeconds: store.craft.first(where: { $0.id == "perseverance" })?.eph.owltSeconds,
-                onOpenTraverse: { id in
-                    showMars = false
-                    if let t = store.tracks[id] {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { marsTraverseTrack = t }
-                    }
-                },
-                onClose: { showMars = false }
-            )
-        }
         .fullScreenCover(item: $marsTraverseTrack) { track in
             TraverseView(store: store, track: track,
                          craftName: store.craft.first(where: { $0.id == track.id })?.name ?? track.label,
                          onClose: { marsTraverseTrack = nil })
-        }
-        .fullScreenCover(isPresented: $showDeepSky) {
-            DeepSkyView(store: store, onClose: { showDeepSky = false })
         }
         .sheet(item: $selection) { sel in
             switch sel {
@@ -109,8 +104,6 @@ struct ContentView: View {
 private struct TopBar: View {
     let onSearch: () -> Void
     let onNearEarth: () -> Void
-    let onMars: () -> Void
-    let onDeepSky: () -> Void
     var body: some View {
         HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -120,15 +113,12 @@ private struct TopBar: View {
                 }
             }
             Spacer()
-            Menu {
-                Button("Mars", action: onMars)
-                Button("Near-Earth", action: onNearEarth)
-                Button("Deep Sky", action: onDeepSky)
-            } label: {
+            Button(action: onNearEarth) {
                 HStack(spacing: 5) {
-                    Text("Explore").font(.mono(11)).foregroundColor(Theme.txt)
-                    Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundColor(Theme.dim)
+                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 11, weight: .semibold))
+                    Text("Near-Earth").font(.mono(11))
                 }
+                .foregroundColor(Theme.txt)
                 .padding(.horizontal, 13).frame(height: 40)
                 .background(Capsule().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Capsule()))
                 .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
@@ -215,7 +205,9 @@ private struct NavBar: View {
     var body: some View {
         HStack(spacing: 6) {
             item(.gallery, icon: "photo.on.rectangle.angled", label: "Gallery")
+            item(.mars, icon: "globe", label: "Mars")
             mapButton
+            item(.deepSky, icon: "sparkles", label: "Deep Sky")
             item(.settings, icon: "gearshape", label: "Settings")
         }
         .padding(8)
@@ -224,15 +216,15 @@ private struct NavBar: View {
                 .background(.ultraThinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
         )
-        .padding(.horizontal, 44)
+        .padding(.horizontal, 12)
         .padding(.bottom, 8)
     }
 
     private func item(_ t: NavTab, icon: String, label: String) -> some View {
         Button { tab = t } label: {
             VStack(spacing: 4) {
-                Image(systemName: icon).font(.system(size: 18))
-                Text(label).font(.mono(9)).tracking(0.5)
+                Image(systemName: icon).font(.system(size: 17))
+                Text(label).font(.mono(8)).tracking(0.3).lineLimit(1)
             }
             .foregroundColor(tab == t ? Theme.signal : Theme.dim)
             .frame(maxWidth: .infinity)

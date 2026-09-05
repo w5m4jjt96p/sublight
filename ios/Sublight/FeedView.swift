@@ -187,10 +187,14 @@ struct FeedGroupCard: View {
                     abs($0.element.index - clamp(index)) < abs($1.element.index - clamp(index))
                 }?.offset ?? 0
                 ForEach(Array(frames.enumerated()), id: \.element.post.id) { k, entry in
-                    FeedPhoto(post: entry.post, contentMode: .fill)
+                    // The empty box takes an equal share of the width; the photo
+                    // fills it and is cropped. Sizing the image itself let a wide
+                    // panorama dictate the layout and leave the strip ragged.
+                    Color.clear
                         .frame(maxWidth: .infinity)
                         .frame(height: 34)
-                        .clipped()
+                        .overlay(FeedPhoto(post: entry.post, contentMode: .fill))
+                        .clipShape(RoundedRectangle(cornerRadius: 2))
                         .opacity(k == active ? 1 : 0.4)
                         .overlay(
                             RoundedRectangle(cornerRadius: 2)
