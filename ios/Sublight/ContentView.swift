@@ -108,15 +108,15 @@ private struct TopBar: View {
         HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
                 HStack(spacing: 6) {
-                    Text(utc(ctx.date)).font(.mono(12)).foregroundColor(Theme.txt)
-                    Text("UTC").font(.mono(8)).tracking(2).foregroundColor(Theme.dim2)
+                    Text(utc(ctx.date)).font(.mono(15)).foregroundColor(Theme.txt)
+                    Text("UTC").font(.mono(11)).tracking(2).foregroundColor(Theme.dim2)
                 }
             }
             Spacer()
             Button(action: onNearEarth) {
-                HStack(spacing: 5) {
-                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 11, weight: .semibold))
-                    Text("Near-Earth").font(.mono(11))
+                HStack(spacing: 6) {
+                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 13, weight: .semibold))
+                    Text("Near-Earth").font(.mono(13))
                 }
                 .foregroundColor(Theme.txt)
                 .padding(.horizontal, 13).frame(height: 40)
@@ -126,7 +126,7 @@ private struct TopBar: View {
             .padding(.trailing, 8)
             Button(action: onSearch) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.system(size: 17, weight: .medium))
                     .foregroundColor(Theme.txt)
                     .frame(width: 40, height: 40)
                     .background(Circle().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Circle()))
@@ -158,10 +158,10 @@ private struct SpaceWeatherChip: View {
             Button { withAnimation(.easeInOut(duration: 0.15)) { open.toggle() } } label: {
                 VStack(alignment: .leading, spacing: 9) {
                     HStack(spacing: 8) {
-                        Circle().fill(dotColor).frame(width: 8, height: 8)
+                        Circle().fill(dotColor).frame(width: 10, height: 10)
                             .shadow(color: dotColor.opacity(0.6), radius: 4)
-                        Text(s.text).font(.mono(11)).foregroundColor(Theme.txt)
-                        Text("Kp \(kp(w.kp))").font(.mono(11)).foregroundColor(Theme.dim)
+                        Text(s.text).font(.mono(16)).foregroundColor(Theme.txt)
+                        Text("Kp \(kp(w.kp))").font(.mono(16)).foregroundColor(Theme.dim)
                     }
                     if open {
                         HStack(spacing: 18) {
@@ -184,8 +184,8 @@ private struct SpaceWeatherChip: View {
 
     private func metric(_ value: String, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(value).font(.monoMed(13)).foregroundColor(Theme.txt)
-            Text(label).font(.mono(9)).foregroundColor(Theme.dim2)
+            Text(value).font(.monoMed(15)).foregroundColor(Theme.txt)
+            Text(label).font(.mono(10.5)).foregroundColor(Theme.dim2)
         }
         .padding(.top, 4)
     }
@@ -203,14 +203,17 @@ private struct NavBar: View {
     let onMapReset: () -> Void
 
     var body: some View {
-        HStack(spacing: 6) {
+        // Tight spacing and a slim capsule: at web's label size, five items plus
+        // the Sun only fit across a phone if the gaps give way.
+        HStack(spacing: 0) {
             item(.gallery, icon: "photo.on.rectangle.angled", label: "Gallery")
             item(.mars, icon: "globe", label: "Mars")
             mapButton
             item(.deepSky, icon: "sparkles", label: "Deep Sky")
             item(.settings, icon: "gearshape", label: "Settings")
         }
-        .padding(8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
         .background(
             Capsule().fill(Theme.panel.opacity(0.82))
                 .background(.ultraThinMaterial, in: Capsule())
@@ -223,12 +226,12 @@ private struct NavBar: View {
     private func item(_ t: NavTab, icon: String, label: String) -> some View {
         Button { tab = t } label: {
             VStack(spacing: 4) {
-                Image(systemName: icon).font(.system(size: 17))
-                Text(label).font(.mono(8)).tracking(0.3).lineLimit(1)
+                Image(systemName: icon).font(.system(size: 23))
+                Text(label).font(.mono(11.5)).lineLimit(1).minimumScaleFactor(0.8)
             }
             .foregroundColor(tab == t ? Theme.signal : Theme.dim)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
+            .padding(.vertical, 6).padding(.horizontal, 2)
         }
         .buttonStyle(.plain)
     }
@@ -239,13 +242,14 @@ private struct NavBar: View {
             tab = .map
         } label: {
             Image(systemName: "sun.max.fill")
-                .font(.system(size: 24))
+                .font(.system(size: 26))
                 .foregroundColor(tab == .map ? Theme.void : Theme.txt)
-                .frame(width: 60, height: 60)
+                .frame(width: 54, height: 54)
                 .background(
                     Circle().fill(tab == .map ? Theme.delay : Theme.rule2)
                         .shadow(color: tab == .map ? Theme.delay.opacity(0.5) : .clear, radius: 10)
                 )
+                .padding(.horizontal, 4)
         }
         .buttonStyle(.plain)
     }
