@@ -1,31 +1,15 @@
-// The gallery — "the wall of arriving light". One block per craft, ordered by
-// when its light reached Earth (capture + light-travel delay), newest arrival
-// first. Each rover block can pull its entire archive, sol by sol, not just the
-// day's frames — that reach is the point of Sublight.
-import { useMemo } from 'react';
+// The gallery — "the wall of arriving light". One chronological stream for the
+// whole fleet: publications from different craft interleave by when their light
+// reached Earth, newest first, each carrying its author. Retired craft have no
+// live arrival and would sink out of a dated feed forever, so they get their own
+// shelf at the end.
 import type { FramesData, ArchiveData, FrameThumb } from '../types.ts';
 import type { MapModel } from '../map/model.ts';
-import { fmtSince, fmtDuration } from '../data/format.ts';
-import { owltAt } from '../data/lightTime.ts';
-import { RoverBlock } from './RoverBlock.tsx';
+import { fmtSince } from '../data/format.ts';
+import { Feed } from './Feed.tsx';
 import { Avatar } from './Avatar.tsx';
 
 const asset = (p: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}${p}`;
-
-interface Block {
-  craftId: string;
-  craftName: string;
-  location: string;
-  owlt: number;
-  lightLine: string | null;
-  newestArrivalMs: number;
-  kind: 'frames' | 'archive';
-  isLive: boolean;
-  latestSol: number | null;
-  initial: FrameThumb[];
-  archiveFile?: string;
-  archiveTitle?: string;
-}
 
 interface GalleryProps {
   frames: FramesData;
@@ -38,39 +22,17 @@ interface GalleryProps {
   onBack: () => void;
 }
 
-const byArrivalDesc = (a: FrameThumb, b: FrameThumb) => (Date.parse(b.capturedUtc) || 0) - (Date.parse(a.capturedUtc) || 0);
-
 export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchive, onOpenList, onBack }: GalleryProps) {
-  // One block per craft; live frames ordered by arrival, blocks by freshest.
-  const blocks = useMemo(() => {
-    const out: Block[] = [];
-    for (const c of model?.craft ?? []) {
-      const id = c.entry.id;
-      const owlt = generatedAt ? (owltAt(c.eph, generatedAt, now) ?? 0) : 0;
-      const lightLine = owlt > 0 ? `Its light took ${fmtDuration(owlt)} to cross the void` : null;
-      const f = frames[id];
-      if (f) {
-        const initial = (f.recent?.length
-          ? [...f.recent]
-          : [{ file: f.file, full: f.full, sourceUrl: f.sourceUrl, instrument: f.instrument, capturedUtc: f.capturedUtc, sol: f.sol }]
-        ).sort(byArrivalDesc);
-        const newest = initial[0] ? (Date.parse(initial[0].capturedUtc) || 0) + owlt * 1000 : -Infinity;
-        out.push({
-          craftId: id, craftName: c.entry.name, location: c.entry.location, owlt, lightLine,
-          newestArrivalMs: newest, kind: 'frames', isLive: f.sol != null, latestSol: f.sol ?? null, initial,
-        });
-      } else if (archive[id]) {
-        out.push({
-          craftId: id, craftName: c.entry.name, location: c.entry.location, owlt, lightLine,
-          newestArrivalMs: -Infinity, kind: 'archive', isLive: false, latestSol: null, initial: [],
-          archiveFile: archive[id]!.file, archiveTitle: archive[id]!.title,
-        });
-      }
-    }
-    return out.sort((a, b) => b.newestArrivalMs - a.newestArrivalMs);
-  }, [frames, archive, model, generatedAt, now]);
+  const archiveCraft = (model?.craft ?? []).filter((c) => !frames[c.entry.id] && archive[c.entry.id]);
 
-  const freshest = blocks.find((b) => b.newestArrivalMs > 0);
+  // The freshest arrival across the fleet, for the lede.
+  let freshest: { name: string; ms: number } | null = null;
+  for (const c of model?.craft ?? []) {
+    const f = frames[c.entry.id];
+    if (!f?.capturedUtc) continue;
+    const ms = Date.parse(f.capturedUtc) || 0;
+    if (ms && (!freshest || ms > freshest.ms)) freshest = { name: c.entry.name, ms };
+  }
 
   return (
     <div className="gallery-overlay">
@@ -80,55 +42,35 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchiv
         </a>
         <h1>The wall of arriving light</h1>
         <p className="gallery-lede">
-          Every frame the fleet has sent home, one block per craft, ordered by when its light
-          actually reached Earth — most recent arrivals first. None of it is happening now.
+          Every frame the fleet has sent home, in one stream ordered by when its light actually
+          reached Earth — most recent arrivals first. None of it is happening now.
           {freshest && (
-            <> The freshest light here reached us from {freshest.craftName} {fmtSince(new Date(freshest.newestArrivalMs).toISOString(), now)} ago.</>
+            <> The freshest light here reached us from {freshest.name} {fmtSince(new Date(freshest.ms).toISOString(), now)} ago.</>
           )}
         </p>
 
-        {blocks.map((b) =>
-          b.kind === 'archive' ? (
-            <section className="craft-block" key={b.craftId}>
-              <header className="cb-head">
-                <Avatar craftId={b.craftId} name={b.craftName} />
-                <div className="cb-who">
-                  <span className="cb-name">{b.craftName}</span>
-                  <span className="cb-loc">{b.location}</span>
-                </div>
-                {b.lightLine && <span className="cb-light">↗ {b.lightLine}</span>}
-              </header>
-              <div className="cb-feed">
-                <article className="cbf-post">
-                  <button className="cbf-photo" onClick={() => onOpenArchive(b.craftId)} aria-label={`${b.craftName} — ${b.archiveTitle}`}>
-                    <img src={asset(b.archiveFile!)} alt={`${b.craftName} — ${b.archiveTitle}`} loading="lazy" />
-                  </button>
-                  <div className="cbf-meta">
-                    <span className="cbf-cap">{b.archiveTitle}</span>
-                    <span className="cbf-arr">mission archive</span>
-                  </div>
-                </article>
-              </div>
-            </section>
-          ) : (
-            <RoverBlock
-              key={b.craftId}
-              craftId={b.craftId}
-              craftName={b.craftName}
-              location={b.location}
-              owlt={b.owlt}
-              lightLine={b.lightLine}
-              isLive={b.isLive}
-              latestSol={b.latestSol}
-              initial={b.initial}
-              now={now}
-              avatar={<Avatar craftId={b.craftId} name={b.craftName} />}
-              onOpenList={onOpenList}
-            />
-          ),
-        )}
+        <Feed frames={frames} model={model} generatedAt={generatedAt} now={now} onOpenList={onOpenList} />
 
-        {blocks.length === 0 && <p className="gallery-lede">No frames available right now.</p>}
+        {archiveCraft.length > 0 && (
+          <section className="archive-shelf">
+            <h2>From the mission archives</h2>
+            <div className="shelf">
+              {archiveCraft.map((c) => {
+                const a = archive[c.entry.id]!;
+                return (
+                  <button key={c.entry.id} className="shelf-item" onClick={() => onOpenArchive(c.entry.id)}>
+                    <img src={asset(a.file)} alt={`${c.entry.name} — ${a.title}`} loading="lazy" />
+                    <span className="shelf-craft">
+                      <Avatar craftId={c.entry.id} name={c.entry.name} />
+                      {c.entry.name}
+                    </span>
+                    <span className="shelf-title">{a.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

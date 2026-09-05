@@ -428,9 +428,21 @@ struct FeedView: View {
                 LazyVStack(spacing: 22) {
                     ForEach(Array(shown.enumerated()), id: \.element.id) { idx, g in
                         FeedGroupCard(group: g) { viewer = $0 }
-                            .onAppear { if idx >= feed.visible - 2 { feed.revealMore() } }
+                            // Infinite scroll: reveal what's loaded, then reach
+                            // further back. No button.
+                            .onAppear {
+                                guard idx >= feed.visible - 2 else { return }
+                                if feed.visible < feed.groups.count { feed.revealMore() }
+                                else { Task { await feed.loadOlder(from: store) } }
+                            }
                     }
-                    if feed.visible < feed.groups.count || feed.canLoadOlder { loadButton }
+                    if feed.loading {
+                        HStack(spacing: 8) {
+                            ProgressView().tint(Theme.dim).scaleEffect(0.8)
+                            Text("Reaching further back…").font(.mono(12)).foregroundColor(Theme.dim)
+                        }
+                        .padding(.vertical, 18)
+                    }
                     archiveSection
                 }
                 .padding(.bottom, 100)
@@ -441,23 +453,6 @@ struct FeedView: View {
             await feed.refreshLive(from: store)
         }
         .fullScreenCover(item: $viewer) { url in PhotoViewer(url: url) { viewer = nil } }
-    }
-
-    private var loadButton: some View {
-        Button {
-            if feed.visible < feed.groups.count { feed.revealMore() }
-            else { Task { await feed.loadOlder(from: store) } }
-        } label: {
-            HStack(spacing: 8) {
-                if feed.loading { ProgressView().tint(Theme.signal).scaleEffect(0.8) }
-                Text(feed.loading ? "Loading…" : (feed.visible < feed.groups.count ? "Load more" : "Load older photos"))
-                    .font(.mono(12)).foregroundColor(Theme.signal)
-            }
-            .padding(.horizontal, 16).padding(.vertical, 11)
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
-        }
-        .buttonStyle(.plain).disabled(feed.loading)
-        .padding(.top, 6)
     }
 
     // MARK: - Mission archive

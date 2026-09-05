@@ -1474,28 +1474,19 @@ a {
 .story-count { color: rgba(255,255,255,0.55); }
 .story-light { font-family: var(--mono); font-size: 12.5px; color: var(--delay); margin-top: 6px; }
 
-/* --- Gallery: one block per craft, ordered by arrival --------------------- */
-.craft-block { margin-top: 34px; padding-top: 24px; border-top: 1px solid var(--rule); }
-.cb-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-.cb-head .ga-avatar { width: 44px; height: 44px; }
-.cb-who { display: flex; flex-direction: column; gap: 2px; margin-right: auto; }
-.cb-name { font-family: var(--sans); font-size: 20px; color: var(--txt); }
-.cb-loc { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--dim); text-transform: uppercase; }
-.cb-light { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
+/* --- Gallery: one chronological feed of publications ---------------------- */
+.feed { display: flex; flex-direction: column; gap: 26px; max-width: 620px; }
+.feed-sentinel { height: 1px; }
+.feed-status { font-family: var(--mono); font-size: 12px; color: var(--dim); padding: 6px 2px 20px; }
 
-/* Vertical feed of publications, constrained like a real feed. */
-.cb-feed { display: flex; flex-direction: column; gap: 18px; max-width: 620px; }
-.cb-sentinel { height: 1px; }
+.post { border: 1px solid var(--rule-2); border-radius: 8px; overflow: hidden; background: #05070a; }
+.post-head { display: flex; align-items: center; gap: 10px; padding: 11px 12px; }
+.post-head .ga-avatar { width: 36px; height: 36px; }
+.post-who { display: flex; flex-direction: column; gap: 1px; margin-right: auto; min-width: 0; }
+.post-craft { font-family: var(--mono); font-weight: 500; font-size: 14px; color: var(--txt); }
+.post-loc { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.post-when { font-family: var(--mono); font-size: 11.5px; color: var(--delay); white-space: nowrap; }
 
-/* A single publication: one sol, swiped like a carousel. */
-.pub { border: 1px solid var(--rule-2); border-radius: 8px; overflow: hidden; background: #05070a; }
-.pub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px; }
-.pub-sol { font-family: var(--mono); font-size: 12.5px; color: var(--txt); }
-.pub-when { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
-
-/* The frame is swapped in place with no transition: these are sequence frames,
-   and a flipbook only reads as motion if nothing slides. `pan-y` keeps the page
-   scrollable vertically while a horizontal drag scrubs. */
 /* The height lives on the stage, not the image: a frame that is still loading
    (or an <img> that lost its rule) is 0x0, which would collapse the whole card. */
 .pub-stage {
@@ -1517,14 +1508,12 @@ a {
 }
 .pub-play:hover { background: rgba(0, 0, 0, 0.8); }
 
-/* Scrub strip: the whole sequence at a glance, drag across it to run through. */
+/* Scrub strip: the sequence at a glance, drag across it to run through. */
 .pub-strip {
   display: flex; gap: 2px; padding: 6px 8px; background: #04060a;
   overflow-x: auto; scrollbar-width: none; touch-action: none; cursor: ew-resize;
 }
 .pub-strip::-webkit-scrollbar { display: none; }
-/* A real <img loading="lazy"> rather than a background, so the strips of
-   publications you haven't scrolled to fetch nothing at all. */
 .pub-thumb {
   flex: 1 1 0; min-width: 9px; height: 34px; border-radius: 2px;
   overflow: hidden; background: var(--rule); opacity: 0.4;
@@ -1532,26 +1521,37 @@ a {
 .pub-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .pub-thumb.is-on { opacity: 1; outline: 1px solid var(--signal); outline-offset: -1px; }
 
-.pub-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px; }
-.pub-cap { font-family: var(--mono); font-size: 12px; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pub-of { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; }
+.post-foot { padding: 10px 12px 13px; }
+.post-caption { font-family: var(--mono); font-size: 12.5px; color: var(--txt); }
+.post-of { color: var(--dim); }
+.post-light { font-family: var(--mono); font-size: 12px; color: var(--delay); margin-top: 5px; }
 
-/* The archive block still shows a single still, not a carousel. */
-.cbf-post { border: 1px solid var(--rule-2); border-radius: 8px; overflow: hidden; background: #05070a; }
-.cbf-photo { display: block; width: 100%; padding: 0; border: none; background: #000; cursor: pointer; }
-.cbf-photo img { display: block; width: 100%; max-height: 68vh; object-fit: contain; }
-.cbf-meta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 12px 12px; }
-.cbf-cap { font-family: var(--mono); font-size: 12px; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cbf-arr { font-family: var(--mono); font-size: 12px; color: var(--delay); white-space: nowrap; }
-
-.cb-more {
-  margin-top: 16px; font-family: var(--mono); font-size: 12px; color: var(--signal);
-  background: none; border: 1px solid var(--rule-2); border-radius: 6px; padding: 11px 18px; cursor: pointer;
+/* Retired craft: one curated still each, off the dated stream. */
+.archive-shelf { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--rule); }
+.archive-shelf h2 {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--dim); font-weight: 400; margin: 0 0 16px;
 }
-.cb-more:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.08); }
-.cb-more:disabled { opacity: 0.6; cursor: default; }
+.shelf { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+.shelf::-webkit-scrollbar { display: none; }
+.shelf-item {
+  flex: 0 0 210px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  padding: 0; border: none; background: none; cursor: pointer; text-align: left;
+}
+.shelf-item img {
+  width: 210px; height: 140px; object-fit: cover; display: block;
+  border-radius: 6px; border: 1px solid var(--rule-2);
+}
+.shelf-craft {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 12px; color: var(--txt);
+}
+.shelf-craft .ga-avatar { width: 22px; height: 22px; }
+.shelf-title {
+  font-family: var(--mono); font-size: 11px; color: var(--dim);
+  max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 @media (max-width: 560px) {
-  .cb-name { font-size: 18px; }
-  .cb-light { font-size: 11px; width: 100%; }
+  .post-craft { font-size: 13.5px; }
 }
