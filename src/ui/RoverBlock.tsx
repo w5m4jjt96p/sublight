@@ -62,26 +62,40 @@ export function RoverBlock({
   const [visible, setVisible] = useState(PAGE);
   const [topSol, setTopSol] = useState(latestSol);
   const [nextSol, setNextSol] = useState(latestSol ?? 0);
-  const [fetchedLatest, setFetchedLatest] = useState(false);
+  const [topSolComplete, setTopSolComplete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
 
   const pubs = useMemo(() => intoPublications(buffer), [buffer]);
 
-  // Live-first: the bundled snapshot is only as fresh as the last data refresh
-  // and NASA publishes in bursts all day, so on open we swap in the frames it
-  // has published most recently. The bundle stays the instant/offline paint.
+  // Live-first, in two steps. The newest published frames paint immediately
+  // (the bundled snapshot is only as fresh as the last data refresh, and NASA
+  // publishes in bursts all day); then we pull that sol in full, because a
+  // publication is one rover on one sol and must be whole from the start —
+  // otherwise "Load older photos" ends up growing the post already on screen
+  // instead of adding an older one.
   useEffect(() => {
     if (!isLive) return;
     let cancelled = false;
-    fetchLatestFrames(craftId, 48)
-      .then((fresh) => {
+    (async () => {
+      try {
+        const fresh = await fetchLatestFrames(craftId, 48);
         if (cancelled || !fresh.length) return;
+        const top = fresh.reduce((m, f) => Math.max(m, f.sol ?? 0), 0) || latestSol;
         setBuffer(fresh.slice().sort(byArrivalDesc));
-        setTopSol(fresh.reduce((m, f) => Math.max(m, f.sol ?? 0), 0) || latestSol);
-      })
-      .catch(() => { /* offline or feed down: keep the bundled frames */ });
+        setTopSol(top);
+        if (top == null) return;
+
+        const full = await fetchSolImages(craftId, top, 600);
+        if (cancelled || !full.frames.length) return;
+        setBuffer(full.frames.slice().sort(byArrivalDesc));
+        setNextSol(top - 1);
+        setTopSolComplete(true);
+      } catch {
+        /* offline or feed down: keep the bundled frames */
+      }
+    })();
     return () => { cancelled = true; };
   }, [craftId, isLive, latestSol]);
 
@@ -101,18 +115,20 @@ export function RoverBlock({
     if (loading || done || !isLive || topSol == null) return;
     setLoading(true);
     try {
-      // Page back from the newest sol we've actually seen (live), not the one
-      // the bundled snapshot happened to capture.
-      let sol = fetchedLatest ? nextSol : topSol;
+      // Normally the newest sol is already complete, so this only ever fetches a
+      // strictly older one and appends it as a new publication. The `topSol`
+      // branch is the degraded path where the live pull never landed and the
+      // buffer is still the partial bundled snapshot — there we replace it, so
+      // we never mix a partial sol with a complete one.
+      let sol = topSolComplete ? nextSol : topSol;
       let added: FrameThumb[] = [];
       // Descend past the occasional empty sol so a gap never dead-ends the feed.
       for (let tries = 0; tries < 8 && sol >= 0; tries++, sol--) {
         const d = await fetchSolImages(craftId, sol, 600);
         if (d.frames.length) { added = d.frames; break; }
       }
-      // The first pull completes the newest sol; the rest append the previous one.
-      setBuffer((prev) => [...(fetchedLatest ? prev : []), ...added].sort(byArrivalDesc));
-      setFetchedLatest(true);
+      setBuffer((prev) => [...(topSolComplete ? prev : []), ...added].sort(byArrivalDesc));
+      setTopSolComplete(true);
       setNextSol(sol - 1);
       if (sol - 1 < 0) setDone(true);
       setVisible((v) => v + PAGE);

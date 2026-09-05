@@ -319,15 +319,28 @@ final class FeedStore: ObservableObject {
         remerge()
     }
 
-    /// Live-first: replace each rover's bundled posts with what NASA published most recently.
+    /// Live-first, in two steps: show what NASA published most recently, then
+    /// pull that sol in full. A publication is one rover on one sol and has to
+    /// be whole from the start — otherwise "Load older photos" grows the post
+    /// already on screen instead of adding an older one.
     func refreshLive(from store: DataStore) async {
         for c in store.craft where cursors[c.id] != nil {
             let images = await RoverImages.fetchLatest(roverId: c.id, limit: 48)
             guard !images.isEmpty else { continue }
             byCraft[c.id] = images.map { post(from: $0, craft: c, store: store) }
-            let top = images.reduce(0) { max($0, $1.sol) }
-            if top > 0 { cursors[c.id]?.nextSol = top }
             remerge()
+
+            let top = images.reduce(0) { max($0, $1.sol) }
+            guard top > 0 else { continue }
+            let full = await RoverImages.fetch(roverId: c.id, sol: top, limit: 600)
+            if full.images.isEmpty {
+                cursors[c.id]?.nextSol = top
+            } else {
+                byCraft[c.id] = full.images.map { post(from: $0, craft: c, store: store) }
+                cursors[c.id]?.nextSol = top - 1
+                cursors[c.id]?.pulledLatestSol = true
+                remerge()
+            }
         }
     }
 
@@ -338,8 +351,10 @@ final class FeedStore: ObservableObject {
         defer { loading = false }
         for c in store.craft {
             guard var cur = cursors[c.id], !cur.done else { continue }
-            // The first pull completes the newest sol; later ones step back
-            // (nextSol is decremented after each pull).
+            // The newest sol is already whole (refreshLive did it), so this
+            // normally fetches a strictly older one and appends it as its own
+            // publication. The else-branch below is only the degraded path where
+            // the live pull never landed and we still hold partial bundled frames.
             var sol = cur.nextSol
             var images: [RoverImage] = []
             var tries = 0
