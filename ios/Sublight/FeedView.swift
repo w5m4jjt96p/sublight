@@ -79,7 +79,21 @@ struct FeedGroupCard: View {
     @State private var playing = false
     @State private var dragAnchor: Int?
 
+    // A complete sol can run to a couple of hundred frames. Past this the strip
+    // is sampled: at 214 thumbnails each is under 2pt wide, so it tells you
+    // nothing and costs a request per frame. Scrubbing still covers every frame.
+    private let stripMax = 40
+
     private var count: Int { group.posts.count }
+
+    /// Evenly spaced sample of the sequence, always including first and last.
+    private var stripFrames: [(index: Int, post: FeedPost)] {
+        guard count > stripMax else { return group.posts.enumerated().map { ($0.offset, $0.element) } }
+        return (0..<stripMax).map { k in
+            let i = Int((Double(k) * Double(count - 1) / Double(stripMax - 1)).rounded())
+            return (i, group.posts[i])
+        }
+    }
     private func clamp(_ i: Int) -> Int { min(max(i, 0), max(count - 1, 0)) }
     private var current: FeedPost? { group.posts.indices.contains(clamp(index)) ? group.posts[clamp(index)] : nil }
 
@@ -167,15 +181,20 @@ struct FeedGroupCard: View {
     private var strip: some View {
         GeometryReader { geo in
             HStack(spacing: 2) {
-                ForEach(Array(group.posts.enumerated()), id: \.element.id) { i, p in
-                    FeedPhoto(post: p, contentMode: .fill)
+                // Highlight whichever sampled thumb sits closest to the frame on screen.
+                let frames = stripFrames
+                let active = frames.enumerated().min {
+                    abs($0.element.index - clamp(index)) < abs($1.element.index - clamp(index))
+                }?.offset ?? 0
+                ForEach(Array(frames.enumerated()), id: \.element.post.id) { k, entry in
+                    FeedPhoto(post: entry.post, contentMode: .fill)
                         .frame(maxWidth: .infinity)
                         .frame(height: 34)
                         .clipped()
-                        .opacity(i == clamp(index) ? 1 : 0.4)
+                        .opacity(k == active ? 1 : 0.4)
                         .overlay(
                             RoundedRectangle(cornerRadius: 2)
-                                .stroke(i == clamp(index) ? Theme.signal : .clear, lineWidth: 1)
+                                .stroke(k == active ? Theme.signal : .clear, lineWidth: 1)
                         )
                 }
             }

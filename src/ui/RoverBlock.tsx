@@ -15,6 +15,10 @@ const capMs = (utc: string) => Date.parse(/(Z|[+-]\d\d:?\d\d)$/.test(utc) ? utc 
 const byArrivalDesc = (a: FrameThumb, b: FrameThumb) => capMs(b.capturedUtc) - capMs(a.capturedUtc);
 
 const PAGE = 3; // publications revealed per step
+// A complete sol can run to a couple of hundred frames. Past this the strip is
+// sampled: at 214 thumbnails each one is under 2px wide, so it tells you
+// nothing and costs a request per frame. Scrubbing still covers every frame.
+const STRIP_MAX = 40;
 
 interface Publication {
   key: string;
@@ -206,6 +210,20 @@ function PublicationCard({
   const clamp = (i: number) => Math.min(Math.max(i, 0), count - 1);
   const current = pub.photos[clamp(index)]!;
 
+  // Evenly spaced sample of the sequence, always including the first and last.
+  const stripFrames = useMemo(() => {
+    if (count <= STRIP_MAX) return pub.photos.map((p, i) => ({ p, i }));
+    return Array.from({ length: STRIP_MAX }, (_, k) => {
+      const i = Math.round((k * (count - 1)) / (STRIP_MAX - 1));
+      return { p: pub.photos[i]!, i };
+    });
+  }, [pub, count]);
+  // Highlight whichever sampled thumb sits closest to the frame on screen.
+  const activeThumb = stripFrames.reduce(
+    (best, s, k) => (Math.abs(s.i - clamp(index)) < Math.abs(stripFrames[best]!.i - clamp(index)) ? k : best),
+    0,
+  );
+
   // Preload a window around the current frame so scrubbing stays smooth. Doing
   // the *whole* sequence up front meant every visible publication fired all its
   // frames at once — over a hundred full-size JPEGs racing the one image you're
@@ -320,8 +338,8 @@ function PublicationCard({
           onPointerCancel={endScrub}
           onPointerLeave={endScrub}
         >
-          {pub.photos.map((p, i) => (
-            <span key={`${p.file}-${i}`} className={`pub-thumb${i === clamp(index) ? ' is-on' : ''}`}>
+          {stripFrames.map(({ p, i }, k) => (
+            <span key={`${p.file}-${i}`} className={`pub-thumb${k === activeThumb ? ' is-on' : ''}`}>
               <img src={asset(p.file)} alt="" loading="lazy" decoding="async" draggable={false} />
             </span>
           ))}
