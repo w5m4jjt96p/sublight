@@ -26,6 +26,11 @@ struct RoverImage: Identifiable {
     let sourceUrl: URL
     let instrument: String
     let capturedUtc: String
+    /// When the frame actually reached Earth: the feed's `date_received`. This
+    /// is what the gallery orders and dates by. Capture time plus light-time is
+    /// not an arrival — a rover buffers frames and downlinks them through a
+    /// relay orbiter hours or days after the shutter.
+    let receivedUtc: String
     let sol: Int
 }
 
@@ -47,9 +52,13 @@ enum RoverImages {
     private static var latestCache: [String: (at: Date, images: [RoverImage])] = [:]
     private static let latestTTL: TimeInterval = 300
 
-    static func fetchLatest(roverId: String, limit: Int = 48) async -> [RoverImage] {
+    /// `force` skips the cache on the way in (never on the way out). Re-opening
+    /// the gallery, pulling to refresh and the background check all take this
+    /// path: the sol on screen is still being added to, so a cached answer is
+    /// the wrong answer.
+    static func fetchLatest(roverId: String, limit: Int = 48, force: Bool = false) async -> [RoverImage] {
         let key = "\(roverId):\(limit)"
-        if let hit = latestCache[key], Date().timeIntervalSince(hit.at) < latestTTL { return hit.images }
+        if !force, let hit = latestCache[key], Date().timeIntervalSince(hit.at) < latestTTL { return hit.images }
         let images: [RoverImage]
         if roverId == "curiosity" {
             images = (try? await latestCuriosity(limit: limit)) ?? []
@@ -74,7 +83,8 @@ enum RoverImages {
             return RoverImage(thumb: thumb, view: URL(string: viewS) ?? thumb, full: URL(string: fullS) ?? thumb,
                               sourceUrl: URL(string: im.link ?? fullS) ?? thumb,
                               instrument: im.camera?.instrument ?? "CAMERA",
-                              capturedUtc: im.date_taken_utc ?? "", sol: im.sol ?? 0)
+                              capturedUtc: im.date_taken_utc ?? "",
+                              receivedUtc: im.date_received ?? "", sol: im.sol ?? 0)
         }
     }
 
@@ -87,13 +97,14 @@ enum RoverImages {
             guard let s = im.url, let u = URL(string: s) else { return nil }
             return RoverImage(thumb: mslVariant(u, "-thm"), view: mslVariant(u, "-br"), full: u, sourceUrl: u,
                               instrument: im.instrument ?? "CAMERA",
-                              capturedUtc: im.date_taken ?? "", sol: im.sol ?? 0)
+                              capturedUtc: im.date_taken ?? "",
+                              receivedUtc: im.date_received ?? "", sol: im.sol ?? 0)
         }
     }
 
-    static func fetch(roverId: String, sol: Int, limit: Int = 120) async -> SolImages {
+    static func fetch(roverId: String, sol: Int, limit: Int = 120, force: Bool = false) async -> SolImages {
         let key = "\(roverId):\(sol):\(limit)"
-        if let hit = cache[key] { return hit }
+        if !force, let hit = cache[key] { return hit }
         let result: SolImages
         if roverId == "curiosity" {
             result = (try? await fetchCuriosity(sol: sol, limit: limit)) ?? SolImages(sol: sol, count: 0, images: [], moreURL: nil)
@@ -113,6 +124,7 @@ enum RoverImages {
             let image_files: Files?
             let camera: Camera?
             let date_taken_utc: String?
+            let date_received: String?
             let sol: Int?
             let link: String?
         }
@@ -138,6 +150,7 @@ enum RoverImages {
                 sourceUrl: URL(string: im.link ?? fullS) ?? thumb,
                 instrument: im.camera?.instrument ?? "CAMERA",
                 capturedUtc: im.date_taken_utc ?? "",
+                receivedUtc: im.date_received ?? "",
                 sol: im.sol ?? sol)
         }
         let more = URL(string: "https://mars.nasa.gov/mars2020/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=\(sol)&end_sol=\(sol)")
@@ -151,6 +164,7 @@ enum RoverImages {
             let url: String?
             let instrument: String?
             let date_taken: String?
+            let date_received: String?
             let sol: Int?
             let is_thumbnail: Bool?
         }
@@ -170,7 +184,8 @@ enum RoverImages {
             guard let s = im.url, let u = URL(string: s) else { return nil }
             return RoverImage(thumb: mslVariant(u, "-thm"), view: mslVariant(u, "-br"), full: u, sourceUrl: u,
                               instrument: im.instrument ?? "CAMERA",
-                              capturedUtc: im.date_taken ?? "", sol: im.sol ?? sol)
+                              capturedUtc: im.date_taken ?? "",
+                              receivedUtc: im.date_received ?? "", sol: im.sol ?? sol)
         }
         let more = URL(string: "https://mars.nasa.gov/msl/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=\(sol)&end_sol=\(sol)")
         return SolImages(sol: sol, count: full.count, images: images, moreURL: more)

@@ -63,6 +63,10 @@ struct FrameThumb: Codable {
     let sourceUrl: String
     let instrument: String
     let capturedUtc: String
+    /// When the frame actually reached Earth (the feed's `date_received`).
+    /// Optional: EPIC publishes no equivalent, and bundles written before this
+    /// existed don't carry it.
+    let receivedUtc: String?
     let sol: Int?
 }
 
@@ -70,6 +74,8 @@ struct FrameData: Codable {
     let sol: Int?
     let instrument: String
     let capturedUtc: String
+    /// Measured arrival on Earth (the feed's `date_received`).
+    let receivedUtc: String?
     let file: String
     let full: String
     let sourceUrl: String

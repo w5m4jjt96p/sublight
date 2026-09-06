@@ -208,7 +208,9 @@ struct RoverStoryView: View {
 
     private func lightLine(_ img: RoverImage) -> String {
         var s = "Its light took \(Fmt.lightTime(owltSeconds)) to cross the void"
-        if !img.capturedUtc.isEmpty { s += " · left \(Fmt.ago(img.capturedUtc))" }
+        // "taken", not "left": the shutter is not the moment the light set
+        // off. The frame waits in the rover's memory for a relay pass first.
+        if !img.capturedUtc.isEmpty { s += " · taken \(Fmt.ago(img.capturedUtc))" }
         return s
     }
 }

@@ -5,6 +5,10 @@ import SwiftUI
 // author, its location the place, the arrival the posted time, and the
 // light-travel delay the honest twist underneath.
 //
+// "Arrival" is the feed's `date_received`, the measured moment the frame
+// reached Earth. It is deliberately not capture time plus light-time, which
+// would put a batch downlinked 90 minutes ago 28 hours down the stream.
+//
 // The bundled snapshot paints instantly; then we pull each rover's most recently
 // *published* frames live, so the top of the feed is what NASA put up minutes
 // ago. Scrolling reveals a page at a time; "Load older photos" walks the rovers
@@ -53,7 +57,12 @@ struct FeedPost: Identifiable {
     let full: URL?
     let caption: String        // "Sol 1969 · MCZ_RIGHT"
     let sol: Int?              // the rover's own day — the grouping key
-    let arrival: Date?         // when its light reached Earth
+    /// When the frame reached Earth, from the feed's `date_received`. Measured,
+    /// not capture time plus light-time: a rover buffers frames and downlinks
+    /// them through a relay orbiter hours or days after the shutter.
+    let arrival: Date?
+    /// When the shutter fired. Orders the frames inside a publication.
+    let captured: Date?
     let lightLine: String?
     let isRemote: Bool
 }
@@ -311,9 +320,14 @@ final class FeedStore: ObservableObject {
         // bucket is already newest-first inside its day.
         groups = order.compactMap { key in
             guard let items = buckets[key], let head = items.first else { return nil }
+            // Order *within* a publication stays capture order, newest first.
+            // These frames are usually one sequence, and the flipbook only reads
+            // as motion if they run as the camera shot them. A whole downlink
+            // shares one arrival, so ordering the post by arrival scrambles it.
+            let seq = items.sorted { ($0.captured ?? .distantPast) > ($1.captured ?? .distantPast) }
             return FeedGroup(id: key, craftName: head.craftName, location: head.location,
                              avatar: head.avatar, lightLine: head.lightLine,
-                             newest: head.arrival, posts: items)
+                             newest: head.arrival, posts: seq)
         }
         if visible > groups.count { visible = max(page, groups.count) }
     }
@@ -327,20 +341,29 @@ final class FeedStore: ObservableObject {
             let owlt = c.eph.owltSeconds
             let light = owlt > 0 ? "Its light took \(Fmt.lightTime(owlt)) to cross the void" : nil
             let avatar = store.avatarURL(for: c.id)
-            func arrival(_ iso: String) -> Date? { Fmt.date(from: iso)?.addingTimeInterval(owlt) }
+            // Measured arrival when the bundle carries one; bundles written
+            // before `receivedUtc` existed fall back to capture plus light-time.
+            func arrival(_ received: String?, _ captured: String) -> Date? {
+                if let r = received, let d = Fmt.date(from: r) { return d }
+                return Fmt.date(from: captured)?.addingTimeInterval(owlt)
+            }
             func cap(_ sol: Int?, _ instrument: String) -> String {
                 sol.map { "Sol \($0) · \(instrument)" } ?? instrument
             }
             var list: [FeedPost] = [
                 FeedPost(id: c.id + "-hero", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
                          thumb: DataStore.imageURL(f.file), view: nil, full: DataStore.imageURL(f.full),
-                         caption: cap(f.sol, f.instrument), sol: f.sol, arrival: arrival(f.capturedUtc),
+                         caption: cap(f.sol, f.instrument), sol: f.sol,
+                         arrival: arrival(f.receivedUtc, f.capturedUtc),
+                         captured: Fmt.date(from: f.capturedUtc),
                          lightLine: light, isRemote: false)
             ]
             for (i, r) in (f.recent ?? []).enumerated() {
                 list.append(FeedPost(id: "\(c.id)-\(i)", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
                                      thumb: DataStore.imageURL(r.file), view: nil, full: DataStore.imageURL(r.full),
-                                     caption: cap(r.sol, r.instrument), sol: r.sol, arrival: arrival(r.capturedUtc),
+                                     caption: cap(r.sol, r.instrument), sol: r.sol,
+                                     arrival: arrival(r.receivedUtc, r.capturedUtc),
+                                     captured: Fmt.date(from: r.capturedUtc),
                                      lightLine: light, isRemote: false))
             }
             byCraft[c.id] = list
@@ -353,21 +376,33 @@ final class FeedStore: ObservableObject {
     /// pull that sol in full. A publication is one rover on one sol and has to
     /// be whole from the start — otherwise "Load older photos" grows the post
     /// already on screen instead of adding an older one.
-    func refreshLive(from store: DataStore) async {
+    ///
+    /// `force` bypasses the network caches. Opening the gallery and pulling to
+    /// refresh both use it: the newest sol is still being added to while you
+    /// look at it, so a cached answer would make a re-open a no-op.
+    func refreshLive(from store: DataStore, force: Bool = false) async {
         for c in store.craft where cursors[c.id] != nil {
-            let images = await RoverImages.fetchLatest(roverId: c.id, limit: 48)
+            let images = await RoverImages.fetchLatest(roverId: c.id, limit: 48, force: force)
             guard !images.isEmpty else { continue }
             byCraft[c.id] = images.map { post(from: $0, craft: c, store: store) }
             remerge()
 
-            let top = images.reduce(0) { max($0, $1.sol) }
-            guard top > 0 else { continue }
-            let full = await RoverImages.fetch(roverId: c.id, sol: top, limit: 600)
-            if full.images.isEmpty {
-                cursors[c.id]?.nextSol = top
+            // Every sol in the newest downlink, not just the highest one. A
+            // rover can send an older sol home after a newer one, and now that
+            // the stream is ordered by arrival that older sol belongs at the
+            // top — taking only max(sol) would hide the freshest post in the
+            // feed. Capped, so an odd batch can't fan out into many requests.
+            let sols = Array(Set(images.map(\.sol).filter { $0 > 0 }).sorted(by: >).prefix(3))
+            guard let lowest = sols.last else { continue }
+            var whole: [RoverImage] = []
+            for sol in sols {
+                whole += await RoverImages.fetch(roverId: c.id, sol: sol, limit: 600, force: force).images
+            }
+            if whole.isEmpty {
+                cursors[c.id]?.nextSol = sols[0]
             } else {
-                byCraft[c.id] = full.images.map { post(from: $0, craft: c, store: store) }
-                cursors[c.id]?.nextSol = top - 1
+                byCraft[c.id] = whole.map { post(from: $0, craft: c, store: store) }
+                cursors[c.id]?.nextSol = lowest - 1
                 cursors[c.id]?.pulledLatestSol = true
                 remerge()
             }
@@ -415,7 +450,9 @@ final class FeedStore: ObservableObject {
             id: img.id.uuidString, craftId: craft.id, craftName: craft.name, location: craft.reg.location,
             avatar: store.avatarURL(for: craft.id), thumb: img.thumb, view: img.view, full: img.full,
             caption: caption, sol: img.sol > 0 ? img.sol : nil,
-            arrival: Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt),
+            arrival: Fmt.date(from: img.receivedUtc)
+                ?? Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt),
+            captured: Fmt.date(from: img.capturedUtc),
             lightLine: owlt > 0 ? "Its light took \(Fmt.lightTime(owlt)) to cross the void" : nil,
             isRemote: true)
     }
@@ -423,10 +460,21 @@ final class FeedStore: ObservableObject {
     func revealMore() {
         if visible < groups.count { visible = min(visible + page, groups.count) }
     }
+
+    /// Make a publication reachable before scrolling to it. Returns false when
+    /// the feed hasn't loaded that far back yet, so the caller can wait for the
+    /// next batch rather than clearing the target.
+    func focus(groupId: String) -> Bool {
+        guard let idx = groups.firstIndex(where: { $0.id == groupId }) else { return false }
+        if idx >= visible { visible = min(groups.count, idx + 2) }
+        return true
+    }
 }
 
 struct FeedView: View {
     @ObservedObject var store: DataStore
+    @ObservedObject private var notifications = NotificationManager.shared
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var feed = FeedStore()
     @State private var viewer: URL?
 
@@ -435,35 +483,60 @@ struct FeedView: View {
     var body: some View {
         ZStack {
             Theme.void.ignoresSafeArea()
-            ScrollView {
-                LazyVStack(spacing: 22) {
-                    ForEach(Array(shown.enumerated()), id: \.element.id) { idx, g in
-                        FeedGroupCard(group: g) { viewer = $0 }
-                            // Infinite scroll: reveal what's loaded, then reach
-                            // further back. No button.
-                            .onAppear {
-                                guard idx >= feed.visible - 2 else { return }
-                                if feed.visible < feed.groups.count { feed.revealMore() }
-                                else { Task { await feed.loadOlder(from: store) } }
-                            }
-                    }
-                    if feed.loading {
-                        HStack(spacing: 8) {
-                            ProgressView().tint(Theme.dim).scaleEffect(0.8)
-                            Text("Reaching further back…").font(.mono(12)).foregroundColor(Theme.dim)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 22) {
+                        ForEach(Array(shown.enumerated()), id: \.element.id) { idx, g in
+                            FeedGroupCard(group: g) { viewer = $0 }
+                                .id(g.id)
+                                .onAppear {
+                                    // Looked at is looked at: never announce this
+                                    // publication later as if it were news.
+                                    notifications.markPublicationsSeen([g.id])
+                                    // Infinite scroll: reveal what's loaded, then
+                                    // reach further back. No button.
+                                    guard idx >= feed.visible - 2 else { return }
+                                    if feed.visible < feed.groups.count { feed.revealMore() }
+                                    else { Task { await feed.loadOlder(from: store) } }
+                                }
                         }
-                        .padding(.vertical, 18)
+                        if feed.loading {
+                            HStack(spacing: 8) {
+                                ProgressView().tint(Theme.dim).scaleEffect(0.8)
+                                Text("Reaching further back…").font(.mono(12)).foregroundColor(Theme.dim)
+                            }
+                            .padding(.vertical, 18)
+                        }
+                        archiveSection
                     }
-                    archiveSection
+                    .padding(.bottom, 100)
                 }
-                .padding(.bottom, 100)
+                .refreshable { await feed.refreshLive(from: store, force: true) }
+                // The target usually arrives before the sol it points at, so try
+                // again on every batch until the card exists.
+                .onChange(of: feed.groups.count) { _, _ in jump(proxy) }
+                .onChange(of: notifications.pendingTarget) { _, _ in jump(proxy) }
             }
         }
+        // The view is torn down when you leave the tab, so this runs on every
+        // open. Forced, or the five-minute cache would make a re-open a no-op.
         .task {
             feed.seed(from: store)
-            await feed.refreshLive(from: store)
+            await feed.refreshLive(from: store, force: true)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await feed.refreshLive(from: store, force: true) }
         }
         .fullScreenCover(item: $viewer) { url in PhotoViewer(url: url) { viewer = nil } }
+    }
+
+    /// Scroll to the publication a tapped notification named, once it's loaded.
+    private func jump(_ proxy: ScrollViewProxy) {
+        guard let target = notifications.pendingTarget else { return }
+        guard feed.focus(groupId: target.groupId) else { return }
+        notifications.pendingTarget = nil
+        withAnimation(.easeInOut(duration: 0.25)) { proxy.scrollTo(target.groupId, anchor: .top) }
     }
 
     // MARK: - Mission archive

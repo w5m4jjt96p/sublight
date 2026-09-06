@@ -1,8 +1,15 @@
 import SwiftUI
+import UserNotifications
 
 @main
 struct SublightApp: App {
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Set before any notification can be delivered, otherwise a tap that
+        // launches the app cold is dropped and you land on the map.
+        UNUserNotificationCenter.current().delegate = NotificationManager.shared
+    }
 
     var body: some Scene {
         WindowGroup { ContentView() }
@@ -22,6 +29,7 @@ struct ContentView: View {
     @StateObject private var store = DataStore()
     @StateObject private var controller = MapController()
     @StateObject private var weather = SpaceWeatherStore()
+    @ObservedObject private var notifications = NotificationManager.shared
     @State private var selection: Selection?
     @State private var tab: NavTab = .map
     @State private var showSearch = false
@@ -96,6 +104,13 @@ struct ContentView: View {
             }, onClose: { showSearch = false })
         }
         .animation(.easeInOut(duration: 0.2), value: tab)
+        // A tapped notification names a publication, so it opens the gallery.
+        // `onAppear` covers a cold launch, where the tap is handled before this
+        // view exists; `onChange` covers a tap while the app is already running.
+        .onAppear { if notifications.pendingTarget != nil { tab = .gallery } }
+        .onChange(of: notifications.pendingTarget) { _, target in
+            if target != nil { tab = .gallery }
+        }
     }
 }
 
@@ -278,7 +293,7 @@ private struct SettingsView: View {
                         }
                         .tint(Theme.signal)
                         .disabled(busy)
-                        Text("A local alert when a rover or DSCOVR sends home a new frame. iOS wakes the app to check for new data, so the timing is approximate, about once a day with regular use.")
+                        Text("A local alert each time a new post reaches the feed: one rover, one sol, however many frames it sent. Tapping it opens that post. iOS decides when to wake the app to check, so the timing is approximate.")
                             .font(.mono(12)).foregroundColor(Theme.dim).lineSpacing(4)
                             .fixedSize(horizontal: false, vertical: true)
                     }
