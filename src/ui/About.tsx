@@ -181,6 +181,16 @@ export function About({ model, onBack }: AboutProps) {
           </a>
         </p>
 
+        <h2>Who made this</h2>
+        <p>
+          Product, interface, art direction and editorial by Florian. The code, on the web and on
+          iOS alike, was written by{' '}
+          <a href="https://claude.com/claude-code" target="_blank" rel="noreferrer">
+            Claude Code
+          </a>
+          , Anthropic's coding agent, working to that direction.
+        </p>
+
         <h2>Type and licences</h2>
         <p>
           Set in Stack Sans Notch and Roboto Mono, with IBM Plex as a fallback, all under the{' '}

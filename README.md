@@ -100,6 +100,16 @@ data to `main`; Pages redeploys on push. A day-stale site is acceptable; a
 broken one is not, so a failing fetch keeps the last good value and opens an
 issue instead of failing the build.
 
+## Who made this
+
+Product, UX/UI, art direction and editorial: Florian. The code (web, iOS and the
+data pipeline) was written by [Claude Code](https://claude.com/claude-code),
+Anthropic's coding agent, working to that direction.
+
+The rules in [CLAUDE.md](CLAUDE.md) are how that direction is held: the reserved
+amber, the dash for a missing value, zero backend. They are constraints on the
+implementation, not notes about it.
+
 ## Data & credits
 
 Positions/distances: NASA/JPL [Horizons](https://ssd.jpl.nasa.gov/horizons/).
