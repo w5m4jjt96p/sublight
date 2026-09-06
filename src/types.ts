@@ -120,6 +120,12 @@ export interface FrameThumb {
   sourceUrl: string;
   instrument: string;
   capturedUtc: string;
+  /** When the frame actually reached Earth, UTC ISO, straight from the feed's
+   *  `date_received`. This is the measured arrival: a rover buffers frames and
+   *  downlinks them through a relay orbiter hours or days after the shutter,
+   *  so capture time plus light-time is a story, not an arrival. Optional only
+   *  because bundles written before this existed don't carry it. */
+  receivedUtc?: string;
   sol: number | null;
 }
 
@@ -128,6 +134,8 @@ export interface FrameData {
   instrument: string;
   /** Real capture time, UTC ISO. The heart of the product. */
   capturedUtc: string;
+  /** Measured arrival on Earth, UTC ISO (the feed's `date_received`). */
+  receivedUtc?: string;
   /** Small local thumbnail (~720px). */
   file: string;
   /** Large local image (~1600px) for the viewer + HQ download. */

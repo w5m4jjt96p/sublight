@@ -90,6 +90,14 @@ async function main() {
     if (!f.capturedUtc || isNaN(Date.parse(f.capturedUtc))) {
       warn(`${name}: frame has no valid capture timestamp`);
     }
+    // The gallery orders and dates on arrival, so a bad one silently misplaces
+    // a whole publication in the stream. An absent one is expected for EPIC.
+    if (f.receivedUtc && isNaN(Date.parse(f.receivedUtc))) {
+      warn(`${name}: frame has an unparseable arrival timestamp (${f.receivedUtc})`);
+    }
+    if (f.receivedUtc && Date.parse(f.receivedUtc) < Date.parse(f.capturedUtc)) {
+      warn(`${name}: frame claims to have arrived before it was taken`);
+    }
   }
 
   console.log('verify: archive stills');

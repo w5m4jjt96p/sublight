@@ -76,8 +76,11 @@ export function DetailPanel({
   const directId = e.naifId != null && String(e.naifId) === via;
 
   const hero = frame?.recent?.[0];
-  const arrivedUtc =
-    hero && owltSeconds != null
+  // Measured arrival when the feed gave us one; otherwise fall back to capture
+  // plus light-time, which is what older bundles allow.
+  const arrivedUtc = hero?.receivedUtc
+    ? hero.receivedUtc
+    : hero && owltSeconds != null
       ? new Date(new Date(hero.capturedUtc).getTime() + owltSeconds * 1000).toISOString()
       : null;
 

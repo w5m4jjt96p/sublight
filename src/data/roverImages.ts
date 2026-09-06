@@ -53,6 +53,7 @@ export async function fetchLatestFrames(roverId: string, limit = 48): Promise<Fr
             sourceUrl: im.url,
             instrument: im.instrument ?? 'CAMERA',
             capturedUtc: im.date_taken ?? '',
+            receivedUtc: im.date_received ?? '',
             sol: im.sol ?? null,
           }))
           .slice(0, limit)
@@ -66,6 +67,7 @@ export async function fetchLatestFrames(roverId: string, limit = 48): Promise<Fr
               sourceUrl: im.link ?? f.full_res ?? f.large,
               instrument: im.camera?.instrument ?? 'CAMERA',
               capturedUtc: im.date_taken_utc ?? '',
+              receivedUtc: im.date_received ?? '',
               sol: im.sol ?? null,
             };
           })
@@ -109,6 +111,7 @@ async function fetchPerseverance(sol: number, limit: number): Promise<SolImages>
       sourceUrl: im.link ?? f.full_res ?? f.large,
       instrument: im.camera?.instrument ?? 'CAMERA',
       capturedUtc: im.date_taken_utc ?? im.date_taken_mars ?? '',
+      receivedUtc: im.date_received ?? '',
       sol: im.sol ?? sol,
     };
   }).filter((f) => f.file);
@@ -137,6 +140,7 @@ async function fetchCuriosity(sol: number, limit: number): Promise<SolImages> {
     sourceUrl: im.url,
     instrument: im.instrument ?? 'CAMERA',
     capturedUtc: im.date_taken ?? '',
+    receivedUtc: im.date_received ?? '',
     sol: im.sol ?? sol,
   })).filter((f) => f.file).slice(0, limit);
   return {

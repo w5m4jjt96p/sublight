@@ -25,12 +25,15 @@ interface GalleryProps {
 export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchive, onOpenList, onBack }: GalleryProps) {
   const archiveCraft = (model?.craft ?? []).filter((c) => !frames[c.entry.id] && archive[c.entry.id]);
 
-  // The freshest arrival across the fleet, for the lede.
+  // The freshest arrival across the fleet, for the lede. Arrival is the feed's
+  // measured `date_received`, not capture time: a frame can sit in a rover's
+  // memory for days before a relay pass sends it home.
   let freshest: { name: string; ms: number } | null = null;
   for (const c of model?.craft ?? []) {
     const f = frames[c.entry.id];
-    if (!f?.capturedUtc) continue;
-    const ms = Date.parse(f.capturedUtc) || 0;
+    const stamp = f?.receivedUtc || f?.capturedUtc;
+    if (!stamp) continue;
+    const ms = Date.parse(stamp) || 0;
     if (ms && (!freshest || ms > freshest.ms)) freshest = { name: c.entry.name, ms };
   }
 

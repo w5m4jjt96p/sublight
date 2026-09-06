@@ -47,8 +47,9 @@ export function Lightbox({
 
   if (!frame) return null;
 
-  const arrivedUtc =
-    owltSeconds != null
+  const arrivedUtc = frame.receivedUtc
+    ? frame.receivedUtc
+    : owltSeconds != null
       ? new Date(new Date(frame.capturedUtc).getTime() + owltSeconds * 1000).toISOString()
       : null;
 

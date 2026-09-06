@@ -46,6 +46,10 @@ interface Frame {
   sol: number | null;
   instrument: string;
   capturedUtc: string; // ISO
+  /** When the frame reached Earth, ISO. The feed's own `date_received`, which
+   *  is what the gallery orders and dates by. EPIC publishes no equivalent, so
+   *  it stays undefined there and the client falls back to capture + light. */
+  receivedUtc?: string;
   /** Best-resolution image to download locally from. */
   url: string;
   /** Original full-resolution image at the source, for "view original". */
@@ -128,11 +132,12 @@ async function fetchMars2020(): Promise<Frame[]> {
       credit?: string;
       camera?: { instrument?: string };
       image_files?: { large?: string; full_res?: string; medium?: string; small?: string };
+      date_received?: string;
     }[];
   };
   return (json.images ?? [])
     .filter((im) => im.date_taken_utc && im.camera?.instrument)
-    .map((im) => {
+    .map((im): Frame | null => {
       const f = im.image_files ?? {};
       // full_res is the native original (often PNG); fall back downward.
       const best = f.full_res ?? f.large ?? f.medium ?? f.small;
@@ -141,6 +146,7 @@ async function fetchMars2020(): Promise<Frame[]> {
             sol: im.sol ?? null,
             instrument: im.camera!.instrument!,
             capturedUtc: new Date(im.date_taken_utc!).toISOString(),
+            receivedUtc: im.date_received ? new Date(im.date_received).toISOString() : undefined,
             url: best,
             sourceUrl: f.full_res ?? best,
             credit: im.credit?.trim() || 'NASA/JPL-Caltech',
@@ -159,7 +165,10 @@ async function fetchMsl(): Promise<Frame[]> {
     // this endpoint names the capture time `date_taken` (already UTC ISO).
     // Every full frame ships with a low-res `is_thumbnail` twin; keep only the
     // full ones so the wall isn't half grainy previews.
-    items?: { sol?: number; instrument?: string; date_taken?: string; url?: string; is_thumbnail?: boolean }[];
+    items?: {
+      sol?: number; instrument?: string; date_taken?: string; url?: string;
+      is_thumbnail?: boolean; date_received?: string;
+    }[];
   };
   return (json.items ?? [])
     .filter((im) => im.date_taken && im.instrument && im.url && !im.is_thumbnail)
@@ -167,6 +176,7 @@ async function fetchMsl(): Promise<Frame[]> {
       sol: im.sol ?? null,
       instrument: im.instrument!,
       capturedUtc: new Date(im.date_taken!).toISOString(),
+      receivedUtc: im.date_received ? new Date(im.date_received).toISOString() : undefined,
       url: im.url!,
       sourceUrl: im.url!,
       credit: 'NASA/JPL-Caltech/MSSS',
@@ -316,6 +326,7 @@ async function main() {
           sourceUrl: f.sourceUrl,
           instrument: f.instrument,
           capturedUtc: f.capturedUtc,
+          receivedUtc: f.receivedUtc,
           sol: f.sol,
         });
       }
@@ -329,6 +340,7 @@ async function main() {
         sol: hero.sol,
         instrument: hero.instrument,
         capturedUtc: hero.capturedUtc,
+        receivedUtc: hero.receivedUtc,
         file: hero.file,
         full: hero.full,
         sourceUrl: hero.sourceUrl,

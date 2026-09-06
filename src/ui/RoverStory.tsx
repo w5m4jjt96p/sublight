@@ -158,7 +158,7 @@ export function RoverStory({
           {owltSeconds > 0 && (
             <div className="story-light">
               ↗ Its light took {fmtDuration(owltSeconds)} to cross the void
-              {frame.capturedUtc ? ` · left ${fmtSince(frame.capturedUtc, now)} ago` : ''}
+              {frame.capturedUtc ? ` · taken ${fmtSince(frame.capturedUtc, now)} ago` : ''}
             </div>
           )}
         </div>

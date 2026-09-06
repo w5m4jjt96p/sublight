@@ -8,6 +8,10 @@
 // A publication is one craft on one sol, whole, swiped like a carousel. Older
 // sols load as you scroll — every rover steps back a sol and the stream is
 // re-merged, so date order holds across craft.
+//
+// "Arrived" means the feed's `date_received`: the moment the frame reached
+// Earth. It is deliberately not capture time plus light-time, which would put a
+// batch downlinked 90 minutes ago 28 hours down the stream.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FramesData, FrameThumb } from '../types.ts';
 import type { MapModel } from '../map/model.ts';
@@ -20,6 +24,14 @@ const asset = (p: string) => (/^https?:/.test(p) ? p : `${import.meta.env.BASE_U
 // Some feeds (mars2020) omit the timezone; those times are UTC, so append Z
 // instead of letting Date.parse read them as local time.
 const capMs = (utc: string) => Date.parse(/(Z|[+-]\d\d:?\d\d)$/.test(utc) ? utc : `${utc}Z`) || 0;
+
+// When a frame actually reached Earth. The feed's `date_received` is the
+// measured answer and is what the stream is ordered and dated by. Capture time
+// plus light-time is only a fallback for bundles written before we carried it:
+// it assumes the rover beams every frame the instant it takes it, when in fact
+// frames wait in memory for a relay pass, sometimes for days.
+const arrivedMs = (f: FrameThumb, owlt: number) =>
+  (f.receivedUtc ? capMs(f.receivedUtc) : 0) || capMs(f.capturedUtc) + owlt * 1000;
 
 const PAGE = 3;       // publications revealed per step
 const STRIP_MAX = 40; // sampled scrub strip; scrubbing still covers every frame
@@ -107,12 +119,22 @@ export function Feed({ frames, model, generatedAt, now, onOpenList }: FeedProps)
           const fresh = await fetchLatestFrames(id, 48);
           if (cancelled || !fresh.length) return;
           setByCraft((prev) => ({ ...prev, [id]: fresh }));
-          const top = fresh.reduce((mx, f) => Math.max(mx, f.sol ?? 0), 0);
-          if (!top) return;
-          const full = await fetchSolImages(id, top, 600);
-          if (cancelled || !full.frames.length) return;
-          setByCraft((prev) => ({ ...prev, [id]: full.frames }));
-          cursors.current[id] = { nextSol: top - 1, topSolComplete: true, done: false };
+          // Every sol in the newest downlink, not just the highest one. A rover
+          // can send an older sol home after a newer one, and now that the
+          // stream is ordered by arrival that older sol belongs at the top —
+          // taking only max(sol) would hide the freshest thing in the feed.
+          // Capped, so an unusual batch can't fan out into many requests.
+          const sols = [...new Set(fresh.map((f) => f.sol).filter((x): x is number => x != null))]
+            .sort((a, b) => b - a)
+            .slice(0, 3);
+          if (!sols.length) return;
+          const whole = await Promise.all(
+            sols.map((s) => fetchSolImages(id, s, 600).then((r) => r.frames).catch(() => [])),
+          );
+          const merged = whole.flat();
+          if (cancelled || !merged.length) return;
+          setByCraft((prev) => ({ ...prev, [id]: merged }));
+          cursors.current[id] = { nextSol: Math.min(...sols) - 1, topSolComplete: true, done: false };
         } catch {
           /* offline or feed down: keep the bundled frames */
         }
@@ -127,7 +149,7 @@ export function Feed({ frames, model, generatedAt, now, onOpenList }: FeedProps)
     for (const [id, list] of Object.entries(byCraft)) {
       const m = meta[id];
       if (!m) continue;
-      for (const f of list) flat.push({ f, craftId: id, arr: capMs(f.capturedUtc) + m.owlt * 1000 });
+      for (const f of list) flat.push({ f, craftId: id, arr: arrivedMs(f, m.owlt) });
     }
     flat.sort((a, b) => b.arr - a.arr);
 
@@ -145,6 +167,11 @@ export function Feed({ frames, model, generatedAt, now, onOpenList }: FeedProps)
     return order.map((key) => {
       const b = buckets.get(key)!;
       const m = meta[b.craftId]!;
+      // Order *within* a publication stays capture order, newest first. These
+      // frames are usually one sequence, and the flipbook only reads as motion
+      // if they run in the order the camera shot them — a whole downlink shares
+      // one arrival time, so sorting the post by arrival would scramble it.
+      b.photos.sort((x, y) => capMs(y.capturedUtc) - capMs(x.capturedUtc));
       return {
         key, craftId: b.craftId, craftName: m.name, location: m.location,
         owlt: m.owlt, lightLine: m.lightLine,

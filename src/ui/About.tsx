@@ -48,8 +48,12 @@ export function About({ model, onBack }: AboutProps) {
           <a href="https://epic.gsfc.nasa.gov/" target="_blank" rel="noreferrer">
             EPIC
           </a>{' '}
-          camera at L1. Each frame keeps its true capture timestamp; the &ldquo;arrived&rdquo; time
-          you see is simply capture time plus that day's light-time. Live antenna contact is read
+          camera at L1. Each frame keeps its true capture timestamp, and the
+          &ldquo;arrived&rdquo; time is the feed's own <code>date_received</code>: the moment the
+          frame actually reached Earth. The two are rarely close. A rover buffers what it shoots and
+          downlinks it through a relay orbiter, so a photo can wait hours or days in memory before
+          its light makes the fifteen-minute crossing. Both delays are real, and the gallery is
+          ordered by the second one. Live antenna contact is read
           directly from the{' '}
           <a href="https://eyes.nasa.gov/dsn/dsn.html" target="_blank" rel="noreferrer">
             Deep Space Network
