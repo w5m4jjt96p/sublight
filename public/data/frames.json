@@ -108,19 +108,19 @@
   },
   "curiosity": {
     "sol": 5004,
-    "instrument": "MAST_RIGHT",
-    "capturedUtc": "2026-09-03T19:40:03.000Z",
-    "file": "/frames/curiosity-5004-mast-right-713a4b.jpg",
-    "full": "/frames/curiosity-5004-mast-right-713a4b-full.jpg",
-    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05004/mcam/5004MR1099600242600470E01_DXXX.jpg",
+    "instrument": "MAST_LEFT",
+    "capturedUtc": "2026-09-03T21:32:45.000Z",
+    "file": "/frames/curiosity-5004-mast-left-1e1720.jpg",
+    "full": "/frames/curiosity-5004-mast-left-1e1720-full.jpg",
+    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05004/mcam/5004ML1099610171905027C00_DXXX.jpg",
     "credit": "NASA/JPL-Caltech/MSSS",
     "recent": [
       {
-        "file": "/frames/curiosity-5004-mast-right-713a4b.jpg",
-        "full": "/frames/curiosity-5004-mast-right-713a4b-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05004/mcam/5004MR1099600242600470E01_DXXX.jpg",
-        "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-09-03T19:40:03.000Z",
+        "file": "/frames/curiosity-5004-mast-left-1e1720.jpg",
+        "full": "/frames/curiosity-5004-mast-left-1e1720-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05004/mcam/5004ML1099610171905027C00_DXXX.jpg",
+        "instrument": "MAST_LEFT",
+        "capturedUtc": "2026-09-03T21:32:45.000Z",
         "sol": 5004
       },
       {
@@ -148,11 +148,11 @@
         "sol": 5005
       },
       {
-        "file": "/frames/curiosity-5004-mast-right-d66682.jpg",
-        "full": "/frames/curiosity-5004-mast-right-d66682-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05004/mcam/5004MR1099600232600469E01_DXXX.jpg",
-        "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-09-03T19:39:51.000Z",
+        "file": "/frames/curiosity-5004-mast-left-fc9e0a.jpg",
+        "full": "/frames/curiosity-5004-mast-left-fc9e0a-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05004/mcam/5004ML1099580061905008C00_DXXX.jpg",
+        "instrument": "MAST_LEFT",
+        "capturedUtc": "2026-09-03T18:23:35.000Z",
         "sol": 5004
       },
       {
