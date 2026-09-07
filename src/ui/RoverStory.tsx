@@ -139,7 +139,7 @@ export function RoverStory({
           <img
             className="story-img"
             src={frame.full}
-            alt={`${roverName} raw frame — ${frame.instrument}${frame.sol != null ? `, sol ${frame.sol}` : ''}`}
+            alt={`${roverName} raw frame, ${frame.instrument}${frame.sol != null ? `, sol ${frame.sol}` : ''}`}
             onError={(e) => { const el = e.currentTarget; if (el.src !== frame.file) el.src = frame.file; }}
           />
         ) : (

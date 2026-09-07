@@ -101,7 +101,7 @@ export function Lightbox({
         <img
           className="lb-img"
           src={asset(frame.full)}
-          alt={`${craftName} raw frame — ${frame.instrument}${frame.sol != null ? `, sol ${frame.sol}` : ''}, captured ${frame.capturedUtc} UTC`}
+          alt={`${craftName} raw frame, ${frame.instrument}${frame.sol != null ? `, sol ${frame.sol}` : ''}, captured ${frame.capturedUtc} UTC`}
           onClick={(e) => e.stopPropagation()}
           onError={(e) => {
             // fall back to the small local thumbnail if the large one is missing

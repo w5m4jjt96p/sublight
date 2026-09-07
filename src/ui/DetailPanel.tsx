@@ -163,7 +163,7 @@ export function DetailPanel({
             onClick={onOpenArchive}
             aria-label={`View archive image full screen: ${archive.title}`}
           >
-            <img src={asset(archive.file)} alt={`${e.name} — ${archive.title}`} />
+            <img src={asset(archive.file)} alt={`${e.name}, ${archive.title}`} />
             <span className="detail-hero-cap">
               <span>Mission archive</span>
               <span aria-hidden="true">⤢</span>

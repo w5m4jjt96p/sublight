@@ -20,7 +20,7 @@ interface MastheadProps {
 export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }: MastheadProps) {
   return (
     <div className="masthead">
-      <button className="brand" onClick={() => onNavigate('map')} aria-label="Sublight — home">
+      <button className="brand" onClick={() => onNavigate('map')} aria-label="Sublight, home">
         <img className="brand-logo" src="/sublight.svg" alt="Sublight" />
       </button>
 

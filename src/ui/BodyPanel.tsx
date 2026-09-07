@@ -54,7 +54,7 @@ export function BodyPanel({ bodyId, photo, onOpenPhoto, onClose }: BodyPanelProp
             onClick={onOpenPhoto}
             aria-label={`View ${info.name} image full screen`}
           >
-            <img src={asset(photo.file)} alt={`${info.name} — ${photo.title}`} />
+            <img src={asset(photo.file)} alt={`${info.name}, ${photo.title}`} />
             <span className="detail-hero-cap">
               <span>{photo.live ? 'Latest · NASA' : 'NASA archive'}</span>
               <span aria-hidden="true">⤢</span>

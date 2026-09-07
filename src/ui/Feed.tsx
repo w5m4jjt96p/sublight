@@ -388,7 +388,7 @@ function PublicationCard({
         <img
           className="pub-img"
           src={stageSrc(current)}
-          alt={`${pub.craftName} — ${current.instrument}`}
+          alt={`${pub.craftName}, ${current.instrument}`}
           draggable={false}
           onError={(e) => {
             // A dropped frame leaves the stage blank; give it one retry.
