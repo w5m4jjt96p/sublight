@@ -91,6 +91,9 @@ struct FeedGroupCard: View {
     @State private var index = 0
     @State private var playing = false
     @State private var dragAnchor: Int?
+    /// The frame whose sharp size has been asked for. Nil while the sequence is
+    /// running or the reader is scrubbing.
+    @State private var sharpIndex: Int?
 
     // A complete sol can run to a couple of hundred frames. Past this the strip
     // is sampled: at 214 thumbnails each is under 2pt wide, so it tells you
@@ -150,7 +153,25 @@ struct FeedGroupCard: View {
     private var stage: some View {
         ZStack {
             Color.black
-            if let p = current { FeedPhoto(post: p, large: true) }
+            if let p = current {
+                FeedPhoto(post: p, large: true)
+                // Motion doesn't need detail; a still does. The mid size is
+                // 500pt (MSL) or 800pt (M20) on a stage that is 3x that on a
+                // phone screen, so a frame the reader has stopped on is loaded
+                // sharp and drawn over the top.
+                if sharpIndex == clamp(index) {
+                    FeedPhoto(post: p, large: true, sharp: true)
+                }
+            }
+        }
+        // Resets on every step, so nothing heavy is fetched while playing or
+        // scrubbing; it only fires once the frame holds still.
+        .task(id: "\(clamp(index))-\(playing)") {
+            sharpIndex = nil
+            guard !playing else { return }
+            try? await Task.sleep(nanoseconds: 180_000_000)
+            guard !Task.isCancelled else { return }
+            sharpIndex = clamp(index)
         }
         .frame(height: 380)
         .clipped()
@@ -253,14 +274,21 @@ struct FeedPhoto: View {
     var contentMode: ContentMode = .fit
     /// The stage wants the mid size; the strip wants the smallest.
     var large = false
-    private var src: URL? { large ? (post.view ?? post.thumb) : post.thumb }
+    /// The sharp size, for a frame the reader has stopped on. It draws over the
+    /// mid size and stays transparent until it has actually loaded, so the
+    /// picture never blinks back to a spinner while it upgrades.
+    var sharp = false
+    private var src: URL? {
+        if sharp { return post.full ?? post.view ?? post.thumb }
+        return large ? (post.view ?? post.thumb) : post.thumb
+    }
     var body: some View {
         if post.isRemote {
             AsyncImage(url: src) { phase in
                 switch phase {
                 case .success(let img): img.resizable().aspectRatio(contentMode: contentMode)
-                case .empty: ProgressView().tint(Theme.dim)
-                default: Rectangle().fill(Theme.rule)
+                case .empty: if sharp { Color.clear } else { ProgressView().tint(Theme.dim) }
+                default: if sharp { Color.clear } else { Rectangle().fill(Theme.rule) }
                 }
             }
         } else {

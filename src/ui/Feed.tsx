@@ -290,6 +290,8 @@ function PublicationCard({
   const count = pub.photos.length;
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  /** The sharp source that has finished loading, if it is the one on screen. */
+  const [sharp, setSharp] = useState<string | null>(null);
   const strip = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; i: number } | null>(null);
   const scrubbing = useRef(false);
@@ -300,6 +302,10 @@ function PublicationCard({
   // smallest. Bundled frames have no mid size — their `file` is already a local
   // 720px render, which serves the stage fine.
   const stageSrc = (p: FrameThumb) => asset(p.view ?? p.file);
+  // The sharp size, for a frame the reader has stopped on. The mid size is
+  // 500px (MSL) or 800px (M20) against a 618px stage that doubles on a retina
+  // screen, so on its own it reads as soft.
+  const sharpSrc = (p: FrameThumb) => asset(p.full);
 
   // Evenly spaced sample of the sequence, always including first and last: at a
   // couple of hundred frames every thumbnail is under 2px and costs a request.
@@ -324,6 +330,26 @@ function PublicationCard({
       if (p) { const im = new Image(); im.src = stageSrc(p); }
     }
   }, [pub, index, count]);
+
+  // Motion doesn't need detail; a still does. The stage keeps the light mid
+  // size while the sequence plays or the reader scrubs — `current` changes on
+  // every step, so this timer keeps resetting and nothing heavy is fetched —
+  // and once they settle on a frame the sharp one is loaded off-screen and
+  // swapped in already decoded, so the picture resolves rather than staying
+  // soft. It is the same file the full-screen viewer opens, so that is warm too.
+  useEffect(() => {
+    if (playing) return;
+    const want = sharpSrc(current);
+    if (want === stageSrc(current)) return;
+    let cancelled = false;
+    const t = window.setTimeout(() => {
+      const im = new Image();
+      im.decoding = 'async';
+      im.onload = () => { if (!cancelled) setSharp(want); };
+      im.src = want;
+    }, 180);
+    return () => { cancelled = true; window.clearTimeout(t); };
+  }, [current, playing]);
 
   useEffect(() => {
     if (!playing || count < 2) return;
@@ -388,7 +414,7 @@ function PublicationCard({
       >
         <img
           className="pub-img"
-          src={stageSrc(current)}
+          src={sharp === sharpSrc(current) ? sharp : stageSrc(current)}
           alt={`${pub.craftName}, ${current.instrument}`}
           draggable={false}
           decoding="async"
