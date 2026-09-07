@@ -84,8 +84,8 @@ struct ContentView: View {
             // The nav measures its own bottom gap from the screen edge, so the
             // three margins around the capsule match. This has to sit on the
             // stack that is laid out against the safe area: on the NavBar
-            // itself it does nothing, and the bar stays a home-indicator
-            // inset above the bottom while the sides are 10pt.
+            // itself it silently does nothing, and the bar stays a
+            // home-indicator inset above the bottom while the sides keep theirs.
             .ignoresSafeArea(.container, edges: .bottom)
         }
         .preferredColorScheme(.dark)
@@ -226,8 +226,10 @@ private struct NavBar: View {
     let onMapReset: () -> Void
 
     /// One inset for the three edges the capsule floats against, so the gap to
-    /// the left, the right and the bottom of the screen reads the same.
-    private let inset: CGFloat = 10
+    /// the left, the right and the bottom of the screen reads the same. Set to
+    /// clear the home indicator: below this the capsule reaches into the band
+    /// the system claims for the home gesture and taps there turn unreliable.
+    private let inset: CGFloat = 20
 
     var body: some View {
         HStack(spacing: 0) {
