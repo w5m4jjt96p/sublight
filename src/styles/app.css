@@ -1472,6 +1472,10 @@ a {
 .pub-stage {
   position: relative; height: 380px; background: #000; cursor: grab;
   touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  /* The thumbnail sits behind the frame as a low-res stand-in. It is 8 KB and
+     the strip has usually fetched it already, so the stage shows the picture
+     immediately instead of a black rectangle while the mid size arrives. */
+  background-position: center; background-repeat: no-repeat; background-size: contain;
 }
 .pub-stage:active { cursor: grabbing; }
 .pub-img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }

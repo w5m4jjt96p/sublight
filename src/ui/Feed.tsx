@@ -384,12 +384,19 @@ function PublicationCard({
         onPointerMove={onStageMove}
         onPointerUp={onStageUp}
         onPointerCancel={onStageUp}
+        style={{ backgroundImage: `url(${asset(current.file)})` }}
       >
         <img
           className="pub-img"
           src={stageSrc(current)}
           alt={`${pub.craftName}, ${current.instrument}`}
           draggable={false}
+          decoding="async"
+          /* The frame on screen must win the connection pool. Every image on the
+             page comes from one host, and a post fires up to 40 strip requests,
+             so without this the picture the reader is looking at queues behind
+             its own filmstrip and the stage stays black. */
+          fetchPriority="high"
           onError={(e) => {
             // A dropped frame leaves the stage blank; give it one retry.
             const el = e.currentTarget;
@@ -426,7 +433,7 @@ function PublicationCard({
         >
           {stripFrames.map(({ p, i }, k) => (
             <span key={`${p.file}-${i}`} className={`pub-thumb${k === activeThumb ? ' is-on' : ''}`}>
-              <img src={asset(p.file)} alt="" loading="lazy" decoding="async" draggable={false} />
+              <img src={asset(p.file)} alt="" loading="lazy" decoding="async" fetchPriority="low" draggable={false} />
             </span>
           ))}
         </div>
