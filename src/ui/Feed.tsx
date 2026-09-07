@@ -63,9 +63,12 @@ interface FeedProps {
   generatedAt: string | null;
   now: number;
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
+  /** Reports the newest publication, so the page lede can quote the same
+   *  arrival the reader sees at the top of the stream. */
+  onFreshest?: (f: { name: string; ms: number }) => void;
 }
 
-export function Feed({ frames, model, generatedAt, now, onOpenList }: FeedProps) {
+export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }: FeedProps) {
   const [byCraft, setByCraft] = useState<Record<string, FrameThumb[]>>({});
   const [visible, setVisible] = useState(PAGE);
   const [loading, setLoading] = useState(false);
@@ -179,6 +182,14 @@ export function Feed({ frames, model, generatedAt, now, onOpenList }: FeedProps)
       } as Publication;
     });
   }, [byCraft, meta]);
+
+  // The lede used to read the bundled snapshot while the stream showed live
+  // frames, so it could name one craft and one age while the post right under
+  // it showed another. One source of truth: whatever is actually on top.
+  useEffect(() => {
+    const top = pubs[0];
+    if (top) onFreshest?.({ name: top.craftName, ms: top.arrivalMs });
+  }, [pubs, onFreshest]);
 
   // Step every rover back one sol and re-merge, so the stream stays in date
   // order across craft rather than exhausting one rover first.

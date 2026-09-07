@@ -3,6 +3,7 @@
 // reached Earth, newest first, each carrying its author. Retired craft have no
 // live arrival and would sink out of a dated feed forever, so they get their own
 // shelf at the end.
+import { useCallback, useState } from 'react';
 import type { FramesData, ArchiveData, FrameThumb } from '../types.ts';
 import type { MapModel } from '../map/model.ts';
 import { fmtSince } from '../data/format.ts';
@@ -25,17 +26,24 @@ interface GalleryProps {
 export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchive, onOpenList, onBack }: GalleryProps) {
   const archiveCraft = (model?.craft ?? []).filter((c) => !frames[c.entry.id] && archive[c.entry.id]);
 
-  // The freshest arrival across the fleet, for the lede. Arrival is the feed's
-  // measured `date_received`, not capture time: a frame can sit in a rover's
-  // memory for days before a relay pass sends it home.
-  let freshest: { name: string; ms: number } | null = null;
+  // The freshest arrival, for the lede. The bundled snapshot only seeds it:
+  // it is hours old by design, so quoting it while the live stream sat right
+  // underneath had the lede naming one craft and one age and the first post
+  // showing another. The feed reports whatever ends up on top, and that wins.
+  const [live, setLive] = useState<{ name: string; ms: number } | null>(null);
+  const onFreshest = useCallback((f: { name: string; ms: number }) => {
+    setLive((prev) => (prev && prev.ms === f.ms && prev.name === f.name ? prev : f));
+  }, []);
+
+  let seeded: { name: string; ms: number } | null = null;
   for (const c of model?.craft ?? []) {
     const f = frames[c.entry.id];
     const stamp = f?.receivedUtc || f?.capturedUtc;
     if (!stamp) continue;
     const ms = Date.parse(stamp) || 0;
-    if (ms && (!freshest || ms > freshest.ms)) freshest = { name: c.entry.name, ms };
+    if (ms && (!seeded || ms > seeded.ms)) seeded = { name: c.entry.name, ms };
   }
+  const freshest = live ?? seeded;
 
   return (
     <div className="gallery-overlay">
@@ -46,13 +54,13 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchiv
         <h1>The wall of arriving light</h1>
         <p className="gallery-lede">
           Every frame the fleet has sent home, in one stream ordered by when its light actually
-          reached Earth — most recent arrivals first. None of it is happening now.
+          reached Earth, most recent arrivals first. None of it is happening now.
           {freshest && (
             <> The freshest light here reached us from {freshest.name} {fmtSince(new Date(freshest.ms).toISOString(), now)} ago.</>
           )}
         </p>
 
-        <Feed frames={frames} model={model} generatedAt={generatedAt} now={now} onOpenList={onOpenList} />
+        <Feed frames={frames} model={model} generatedAt={generatedAt} now={now} onOpenList={onOpenList} onFreshest={onFreshest} />
 
         {archiveCraft.length > 0 && (
           <section className="archive-shelf">
@@ -62,7 +70,7 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchiv
                 const a = archive[c.entry.id]!;
                 return (
                   <button key={c.entry.id} className="shelf-item" onClick={() => onOpenArchive(c.entry.id)}>
-                    <img src={asset(a.file)} alt={`${c.entry.name} — ${a.title}`} loading="lazy" />
+                    <img src={asset(a.file)} alt={`${c.entry.name}, ${a.title}`} loading="lazy" />
                     <span className="shelf-craft">
                       <Avatar craftId={c.entry.id} name={c.entry.name} />
                       {c.entry.name}
