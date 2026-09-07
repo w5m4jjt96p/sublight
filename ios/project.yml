@@ -26,7 +26,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: observer.sublight.app
         MARKETING_VERSION: "0.6.0"
         CURRENT_PROJECT_VERSION: "6"
-        DEVELOPMENT_TEAM: ""
+        # No DEVELOPMENT_TEAM here on purpose. Pinning it to "" made xcodegen
+        # write an empty team into the target, and archiving then failed before
+        # compiling with "Signing for Sublight requires a development team".
+        # Pick the team once in Xcode (Signing & Capabilities); it is stored in
+        # the generated .xcodeproj, which is gitignored, so it never leaves this
+        # machine. Re-pick it after any `xcodegen generate`.
+        CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_VERSION: "5.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
