@@ -31,7 +31,9 @@ struct ContentView: View {
     @StateObject private var weather = SpaceWeatherStore()
     @ObservedObject private var notifications = NotificationManager.shared
     @State private var selection: Selection?
-    @State private var tab: NavTab = .map
+    // The feed is what changes hour to hour, so that is where the app opens.
+    // The map is still home: the Sun at the centre of the nav returns to it.
+    @State private var tab: NavTab = .gallery
     @State private var showSearch = false
     @State private var showNearEarth = false
     @State private var marsTraverseTrack: RoverTrack?
@@ -234,8 +236,12 @@ private struct NavBar: View {
                 .background(.ultraThinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
         )
-        .padding(.horizontal, 12)
-        .padding(.bottom, 8)
+        // Close to the edges on purpose. Inset further, the capsule reads as a
+        // slab parked in the content rather than a bar at the edge of the
+        // screen, and it eats a band of the feed. The bottom sits on the safe
+        // area, so the home indicator still has its own clearance.
+        .padding(.horizontal, 5)
+        .padding(.bottom, 0)
     }
 
     private func item(_ t: NavTab, icon: String, label: String) -> some View {
