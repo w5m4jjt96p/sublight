@@ -81,6 +81,12 @@ struct ContentView: View {
                 Spacer()
                 NavBar(tab: $tab, onMapReset: { controller.reset() })
             }
+            // The nav measures its own bottom gap from the screen edge, so the
+            // three margins around the capsule match. This has to sit on the
+            // stack that is laid out against the safe area: on the NavBar
+            // itself it does nothing, and the bar stays a home-indicator
+            // inset above the bottom while the sides are 10pt.
+            .ignoresSafeArea(.container, edges: .bottom)
         }
         .preferredColorScheme(.dark)
         .fullScreenCover(isPresented: $showNearEarth) {
@@ -219,9 +225,11 @@ private struct NavBar: View {
     @Binding var tab: NavTab
     let onMapReset: () -> Void
 
+    /// One inset for the three edges the capsule floats against, so the gap to
+    /// the left, the right and the bottom of the screen reads the same.
+    private let inset: CGFloat = 10
+
     var body: some View {
-        // Tight spacing and a slim capsule: at web's label size, five items plus
-        // the Sun only fit across a phone if the gaps give way.
         HStack(spacing: 0) {
             item(.gallery, icon: "photo.on.rectangle.angled", label: "Gallery")
             item(.mars, icon: "globe", label: "Mars")
@@ -236,25 +244,28 @@ private struct NavBar: View {
                 .background(.ultraThinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
         )
-        // Close to the edges on purpose. Inset further, the capsule reads as a
-        // slab parked in the content rather than a bar at the edge of the
-        // screen, and it eats a band of the feed. The bottom sits on the safe
-        // area, so the home indicator still has its own clearance.
-        .padding(.horizontal, 5)
-        .padding(.bottom, 0)
+        // Measured from the screen, not from the safe area: left, right and
+        // bottom all clear by `inset`. Left on the safe area the bottom gap
+        // would be the home-indicator inset, three times the side gap, and the
+        // capsule would sit visibly high.
+        .padding(.horizontal, inset)
+        .padding(.bottom, inset)
     }
 
+    /// Icons only. The five destinations are stable and the shapes carry them,
+    /// so the words were repeating what the icon already said and setting the
+    /// height of the whole bar. The label stays for VoiceOver.
     private func item(_ t: NavTab, icon: String, label: String) -> some View {
         Button { tab = t } label: {
-            VStack(spacing: 4) {
-                Image(systemName: icon).font(.system(size: 23))
-                Text(label).font(.mono(11.5)).lineLimit(1).minimumScaleFactor(0.8)
-            }
-            .foregroundColor(tab == t ? Theme.signal : Theme.dim)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6).padding(.horizontal, 2)
+            Image(systemName: icon)
+                .font(.system(size: 23))
+                .foregroundColor(tab == t ? Theme.signal : Theme.dim)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6).padding(.horizontal, 2)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(tab == t ? [.isButton, .isSelected] : .isButton)
     }
 
     private var mapButton: some View {
@@ -273,6 +284,8 @@ private struct NavBar: View {
                 .padding(.horizontal, 4)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Solar system map")
+        .accessibilityAddTraits(tab == .map ? [.isButton, .isSelected] : .isButton)
     }
 }
 
