@@ -324,6 +324,69 @@ struct FeedPhoto: View {
     }
 }
 
+
+// MARK: - Last live feed, kept on disk
+//
+// The bundled snapshot is frozen at build time: a fortnight after a release it
+// seeds the feed with a fortnight-old photos, and the live posts only replace
+// them once mars2020 answers, which takes 11 to 16 seconds on its own. Writing
+// the last live result down means the second launch onwards opens straight on
+// the posts you last saw, and the network refresh lands on top of them.
+//
+// Caches, not Application Support: this is reconstructible from the network, so
+// the system is welcome to reclaim it.
+
+private struct CachedFrame: Codable {
+    let thumb: URL, view: URL, full: URL, sourceUrl: URL
+    let instrument: String, capturedUtc: String, receivedUtc: String
+    let sol: Int
+
+    init(_ i: RoverImage) {
+        thumb = i.thumb; view = i.view; full = i.full; sourceUrl = i.sourceUrl
+        instrument = i.instrument; capturedUtc = i.capturedUtc
+        receivedUtc = i.receivedUtc; sol = i.sol
+    }
+    var image: RoverImage {
+        RoverImage(thumb: thumb, view: view, full: full, sourceUrl: sourceUrl,
+                   instrument: instrument, capturedUtc: capturedUtc,
+                   receivedUtc: receivedUtc, sol: sol)
+    }
+}
+
+private struct CachedRover: Codable {
+    let frames: [CachedFrame]
+    let nextSol: Int?
+}
+
+private struct CachedFeed: Codable {
+    let savedAt: Date
+    let rovers: [String: CachedRover]
+}
+
+enum FeedCache {
+    private static var url: URL? {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+            .first?.appendingPathComponent("feed-live.json")
+    }
+
+    static func save(_ rovers: [String: (images: [RoverImage], nextSol: Int?)]) {
+        guard let url else { return }
+        let payload = CachedFeed(
+            savedAt: Date(),
+            rovers: rovers.mapValues { CachedRover(frames: $0.images.map(CachedFrame.init), nextSol: $0.nextSol) },
+        )
+        guard let data = try? JSONEncoder().encode(payload) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    static func load() -> [String: (images: [RoverImage], nextSol: Int?)] {
+        guard let url, let data = try? Data(contentsOf: url),
+              let payload = try? JSONDecoder().decode(CachedFeed.self, from: data)
+        else { return [:] }
+        return payload.rovers.mapValues { (images: $0.frames.map(\.image), nextSol: $0.nextSol) }
+    }
+}
+
 /// A live rover we can page backwards through, sol by sol.
 private struct RoverCursor {
     let id: String
@@ -387,10 +450,15 @@ final class FeedStore: ObservableObject {
         if visible > groups.count { visible = max(page, groups.count) }
     }
 
-    /// Instant first paint from the bundled snapshot.
+    /// Instant first paint. Two candidate sources per craft: the snapshot baked
+    /// into the app, and whatever the last live load wrote to disk. Neither is
+    /// reliably the fresher one — a new build ships a recent bundle, a long-run
+    /// install has a recent cache — so each craft takes whichever holds the
+    /// later arrival. No clock or build date needed, just the data.
     func seed(from store: DataStore) {
         guard !seeded else { return }
         seeded = true
+        let cached = FeedCache.load()
         for c in store.craft {
             guard let f = store.frames[c.id] else { continue }
             let owlt = c.eph.owltSeconds
@@ -420,6 +488,19 @@ final class FeedStore: ObservableObject {
                                      arrival: arrival(r.receivedUtc, r.capturedUtc),
                                      captured: Fmt.date(from: r.capturedUtc),
                                      lightLine: light, isRemote: false))
+            }
+            if let hit = cached[c.id], !hit.images.isEmpty {
+                let live = hit.images.map { post(from: $0, craft: c, store: store) }
+                let newest = { (ps: [FeedPost]) in ps.compactMap(\.arrival).max() ?? .distantPast }
+                if newest(live) >= newest(list) {
+                    byCraft[c.id] = live
+                    if let next = hit.nextSol {
+                        cursors[c.id] = RoverCursor(id: c.id, nextSol: next, pulledLatestSol: true)
+                    } else if let sol = f.sol {
+                        cursors[c.id] = RoverCursor(id: c.id, nextSol: sol)
+                    }
+                    continue
+                }
             }
             byCraft[c.id] = list
             if let sol = f.sol { cursors[c.id] = RoverCursor(id: c.id, nextSol: sol) }
@@ -498,7 +579,10 @@ final class FeedStore: ObservableObject {
             }
             changed = true
         }
-        if changed { remerge() }
+        if changed {
+            remerge()
+            FeedCache.save(results.filter { !$0.value.images.isEmpty })
+        }
     }
 
     /// Walk every rover back one sol and re-merge, so the stream stays in date order.
