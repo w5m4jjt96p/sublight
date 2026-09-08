@@ -221,11 +221,12 @@ private struct NavBar: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            item(.gallery, icon: "photo.on.rectangle.angled", label: "Gallery")
-            item(.mars, icon: "globe", label: "Mars")
+            item(.gallery, icon: .gallery, label: "Gallery")
+            item(.mars, icon: .mars, label: "Mars")
             mapButton
-            item(.deepSky, icon: "sparkles", label: "Deep Sky")
-            item(.settings, icon: "gearshape", label: "Settings")
+            item(.deepSky, icon: .deepSky, label: "Deep Sky")
+            // No drawn glyph for settings yet, so the system one stays.
+            systemItem(.settings, systemName: "gearshape", label: "Settings")
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
@@ -245,9 +246,21 @@ private struct NavBar: View {
     /// Icons only. The five destinations are stable and the shapes carry them,
     /// so the words were repeating what the icon already said and setting the
     /// height of the whole bar. The label stays for VoiceOver.
-    private func item(_ t: NavTab, icon: String, label: String) -> some View {
+    private func item(_ t: NavTab, icon: SublightIcon, label: String) -> some View {
         Button { tab = t } label: {
-            Image(systemName: icon)
+            IconView(icon: icon, size: 23)
+                .foregroundColor(tab == t ? Theme.signal : Theme.dim)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6).padding(.horizontal, 2)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(tab == t ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private func systemItem(_ t: NavTab, systemName: String, label: String) -> some View {
+        Button { tab = t } label: {
+            Image(systemName: systemName)
                 .font(.system(size: 23))
                 .foregroundColor(tab == t ? Theme.signal : Theme.dim)
                 .frame(maxWidth: .infinity)
@@ -263,8 +276,7 @@ private struct NavBar: View {
             onMapReset()
             tab = .map
         } label: {
-            Image(systemName: "sun.max.fill")
-                .font(.system(size: 26))
+            IconView(icon: .sun, size: 26)
                 .foregroundColor(tab == .map ? Theme.void : Theme.txt)
                 .frame(width: 54, height: 54)
                 .background(
