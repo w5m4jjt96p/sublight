@@ -125,8 +125,13 @@ private struct TopBar: View {
         HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
                 HStack(spacing: 6) {
-                    Text(utc(ctx.date)).font(.mono(15)).foregroundColor(Theme.txt)
-                    Text("UTC").font(.mono(11)).tracking(2).foregroundColor(Theme.dim2)
+                    // Stack Sans Notch has proportional figures, and this
+                    // ticks every second: unstyled, "00:00:00" and "11:11:11"
+                    // differ by 17px and the clock would jitter. The face does
+                    // ship a tnum table, which is what monospacedDigit asks
+                    // for. The web gets the same guard from tabular-nums.
+                    Text(utc(ctx.date)).font(.title(15).monospacedDigit()).foregroundColor(Theme.txt)
+                    Text("UTC").font(.title(11)).tracking(2).foregroundColor(Theme.dim2)
                 }
             }
             Spacer()

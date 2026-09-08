@@ -165,8 +165,8 @@ struct FeedGroupCard: View {
             .frame(width: 36, height: 36).clipShape(Circle())
             .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
             VStack(alignment: .leading, spacing: 2) {
-                Text(group.craftName).font(.monoMed(17)).foregroundColor(Theme.txt)
-                Text(group.location).font(.mono(12)).foregroundColor(Theme.dim)
+                Text(group.craftName).font(.title(17)).foregroundColor(Theme.txt)
+                Text(group.location).font(.title(12)).foregroundColor(Theme.dim)
             }
             Spacer()
             if let n = group.newest {
@@ -281,7 +281,7 @@ struct FeedGroupCard: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let p = current {
-                Text(p.caption).font(.mono(12.5)).foregroundColor(Theme.txt)
+                Text(p.caption).font(.title(12.5)).foregroundColor(Theme.txt)
             }
             if let l = group.lightLine {
                 HStack(spacing: 6) {
@@ -621,7 +621,7 @@ struct FeedView: View {
     @ViewBuilder private var archiveSection: some View {
         if !archiveCraft.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                Text("MISSION ARCHIVE").font(.mono(12)).tracking(1.5).foregroundColor(Theme.dim)
+                Text("MISSION ARCHIVE").font(.title(12)).tracking(1.5).foregroundColor(Theme.dim)
                     .padding(.horizontal, 14)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -632,7 +632,7 @@ struct FeedView: View {
                                         BundleImage(url: DataStore.imageURL(a.file), contentMode: .fill)
                                             .frame(width: 150, height: 110).clipped()
                                             .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        Text(c.name).font(.mono(11)).foregroundColor(Theme.txt).lineLimit(1)
+                                        Text(c.name).font(.title(18)).foregroundColor(Theme.txt).lineLimit(1)
                                         Text(a.title).font(.mono(9)).foregroundColor(Theme.dim)
                                             .lineLimit(1).frame(width: 150, alignment: .leading)
                                     }
