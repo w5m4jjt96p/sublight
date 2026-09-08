@@ -23,7 +23,7 @@
   --sidebar-w: 380px;
 
   /* Global text multiplier — every per-text token below is scaled by this. */
-  --font-scale: 1.2;
+  --font-scale: 1.4;
 
   /* --------------------------------------------------------------------- */
   /* Per-text font-size tokens. One per text role; edit any value here to   */
@@ -31,19 +31,19 @@
   /* --------------------------------------------------------------------- */
 
   /* masthead */
-  --fs-brand: calc(18px * var(--font-scale)); /* "OUT THERE / v0.4" */
-  --fs-mast-right: calc(16px * var(--font-scale)); /* UTC · tracking · About */
-  --fs-body: calc(14px * var(--font-scale)); /* default body text */
+  --fs-brand: calc(18.5px * var(--font-scale)); /* "OUT THERE / v0.4" */
+  --fs-mast-right: calc(12px * var(--font-scale)); /* UTC · tracking · About */
+  --fs-body: calc(16px * var(--font-scale)); /* default body text */
 
   /* HUD (over the map) */
   --fs-hud-eyebrow: calc(16px * var(--font-scale)); /* "currently tracking" */
   --fs-hud-name: calc(42px * var(--font-scale)); /* big craft name */
-  --fs-hud-name-caret: calc(32px * var(--font-scale)); /* ↗ next to the name */
+  --fs-hud-name-caret: calc(38px * var(--font-scale)); /* ↗ next to the name */
   --fs-hud-loc: calc(20px * var(--font-scale)); /* craft location line */
   --fs-stat-l: calc(12px * var(--font-scale)); /* stat labels (bottom-left) */
-  --fs-stat-v: calc(32px * var(--font-scale)); /* big stat values */
+  --fs-stat-v: calc(30px * var(--font-scale)); /* big stat values */
   --fs-stat-v-small: calc(24px * var(--font-scale)); /* smaller stat values */
-  --fs-ctrl: calc(14px * var(--font-scale)); /* "Whole system" / "Signal path" */
+  --fs-ctrl: calc(12px * var(--font-scale)); /* "Whole system" / "Signal path" */
 
   /* raw-frame thumbnail */
   --fs-thumb-foot: calc(12px * var(--font-scale)); /* captured / arrived caption */
@@ -62,12 +62,12 @@
   --fs-feed: calc(14px * var(--font-scale)); /* "IMG" tag */
 
   /* detail panel */
-  --fs-detail-name: calc(32px * var(--font-scale));
+  --fs-detail-name: calc(30px * var(--font-scale));
   --fs-detail-sub: calc(12px * var(--font-scale)); /* agency · kind · status */
-  --fs-detail-note: calc(16px * var(--font-scale)); /* editorial note */
-  --fs-detail-grid-v: calc(14px * var(--font-scale)); /* stat values */
+  --fs-detail-note: calc(12px * var(--font-scale)); /* editorial note */
+  --fs-detail-grid-v: calc(12px * var(--font-scale)); /* stat values */
   --fs-detail-section-l: calc(12px * var(--font-scale)); /* section labels */
-  --fs-detail-source: calc(12px * var(--font-scale)); /* provenance line */
+  --fs-detail-source: calc(10px * var(--font-scale)); /* provenance line */
 
   /* full-screen viewer (lightbox) */
   --fs-lb-craft: calc(24px * var(--font-scale)); /* craft name */
@@ -79,20 +79,20 @@
   --fs-lb-credit: calc(14px * var(--font-scale));
 
   /* about page */
-  --fs-about-h1: calc(36px * var(--font-scale));
-  --fs-about-lede: calc(17px * var(--font-scale));
-  --fs-about-h2: calc(19px * var(--font-scale));
-  --fs-about-p: calc(15.5px * var(--font-scale));
-  --fs-about-ul: calc(15.5px * var(--font-scale));
+  --fs-about-h1: calc(26px * var(--font-scale));
+  --fs-about-lede: calc(14px * var(--font-scale));
+  --fs-about-h2: calc(16px * var(--font-scale));
+  --fs-about-p: calc(12px * var(--font-scale));
+  --fs-about-ul: calc(14px * var(--font-scale));
   --fs-about-a-back: calc(12px * var(--font-scale)); /* "← back to the map" */
 
   /* Gallery, feed and chrome. These were hard-coded px until the type work of
      September 2026; tokenised so the dev panel can drive them like the rest. */
-  --fs-gal-h1: calc(30px * var(--font-scale));
-  --fs-gal-lede: calc(14px * var(--font-scale));
-  --fs-gal-shelf: calc(11px * var(--font-scale));   /* "From the mission archives" */
-  --fs-post-craft: calc(14px * var(--font-scale));
-  --fs-post-loc: calc(11px * var(--font-scale));
+  --fs-gal-h1: calc(32px * var(--font-scale));
+  --fs-gal-lede: calc(12px * var(--font-scale));
+  --fs-gal-shelf: calc(12px * var(--font-scale));   /* "From the mission archives" */
+  --fs-post-craft: calc(18px * var(--font-scale));
+  --fs-post-loc: calc(12px * var(--font-scale));
   --fs-post-when: calc(11.5px * var(--font-scale));
   --fs-post-caption: calc(12.5px * var(--font-scale));
   --fs-post-light: calc(12px * var(--font-scale));

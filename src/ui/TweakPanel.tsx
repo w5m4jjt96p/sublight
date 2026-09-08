@@ -132,11 +132,16 @@ const FACE_TOKENS = [
 
 // What is actually bundled, plus system stacks that need no download. Anything
 // else has to be pulled from Google Fonts, which is why that is a separate box.
+// Every stack keeps IBM Plex behind the display face. Roboto Mono has no ↗ and
+// no ≈ — verified by advance width: it is monospaced, so a glyph it owns
+// measures 9.6px at 16px, and those two come back 16px and 8.78px. The light
+// line under every post opens with ↗, so dropping that fallback is not
+// cosmetic. Picking a face here must never truncate the chain.
 const BUNDLED_FACES: { label: string; stack: string }[] = [
-  { label: 'Stack Sans Notch', stack: "'Stack Sans Notch', system-ui, sans-serif" },
-  { label: 'Roboto Mono', stack: "'Roboto Mono', ui-monospace, Menlo, monospace" },
+  { label: 'Stack Sans Notch', stack: "'Stack Sans Notch', 'IBM Plex Sans', system-ui, sans-serif" },
+  { label: 'Roboto Mono', stack: "'Roboto Mono', 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace" },
   { label: 'IBM Plex Sans', stack: "'IBM Plex Sans', system-ui, sans-serif" },
-  { label: 'IBM Plex Mono', stack: "'IBM Plex Mono', ui-monospace, Menlo, monospace" },
+  { label: 'IBM Plex Mono', stack: "'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace" },
   { label: 'System sans', stack: 'system-ui, -apple-system, sans-serif' },
   { label: 'System mono', stack: 'ui-monospace, SF Mono, Menlo, monospace' },
   { label: 'Georgia (serif)', stack: 'Georgia, Times, serif' },
@@ -213,8 +218,12 @@ export function TweakPanel() {
     const family = gfName.trim();
     if (!family) return;
     loadGoogleFont(family);
-    const generic = gfTarget === '--mono' ? 'monospace' : 'sans-serif';
-    setFace(gfTarget, `'${family}', ${generic}`);
+    // Keep IBM Plex behind the candidate, or the symbols the product leans on
+    // (↗ ≈ · —) fall through to whatever the platform happens to have.
+    const fallback = gfTarget === '--mono'
+      ? "'IBM Plex Mono', ui-monospace, monospace"
+      : "'IBM Plex Sans', system-ui, sans-serif";
+    setFace(gfTarget, `'${family}', ${fallback}`);
   };
 
   const applyZoom = (z: number) => {
