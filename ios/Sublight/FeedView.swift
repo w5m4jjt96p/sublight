@@ -438,46 +438,67 @@ final class FeedStore: ObservableObject {
     /// One publication of state for the whole live load, not one per rover per
     /// step. Assigning as each rover landed re-sorted the entire stream every
     /// time: two rovers, two steps each, and the reader watched the top post
-    /// jump between craft and ages for several seconds. The seed paints
-    /// instantly; this replaces it once, complete.
+    /// jump between craft and ages for several seconds.
+    ///
+    /// Everything is fetched at once. Sequentially this was six round trips in
+    /// a queue, each returning up to 600 entries, and the feed sat on the
+    /// bundled seed for about forty seconds before the live posts appeared —
+    /// on a build a week old, that is forty seconds of week-old photos. The
+    /// caches behind these calls are actor-isolated, which is what makes
+    /// firing them together safe.
+    ///
+    /// Sols come back in whatever order they finish. That is fine: `remerge`
+    /// buckets by sol and orders each publication by capture time.
     func refreshLive(from store: DataStore, force: Bool = false) async {
         let rovers = store.craft.filter { cursors[$0.id] != nil }
         guard !rovers.isEmpty else { return }
 
-        var fetched: [(id: String, posts: [FeedPost], nextSol: Int?)] = []
+        let results = await withTaskGroup(
+            of: (id: String, images: [RoverImage], nextSol: Int?).self
+        ) { group -> [String: (images: [RoverImage], nextSol: Int?)] in
+            for c in rovers {
+                let id = c.id
+                group.addTask {
+                    let latest = await RoverImages.fetchLatest(roverId: id, limit: 48, force: force)
+                    guard !latest.isEmpty else { return (id, [], nil) }
+
+                    // Every sol in the newest downlink, not just the highest
+                    // one. A rover can send an older sol home after a newer
+                    // one, and the stream is ordered by arrival, so that older
+                    // sol belongs at the top. Capped, so an unusual batch
+                    // cannot fan out into many requests.
+                    let sols = Array(Set(latest.map(\.sol).filter { $0 > 0 }).sorted(by: >).prefix(3))
+                    guard let lowest = sols.last else { return (id, latest, nil) }
+
+                    let whole = await withTaskGroup(of: [RoverImage].self) { inner -> [RoverImage] in
+                        for sol in sols {
+                            inner.addTask {
+                                await RoverImages.fetch(roverId: id, sol: sol, limit: 600, force: force).images
+                            }
+                        }
+                        var acc: [RoverImage] = []
+                        for await part in inner { acc += part }
+                        return acc
+                    }
+                    return whole.isEmpty ? (id, latest, nil) : (id, whole, lowest - 1)
+                }
+            }
+            var out: [String: (images: [RoverImage], nextSol: Int?)] = [:]
+            for await r in group { out[r.id] = (r.images, r.nextSol) }
+            return out
+        }
+
+        var changed = false
         for c in rovers {
-            let images = await RoverImages.fetchLatest(roverId: c.id, limit: 48, force: force)
-            guard !images.isEmpty else { continue }
-
-            // Every sol in the newest downlink, not just the highest one. A
-            // rover can send an older sol home after a newer one, and the
-            // stream is ordered by arrival, so that older sol belongs at the
-            // top. Capped, so an odd batch can't fan out into many requests.
-            let sols = Array(Set(images.map(\.sol).filter { $0 > 0 }).sorted(by: >).prefix(3))
-            guard let lowest = sols.last else {
-                fetched.append((c.id, images.map { post(from: $0, craft: c, store: store) }, nil))
-                continue
+            guard let r = results[c.id], !r.images.isEmpty else { continue }
+            byCraft[c.id] = r.images.map { post(from: $0, craft: c, store: store) }
+            if let next = r.nextSol {
+                cursors[c.id]?.nextSol = next
+                cursors[c.id]?.pulledLatestSol = true
             }
-            var whole: [RoverImage] = []
-            for sol in sols {
-                whole += await RoverImages.fetch(roverId: c.id, sol: sol, limit: 600, force: force).images
-            }
-            if whole.isEmpty {
-                fetched.append((c.id, images.map { post(from: $0, craft: c, store: store) }, nil))
-            } else {
-                fetched.append((c.id, whole.map { post(from: $0, craft: c, store: store) }, lowest - 1))
-            }
+            changed = true
         }
-
-        guard !fetched.isEmpty else { return }
-        for f in fetched {
-            byCraft[f.id] = f.posts
-            if let next = f.nextSol {
-                cursors[f.id]?.nextSol = next
-                cursors[f.id]?.pulledLatestSol = true
-            }
-        }
-        remerge()
+        if changed { remerge() }
     }
 
     /// Walk every rover back one sol and re-merge, so the stream stays in date order.
