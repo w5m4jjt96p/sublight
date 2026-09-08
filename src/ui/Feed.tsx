@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FramesData, FrameThumb } from '../types.ts';
 import type { MapModel } from '../map/model.ts';
-import { fetchSolImages, fetchLatestFrames } from '../data/roverImages.ts';
+import { fetchSolImages, fetchLatestFrames, openingFrame } from '../data/roverImages.ts';
 import { fmtSince, fmtDuration } from '../data/format.ts';
 import { owltAt } from '../data/lightTime.ts';
 import { Avatar } from './Avatar.tsx';
@@ -116,33 +116,47 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
   useEffect(() => {
     if (!roverIds.length) return;
     let cancelled = false;
-    for (const id of roverIds) {
-      (async () => {
-        try {
-          const fresh = await fetchLatestFrames(id, 48);
-          if (cancelled || !fresh.length) return;
-          setByCraft((prev) => ({ ...prev, [id]: fresh }));
-          // Every sol in the newest downlink, not just the highest one. A rover
-          // can send an older sol home after a newer one, and now that the
-          // stream is ordered by arrival that older sol belongs at the top —
-          // taking only max(sol) would hide the freshest thing in the feed.
-          // Capped, so an unusual batch can't fan out into many requests.
-          const sols = [...new Set(fresh.map((f) => f.sol).filter((x): x is number => x != null))]
-            .sort((a, b) => b - a)
-            .slice(0, 3);
-          if (!sols.length) return;
-          const whole = await Promise.all(
-            sols.map((s) => fetchSolImages(id, s, 600).then((r) => r.frames).catch(() => [])),
-          );
-          const merged = whole.flat();
-          if (cancelled || !merged.length) return;
-          setByCraft((prev) => ({ ...prev, [id]: merged }));
-          cursors.current[id] = { nextSol: Math.min(...sols) - 1, topSolComplete: true, done: false };
-        } catch {
-          /* offline or feed down: keep the bundled frames */
+    // One publication of state for the whole live load, not one per rover per
+    // step. Resolving each rover on its own re-sorted the entire stream every
+    // time a request landed: two rovers, two steps each, five reshuffles in a
+    // few seconds, and the reader watched the top post jump between craft and
+    // ages. The seed paints instantly; this replaces it once, complete.
+    (async () => {
+      const results = await Promise.all(
+        roverIds.map(async (id) => {
+          try {
+            const fresh = await fetchLatestFrames(id, 48);
+            if (!fresh.length) return null;
+            // Every sol in the newest downlink, not just the highest one. A
+            // rover can send an older sol home after a newer one, and the
+            // stream is ordered by arrival, so that older sol belongs at the
+            // top. Capped, so an unusual batch can't fan out into requests.
+            const sols = [...new Set(fresh.map((f) => f.sol).filter((x): x is number => x != null))]
+              .sort((a, b) => b - a)
+              .slice(0, 3);
+            if (!sols.length) return { id, frames: fresh, nextSol: null };
+            const whole = await Promise.all(
+              sols.map((sn) => fetchSolImages(id, sn, 600).then((r) => r.frames).catch(() => [])),
+            );
+            const merged = whole.flat();
+            if (!merged.length) return { id, frames: fresh, nextSol: null };
+            return { id, frames: merged, nextSol: Math.min(...sols) - 1 };
+          } catch {
+            return null; // offline or feed down: this rover keeps its bundled frames
+          }
+        }),
+      );
+      if (cancelled) return;
+      const next: Record<string, FrameThumb[]> = {};
+      for (const r of results) {
+        if (!r) continue;
+        next[r.id] = r.frames;
+        if (r.nextSol != null) {
+          cursors.current[r.id] = { nextSol: r.nextSol, topSolComplete: true, done: false };
         }
-      })();
-    }
+      }
+      if (Object.keys(next).length) setByCraft((prev) => ({ ...prev, ...next }));
+    })();
     return () => { cancelled = true; };
   }, [roverIds]);
 
@@ -288,7 +302,20 @@ function PublicationCard({
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
 }) {
   const count = pub.photos.length;
+  // Open on the best camera in the batch rather than on whatever the sequence
+  // happens to start with, which is often a PIXL micro-shot or a hazcam of the
+  // wheels. The array stays in capture order so the flipbook still reads as
+  // motion; only the frame you land on changes.
   const [index, setIndex] = useState(0);
+  /** Set as soon as the reader scrubs or plays, so we stop moving the frame. */
+  const touched = useRef(false);
+  // Recomputed when the photos change, not only on mount: the card first
+  // renders on the bundled seed and the live batch replaces it a moment later,
+  // so an index picked once would point into an array that no longer exists.
+  useEffect(() => {
+    if (touched.current) return;
+    setIndex(openingFrame(pub.photos));
+  }, [pub.photos]);
   const [playing, setPlaying] = useState(false);
   /** The sharp source that has finished loading, if it is the one on screen. */
   const [sharp, setSharp] = useState<string | null>(null);
@@ -368,6 +395,7 @@ function PublicationCard({
   // refused and scrubbing would go silently dead.
   const onStripDown = (e: React.PointerEvent<HTMLDivElement>) => {
     setPlaying(false);
+    touched.current = true;
     scrubbing.current = true;
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* capture is a nicety */ }
     scrub(e.clientX);
@@ -379,6 +407,7 @@ function PublicationCard({
 
   const onStageDown = (e: React.PointerEvent<HTMLDivElement>) => {
     setPlaying(false);
+    touched.current = true;
     drag.current = { x: e.clientX, i: clamp(index) };
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* capture is a nicety */ }
   };
@@ -438,7 +467,7 @@ function PublicationCard({
             <button
               className="pub-play"
               onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => setPlaying((p) => !p)}
+              onClick={() => { touched.current = true; setPlaying((p) => !p); }}
               aria-label={playing ? 'Pause sequence' : 'Play sequence'}
             >
               {playing ? '❚❚' : '▶'}

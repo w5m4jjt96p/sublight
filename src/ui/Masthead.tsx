@@ -4,7 +4,7 @@
 // phone.
 import { IconClock, IconTracking, IconSearch } from './Icons.tsx';
 
-type View = 'map' | 'about' | 'gallery' | 'orbit' | 'mars' | 'deepsky' | 'traverse';
+type View = 'map' | 'about' | 'gallery' | 'mars' | 'deepsky' | 'traverse';
 // You can *be* on the traverse, but you never navigate to it from a nav item —
 // it needs a rover id — so the callback takes the narrower set.
 type NavTarget = Exclude<View, 'traverse'>;

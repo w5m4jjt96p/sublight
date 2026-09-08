@@ -13,6 +13,54 @@ import type { FrameThumb } from '../types.ts';
 const mslVariant = (url: string, suffix: string) =>
   url.replace(/\.(jpg|JPG)$/, (ext) => `${suffix}${ext}`);
 
+/**
+ * Rovers shoot in stereo: the same instant through a left and a right eye, and
+ * both eyes are published as separate frames. A sol of 214 Perseverance frames
+ * is really about 149 scenes. Keep the left eye when a right one shares its
+ * capture time and its camera differs only by which eye it is.
+ *
+ * Measured on Perseverance sol 1972: 214 frames in, 149 out, and Mastcam-Z
+ * drops from 71+71 to 41+41. On Curiosity the two eyes rarely share a
+ * timestamp, so this removes almost nothing there — which is correct, they are
+ * genuinely separate exposures.
+ */
+function dropStereoTwins(frames: FrameThumb[]): FrameThumb[] {
+  const seen = new Map<string, number>();
+  const out: FrameThumb[] = [];
+  for (const f of frames) {
+    const base = f.instrument.replace(/_(LEFT|RIGHT)/, '');
+    const key = `${f.capturedUtc}|${base}`;
+    const at = seen.get(key);
+    if (at === undefined) { seen.set(key, out.length); out.push(f); continue; }
+    if (/LEFT/.test(f.instrument) && /RIGHT/.test(out[at]!.instrument)) out[at] = f;
+  }
+  return out;
+}
+
+/**
+ * How much a camera is worth opening a post on, highest first. The raw feeds
+ * carry no "featured" or "interesting" flag; the closest thing NASA publishes
+ * is MSL's `instrument_sort` (Mastcam 1, ChemCam RMI 4, Navcam 7-8), and this
+ * ordering matches it while also covering Perseverance, whose feed has no
+ * equivalent field.
+ */
+const CAMERA_RANK: [RegExp, number][] = [
+  [/MCZ|MAST|ZCAM/, 0],        // colour, scenic
+  [/NAVCAM|NAV_/, 1],          // wide, grey
+  [/RMI|SUPERCAM|CHEMCAM/, 2], // distant detail
+  [/HAZ/, 3],                  // wheels and ground
+];
+export function openingFrame(frames: { instrument: string }[]): number {
+  let best = 0;
+  let bestRank = 99;
+  for (let i = 0; i < frames.length; i++) {
+    const inst = frames[i]!.instrument;
+    const rank = CAMERA_RANK.find(([re]) => re.test(inst))?.[1] ?? 4;
+    if (rank < bestRank) { bestRank = rank; best = i; if (rank === 0) break; }
+  }
+  return best;
+}
+
 export interface SolImages {
   sol: number;
   count: number;      // total frames that sol (may exceed the loaded sample)
@@ -73,8 +121,9 @@ export async function fetchLatestFrames(roverId: string, limit = 48): Promise<Fr
           })
           .filter((f) => f.file);
 
-  latestCache.set(key, { at: Date.now(), frames });
-  return frames;
+  const deduped = dropStereoTwins(frames);
+  latestCache.set(key, { at: Date.now(), frames: deduped });
+  return deduped;
 }
 
 export async function fetchSolImages(
@@ -118,7 +167,7 @@ async function fetchPerseverance(sol: number, limit: number): Promise<SolImages>
   return {
     sol,
     count: data.num_images ?? frames.length,
-    frames: frames.slice(0, limit), // the feed ignores `num` when filtering by sol
+    frames: dropStereoTwins(frames).slice(0, limit), // the feed ignores `num` when filtering by sol
     more: `https://mars.nasa.gov/mars2020/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=${sol}&end_sol=${sol}`,
   };
 }
@@ -146,7 +195,7 @@ async function fetchCuriosity(sol: number, limit: number): Promise<SolImages> {
   return {
     sol,
     count: items.length,
-    frames,
+    frames: dropStereoTwins(frames),
     more: `https://mars.nasa.gov/msl/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=${sol}&end_sol=${sol}`,
   };
 }

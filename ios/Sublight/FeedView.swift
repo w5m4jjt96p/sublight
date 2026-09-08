@@ -56,6 +56,8 @@ struct FeedPost: Identifiable {
     let view: URL?
     let full: URL?
     let caption: String        // "Sol 1969 · MCZ_RIGHT"
+    /// Raw camera name, for ranking which frame a post opens on.
+    let instrument: String
     let sol: Int?              // the rover's own day — the grouping key
     /// When the frame reached Earth, from the feed's `date_received`. Measured,
     /// not capture time plus light-time: a rover buffers frames and downlinks
@@ -91,6 +93,8 @@ struct FeedGroupCard: View {
     @State private var index = 0
     @State private var playing = false
     @State private var dragAnchor: Int?
+    /// Set as soon as the reader scrubs or plays, so we stop moving the frame.
+    @State private var touched = false
     /// The frame whose sharp size has been asked for. Nil while the sequence is
     /// running or the reader is scrubbing.
     @State private var sharpIndex: Int?
@@ -111,6 +115,16 @@ struct FeedGroupCard: View {
         }
     }
     private func clamp(_ i: Int) -> Int { min(max(i, 0), max(count - 1, 0)) }
+
+    /// First frame from the best-ranked camera present in the batch.
+    private var openingIndex: Int {
+        var best = 0, bestRank = 99
+        for (i, p) in group.posts.enumerated() {
+            let r = cameraRank(p.instrument)
+            if r < bestRank { bestRank = r; best = i; if r == 0 { break } }
+        }
+        return best
+    }
     private var current: FeedPost? { group.posts.indices.contains(clamp(index)) ? group.posts[clamp(index)] : nil }
 
     var body: some View {
@@ -120,6 +134,18 @@ struct FeedGroupCard: View {
             if count > 1 { strip }
             footer
         }
+        // Open on the best camera in the batch rather than on whatever the
+        // sequence starts with, often a micro-shot or a hazcam of the wheels.
+        // Keyed on the count, not run once: the card first renders on the
+        // bundled seed and the live batch replaces it a moment later, so an
+        // index picked at mount would point into an array that no longer
+        // exists. The order itself is untouched, so the flipbook still reads
+        // as motion; only the frame you land on changes.
+        .onChange(of: count) { _, _ in
+            guard !touched else { return }
+            index = openingIndex
+        }
+        .onAppear { if !touched { index = openingIndex } }
         // Only ticks while playing, and restarts cleanly when it's toggled.
         .task(id: playing) {
             guard playing, count > 1 else { return }
@@ -187,7 +213,7 @@ struct FeedGroupCard: View {
         }
         .overlay(alignment: .bottomLeading) {
             if count > 1 {
-                Button { playing.toggle() } label: {
+                Button { touched = true; playing.toggle() } label: {
                     Image(systemName: playing ? "pause.fill" : "play.fill")
                         .font(.system(size: 11, weight: .bold)).foregroundColor(.white)
                         .frame(width: 32, height: 32)
@@ -203,7 +229,7 @@ struct FeedGroupCard: View {
             DragGesture(minimumDistance: 12)
                 .onChanged { v in
                     guard abs(v.translation.width) > abs(v.translation.height) else { return }
-                    if dragAnchor == nil { dragAnchor = clamp(index); playing = false }
+                    if dragAnchor == nil { dragAnchor = clamp(index); playing = false; touched = true }
                     index = clamp((dragAnchor ?? 0) + Int((-v.translation.width / 26).rounded()))
                 }
                 .onEnded { _ in dragAnchor = nil }
@@ -241,6 +267,7 @@ struct FeedGroupCard: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged { v in
                         playing = false
+                        touched = true
                         let ratio = max(0, min(1, v.location.x / max(geo.size.width, 1)))
                         index = Int((ratio * CGFloat(max(count - 1, 1))).rounded())
                     }
@@ -381,7 +408,7 @@ final class FeedStore: ObservableObject {
             var list: [FeedPost] = [
                 FeedPost(id: c.id + "-hero", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
                          thumb: DataStore.imageURL(f.file), view: nil, full: DataStore.imageURL(f.full),
-                         caption: cap(f.sol, f.instrument), sol: f.sol,
+                         caption: cap(f.sol, f.instrument), instrument: f.instrument, sol: f.sol,
                          arrival: arrival(f.receivedUtc, f.capturedUtc),
                          captured: Fmt.date(from: f.capturedUtc),
                          lightLine: light, isRemote: false)
@@ -389,7 +416,7 @@ final class FeedStore: ObservableObject {
             for (i, r) in (f.recent ?? []).enumerated() {
                 list.append(FeedPost(id: "\(c.id)-\(i)", craftId: c.id, craftName: c.name, location: c.reg.location, avatar: avatar,
                                      thumb: DataStore.imageURL(r.file), view: nil, full: DataStore.imageURL(r.full),
-                                     caption: cap(r.sol, r.instrument), sol: r.sol,
+                                     caption: cap(r.sol, r.instrument), instrument: r.instrument, sol: r.sol,
                                      arrival: arrival(r.receivedUtc, r.capturedUtc),
                                      captured: Fmt.date(from: r.capturedUtc),
                                      lightLine: light, isRemote: false))
@@ -408,33 +435,49 @@ final class FeedStore: ObservableObject {
     /// `force` bypasses the network caches. Opening the gallery and pulling to
     /// refresh both use it: the newest sol is still being added to while you
     /// look at it, so a cached answer would make a re-open a no-op.
+    /// One publication of state for the whole live load, not one per rover per
+    /// step. Assigning as each rover landed re-sorted the entire stream every
+    /// time: two rovers, two steps each, and the reader watched the top post
+    /// jump between craft and ages for several seconds. The seed paints
+    /// instantly; this replaces it once, complete.
     func refreshLive(from store: DataStore, force: Bool = false) async {
-        for c in store.craft where cursors[c.id] != nil {
+        let rovers = store.craft.filter { cursors[$0.id] != nil }
+        guard !rovers.isEmpty else { return }
+
+        var fetched: [(id: String, posts: [FeedPost], nextSol: Int?)] = []
+        for c in rovers {
             let images = await RoverImages.fetchLatest(roverId: c.id, limit: 48, force: force)
             guard !images.isEmpty else { continue }
-            byCraft[c.id] = images.map { post(from: $0, craft: c, store: store) }
-            remerge()
 
             // Every sol in the newest downlink, not just the highest one. A
-            // rover can send an older sol home after a newer one, and now that
-            // the stream is ordered by arrival that older sol belongs at the
-            // top — taking only max(sol) would hide the freshest post in the
-            // feed. Capped, so an odd batch can't fan out into many requests.
+            // rover can send an older sol home after a newer one, and the
+            // stream is ordered by arrival, so that older sol belongs at the
+            // top. Capped, so an odd batch can't fan out into many requests.
             let sols = Array(Set(images.map(\.sol).filter { $0 > 0 }).sorted(by: >).prefix(3))
-            guard let lowest = sols.last else { continue }
+            guard let lowest = sols.last else {
+                fetched.append((c.id, images.map { post(from: $0, craft: c, store: store) }, nil))
+                continue
+            }
             var whole: [RoverImage] = []
             for sol in sols {
                 whole += await RoverImages.fetch(roverId: c.id, sol: sol, limit: 600, force: force).images
             }
             if whole.isEmpty {
-                cursors[c.id]?.nextSol = sols[0]
+                fetched.append((c.id, images.map { post(from: $0, craft: c, store: store) }, nil))
             } else {
-                byCraft[c.id] = whole.map { post(from: $0, craft: c, store: store) }
-                cursors[c.id]?.nextSol = lowest - 1
-                cursors[c.id]?.pulledLatestSol = true
-                remerge()
+                fetched.append((c.id, whole.map { post(from: $0, craft: c, store: store) }, lowest - 1))
             }
         }
+
+        guard !fetched.isEmpty else { return }
+        for f in fetched {
+            byCraft[f.id] = f.posts
+            if let next = f.nextSol {
+                cursors[f.id]?.nextSol = next
+                cursors[f.id]?.pulledLatestSol = true
+            }
+        }
+        remerge()
     }
 
     /// Walk every rover back one sol and re-merge, so the stream stays in date order.
@@ -477,7 +520,7 @@ final class FeedStore: ObservableObject {
         return FeedPost(
             id: img.id.uuidString, craftId: craft.id, craftName: craft.name, location: craft.reg.location,
             avatar: store.avatarURL(for: craft.id), thumb: img.thumb, view: img.view, full: img.full,
-            caption: caption, sol: img.sol > 0 ? img.sol : nil,
+            caption: caption, instrument: img.instrument, sol: img.sol > 0 ? img.sol : nil,
             arrival: Fmt.date(from: img.receivedUtc)
                 ?? Fmt.date(from: img.capturedUtc)?.addingTimeInterval(owlt),
             captured: Fmt.date(from: img.capturedUtc),

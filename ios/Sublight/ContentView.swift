@@ -35,7 +35,6 @@ struct ContentView: View {
     // The map is still home: the Sun at the centre of the nav returns to it.
     @State private var tab: NavTab = .gallery
     @State private var showSearch = false
-    @State private var showNearEarth = false
     @State private var marsTraverseTrack: RoverTrack?
 
     var body: some View {
@@ -75,8 +74,7 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 if tab == .map {
-                    TopBar(onSearch: { showSearch = true },
-                           onNearEarth: { showNearEarth = true })
+                    TopBar(onSearch: { showSearch = true })
                 }
                 Spacer()
                 NavBar(tab: $tab, onMapReset: { controller.reset() })
@@ -89,9 +87,6 @@ struct ContentView: View {
             .ignoresSafeArea(.container, edges: .bottom)
         }
         .preferredColorScheme(.dark)
-        .fullScreenCover(isPresented: $showNearEarth) {
-            NearEarthView(store: store, onClose: { showNearEarth = false })
-        }
         .fullScreenCover(item: $marsTraverseTrack) { track in
             TraverseView(store: store, track: track,
                          craftName: store.craft.first(where: { $0.id == track.id })?.name ?? track.label,
@@ -126,7 +121,6 @@ struct ContentView: View {
 
 private struct TopBar: View {
     let onSearch: () -> Void
-    let onNearEarth: () -> Void
     var body: some View {
         HStack(alignment: .center) {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -136,17 +130,6 @@ private struct TopBar: View {
                 }
             }
             Spacer()
-            Button(action: onNearEarth) {
-                HStack(spacing: 6) {
-                    Image(systemName: "antenna.radiowaves.left.and.right").font(.system(size: 13, weight: .semibold))
-                    Text("Near-Earth").font(.mono(13))
-                }
-                .foregroundColor(Theme.txt)
-                .padding(.horizontal, 13).frame(height: 40)
-                .background(Capsule().fill(Theme.panel.opacity(0.6)).background(.ultraThinMaterial, in: Capsule()))
-                .overlay(Capsule().stroke(Theme.rule2, lineWidth: 1))
-            }
-            .padding(.trailing, 8)
             Button(action: onSearch) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 17, weight: .medium))

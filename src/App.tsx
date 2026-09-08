@@ -11,7 +11,6 @@ import { Gallery } from './ui/Gallery.tsx';
 import { BottomNav } from './ui/BottomNav.tsx';
 import { Traverse } from './ui/Traverse.tsx';
 import { RoverStory } from './ui/RoverStory.tsx';
-import { NearEarth } from './ui/NearEarth.tsx';
 import { MarsGlobe } from './ui/MarsGlobe.tsx';
 import { DeepSky } from './ui/DeepSky.tsx';
 import { SpaceWeather } from './ui/SpaceWeather.tsx';
@@ -29,7 +28,7 @@ export function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  const { model, frames, archive, bodyPhotos, tracks, satellites, deepSky, generatedAt, loading } = useData();
+  const { model, frames, archive, bodyPhotos, tracks, deepSky, generatedAt, loading } = useData();
   const now = useNow();
   const dsn = useDsn();
   const spaceWeather = useSpaceWeather();
@@ -45,10 +44,9 @@ export function App() {
     credit: string;
     owlt: number | null;
   } | null>(null);
-  const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse' | 'orbit' | 'mars' | 'deepsky'>(() => {
+  const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse' | 'mars' | 'deepsky'>(() => {
     if (window.location.hash === '#about') return 'about';
     if (window.location.hash === '#gallery') return 'gallery';
-    if (window.location.hash === '#orbit') return 'orbit';
     if (window.location.hash.startsWith('#mars')) return 'mars';
     if (window.location.hash === '#deepsky') return 'deepsky';
     if (window.location.hash.startsWith('#t/')) return 'traverse';
@@ -119,10 +117,9 @@ export function App() {
     }
   }
 
-  function navigate(v: 'map' | 'about' | 'gallery' | 'orbit' | 'mars' | 'deepsky') {
+  function navigate(v: 'map' | 'about' | 'gallery' | 'mars' | 'deepsky') {
     if (v === 'about') window.location.hash = '#about';
     else if (v === 'gallery') window.location.hash = '#gallery';
-    else if (v === 'orbit') window.location.hash = '#orbit';
     else if (v === 'mars') window.location.hash = '#mars';
     else if (v === 'deepsky') window.location.hash = '#deepsky';
     else
@@ -145,10 +142,6 @@ export function App() {
       }
       if (h === '#gallery') {
         setView('gallery');
-        return;
-      }
-      if (h === '#orbit') {
-        setView('orbit');
         return;
       }
       const mm = h.match(/^#mars(?:\/(.+))?$/);
@@ -443,16 +436,6 @@ export function App() {
           onOpenStory={(sol) => setStory({ roverId: traverseId, startSol: sol })}
           onBack={() => { window.location.hash = `#c/${traverseId}`; }}
         />
-      )}
-
-      {view === 'orbit' && (
-        <div className="orbit-overlay">
-          <NearEarth
-            satellites={satellites}
-            onBack={() => navigate('map')}
-            onGoDeep={() => navigate('map')}
-          />
-        </div>
       )}
 
       {view === 'deepsky' && <DeepSky objects={deepSky} onBack={() => navigate('map')} />}

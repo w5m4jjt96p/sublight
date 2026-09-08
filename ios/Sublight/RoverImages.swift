@@ -34,6 +34,44 @@ struct RoverImage: Identifiable {
     let sol: Int
 }
 
+/// Rovers shoot in stereo: the same instant through a left and a right eye, and
+/// both eyes are published as separate frames. A sol of 214 Perseverance frames
+/// is really about 149 scenes. Keep the left eye when a right one shares its
+/// capture time and its camera differs only by which eye it is.
+///
+/// Measured live: Perseverance sol 1972 goes 214 to 149, Curiosity sol 5008
+/// goes 199 to 111.
+func dropStereoTwins(_ frames: [RoverImage]) -> [RoverImage] {
+    var seen: [String: Int] = [:]
+    var out: [RoverImage] = []
+    for f in frames {
+        let base = f.instrument
+            .replacingOccurrences(of: "_LEFT", with: "")
+            .replacingOccurrences(of: "_RIGHT", with: "")
+        let key = "\(f.capturedUtc)|\(base)"
+        guard let at = seen[key] else {
+            seen[key] = out.count
+            out.append(f)
+            continue
+        }
+        if f.instrument.contains("LEFT") && out[at].instrument.contains("RIGHT") { out[at] = f }
+    }
+    return out
+}
+
+/// How much a camera is worth opening a post on, lowest number first. The raw
+/// feeds carry no "featured" or "interesting" flag; the closest thing NASA
+/// publishes is MSL's `instrument_sort` (Mastcam 1, ChemCam RMI 4, Navcam 7-8),
+/// and this matches it while also covering Perseverance, which has no
+/// equivalent field.
+func cameraRank(_ instrument: String) -> Int {
+    if instrument.contains("MCZ") || instrument.contains("MAST") || instrument.contains("ZCAM") { return 0 }
+    if instrument.contains("NAVCAM") || instrument.contains("NAV_") { return 1 }
+    if instrument.contains("RMI") || instrument.contains("SUPERCAM") || instrument.contains("CHEMCAM") { return 2 }
+    if instrument.contains("HAZ") { return 3 }
+    return 4
+}
+
 struct SolImages {
     let sol: Int
     let count: Int
@@ -65,8 +103,9 @@ enum RoverImages {
         } else {
             images = (try? await latestPerseverance(limit: limit)) ?? []
         }
-        if !images.isEmpty { latestCache[key] = (Date(), images) }
-        return images
+        let deduped = dropStereoTwins(images)
+        if !deduped.isEmpty { latestCache[key] = (Date(), deduped) }
+        return deduped
     }
 
     private static func latestPerseverance(limit: Int) async throws -> [RoverImage] {
@@ -154,7 +193,7 @@ enum RoverImages {
                 sol: im.sol ?? sol)
         }
         let more = URL(string: "https://mars.nasa.gov/mars2020/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=\(sol)&end_sol=\(sol)")
-        return SolImages(sol: sol, count: d.num_images ?? images.count, images: images, moreURL: more)
+        return SolImages(sol: sol, count: d.num_images ?? images.count, images: dropStereoTwins(images), moreURL: more)
     }
 
     // MARK: - Curiosity (msl raw image items)
@@ -188,6 +227,6 @@ enum RoverImages {
                               receivedUtc: im.date_received ?? "", sol: im.sol ?? sol)
         }
         let more = URL(string: "https://mars.nasa.gov/msl/multimedia/raw-images/?order=sol+desc&per_page=100&page=0&begin_sol=\(sol)&end_sol=\(sol)")
-        return SolImages(sol: sol, count: full.count, images: images, moreURL: more)
+        return SolImages(sol: sol, count: full.count, images: dropStereoTwins(images), moreURL: more)
     }
 }
