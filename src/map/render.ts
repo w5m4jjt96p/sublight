@@ -30,7 +30,10 @@ export interface RenderInput {
   focusInsetX: number;
 }
 
-const LABEL_FACE = '"Roboto Mono", "IBM Plex Mono", monospace';
+// No trailing semicolon: this is concatenated into `ctx.font`, which parses a
+// CSS font *value*, not a declaration. With one, canvas rejects the whole
+// assignment silently and the labels stay at the default 10px sans-serif.
+const LABEL_FACE = '"Stack Sans Notch", "IBM Plex Sans", system-ui, sans-serif';
 // Set once per frame in render(), reused by labelAt so the label size tracks
 // the global --font-scale.
 let labelFont = `11px ${LABEL_FACE}`;
@@ -45,7 +48,7 @@ export function render(input: RenderInput): void {
     input;
   const cam = camera.cur;
   const zoomFactor = cam.k / camera.base;
-  const labelPx = 11 * (fontScale || 1);
+  const labelPx = 12 * (fontScale || 1);
   labelFont = `${labelPx}px ${LABEL_FACE}`;
   // Shift the whole scene left by half the panel inset so a centred (flown-to)
   // craft lands in the middle of the *visible* map, not behind the panel.
