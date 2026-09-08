@@ -89,6 +89,27 @@ const FONT_GROUPS: { group: string; items: FontItem[] }[] = [
     ],
   },
   {
+    group: 'Gallery & feed',
+    items: [
+      { name: '--fs-gal-h1', label: 'Title', base: 30 },
+      { name: '--fs-gal-lede', label: 'Lede', base: 14 },
+      { name: '--fs-gal-shelf', label: 'Shelf label', base: 11 },
+      { name: '--fs-post-craft', label: 'Craft name', base: 14 },
+      { name: '--fs-post-loc', label: 'Location', base: 11 },
+      { name: '--fs-post-when', label: 'Arrived', base: 11.5 },
+      { name: '--fs-post-caption', label: 'Caption', base: 12.5 },
+      { name: '--fs-post-light', label: 'Light line', base: 12 },
+    ],
+  },
+  {
+    group: 'Chrome',
+    items: [
+      { name: '--fs-mast-stat', label: 'Masthead readout', base: 17 },
+      { name: '--fs-mast-stat-em', label: 'Readout label', base: 11.5 },
+      { name: '--fs-nav-label', label: 'Nav label', base: 13 },
+    ],
+  },
+  {
     group: 'About page',
     items: [
       { name: '--fs-about-h1', label: 'H1', base: 36 },
@@ -101,6 +122,40 @@ const FONT_GROUPS: { group: string; items: FontItem[] }[] = [
   },
 ];
 const FONT_ITEMS = FONT_GROUPS.flatMap((g) => g.items);
+
+// Two roles, two tokens. `--sans` is the display face (titles, craft names),
+// `--mono` carries every number and every small label.
+const FACE_TOKENS = [
+  { name: '--sans', label: 'Titles' },
+  { name: '--mono', label: 'Numbers & labels' },
+] as const;
+
+// What is actually bundled, plus system stacks that need no download. Anything
+// else has to be pulled from Google Fonts, which is why that is a separate box.
+const BUNDLED_FACES: { label: string; stack: string }[] = [
+  { label: 'Stack Sans Notch', stack: "'Stack Sans Notch', system-ui, sans-serif" },
+  { label: 'Roboto Mono', stack: "'Roboto Mono', ui-monospace, Menlo, monospace" },
+  { label: 'IBM Plex Sans', stack: "'IBM Plex Sans', system-ui, sans-serif" },
+  { label: 'IBM Plex Mono', stack: "'IBM Plex Mono', ui-monospace, Menlo, monospace" },
+  { label: 'System sans', stack: 'system-ui, -apple-system, sans-serif' },
+  { label: 'System mono', stack: 'ui-monospace, SF Mono, Menlo, monospace' },
+  { label: 'Georgia (serif)', stack: 'Georgia, Times, serif' },
+];
+
+/**
+ * Pull a family from Google Fonts at runtime so a face can be judged in place
+ * before anyone commits to self-hosting it. DEV only, like the rest of this
+ * panel: nothing here reaches a build, and the site itself never calls a CDN.
+ */
+function loadGoogleFont(family: string) {
+  const id = `tw-gf-${family.replace(/\W+/g, '-')}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@300;400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+}
 const fontCalc = (px: number) => `calc(${px}px * var(--font-scale))`;
 
 const root = () => document.documentElement;
@@ -129,6 +184,11 @@ export function TweakPanel() {
   const [fontsOpen, setFontsOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>(initial);
   const [fonts, setFonts] = useState<Record<string, number>>(fontBase);
+  const [faces, setFaces] = useState<Record<string, string>>(() =>
+    Object.fromEntries(FACE_TOKENS.map((f) => [f.name, readVar(f.name)])),
+  );
+  const [gfName, setGfName] = useState('');
+  const [gfTarget, setGfTarget] = useState<string>('--sans');
   const [zoom, setZoom] = useState(1);
   const [copied, setCopied] = useState(false);
 
@@ -143,17 +203,38 @@ export function TweakPanel() {
     setCopied(false);
   };
 
+  const setFace = (name: string, stack: string) => {
+    root().style.setProperty(name, stack);
+    setFaces((f) => ({ ...f, [name]: stack }));
+    setCopied(false);
+  };
+
+  const applyGoogleFont = () => {
+    const family = gfName.trim();
+    if (!family) return;
+    loadGoogleFont(family);
+    const generic = gfTarget === '--mono' ? 'monospace' : 'sans-serif';
+    setFace(gfTarget, `'${family}', ${generic}`);
+  };
+
   const applyZoom = (z: number) => {
     setZoom(z);
     (root().style as CSSStyleDeclaration & { zoom?: string }).zoom = z === 1 ? '' : String(z);
   };
 
+  const initialFaces = useMemo(
+    () => Object.fromEntries(FACE_TOKENS.map((f) => [f.name, readVar(f.name)])),
+    [],
+  );
+  const changedFaces = FACE_TOKENS.filter((f) => faces[f.name] !== initialFaces[f.name]);
   const changed = CONTROLS.filter((c) => values[c.name] !== initial[c.name]);
   const changedFonts = FONT_ITEMS.filter((f) => fonts[f.name] !== fontBase[f.name]);
 
   const reset = () => {
     for (const c of CONTROLS) root().style.removeProperty(c.name);
     for (const f of FONT_ITEMS) root().style.removeProperty(f.name);
+    for (const f of FACE_TOKENS) root().style.removeProperty(f.name);
+    setFaces(initialFaces);
     applyZoom(1);
     setValues(initial);
     setFonts(fontBase);
@@ -164,6 +245,7 @@ export function TweakPanel() {
     const lines = [
       ...changed.map((c) => `  ${c.name}: ${values[c.name]};`),
       ...changedFonts.map((f) => `  ${f.name}: ${fontCalc(fonts[f.name]!)};`),
+      ...changedFaces.map((f) => `  ${f.name}: ${faces[f.name]};`),
     ];
     if (lines.length === 0) return;
     navigator.clipboard.writeText(`:root {\n${lines.join('\n')}\n}\n`).then(() => {
@@ -172,7 +254,7 @@ export function TweakPanel() {
     });
   };
 
-  const totalChanged = changed.length + changedFonts.length;
+  const totalChanged = changed.length + changedFonts.length + changedFaces.length;
 
   if (!open) {
     return (
@@ -194,6 +276,47 @@ export function TweakPanel() {
       </div>
 
       <div className="tw-body">
+        <div className="tw-face-block">
+          {FACE_TOKENS.map((f) => (
+            <label className="tw-row" key={f.name}>
+              <span className="tw-label">{f.label}</span>
+              <select
+                className="tw-select"
+                value={BUNDLED_FACES.find((b) => b.stack === faces[f.name])?.stack ?? ''}
+                onChange={(e) => setFace(f.name, e.target.value)}
+              >
+                <option value="" disabled>
+                  {faces[f.name]?.split(',')[0]?.replace(/'/g, '') || 'custom'}
+                </option>
+                {BUNDLED_FACES.map((b) => (
+                  <option key={b.label} value={b.stack}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+          <label className="tw-row">
+            <span className="tw-label">Try a Google font</span>
+            <span className="tw-gf">
+              <select className="tw-select" value={gfTarget} onChange={(e) => setGfTarget(e.target.value)}>
+                <option value="--sans">Titles</option>
+                <option value="--mono">Labels</option>
+              </select>
+              <input
+                type="text"
+                className="tw-hex"
+                placeholder="Space Grotesk"
+                value={gfName}
+                spellCheck={false}
+                onChange={(e) => setGfName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') applyGoogleFont(); }}
+              />
+              <button className="tw-go" onClick={applyGoogleFont}>load</button>
+            </span>
+          </label>
+        </div>
+
         {CONTROLS.map((c) => (
           <label className="tw-row" key={c.name}>
             <span className="tw-label">{c.label}</span>
@@ -335,6 +458,19 @@ function TweakStyles() {
         border: 1px solid var(--rule-2); font-family: var(--mono); font-size: 11.5px;
         padding: 3px 5px;
       }
+      .tw-face-block { border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 4px; }
+      .tw-select {
+        background: var(--void); color: var(--txt); border: 1px solid var(--rule-2);
+        font-family: var(--mono); font-size: 11.5px; padding: 3px 4px; max-width: 150px;
+      }
+      .tw-gf { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; }
+      .tw-gf .tw-select { max-width: 72px; }
+      .tw-gf .tw-hex { width: 104px; }
+      .tw-go {
+        background: var(--rule-2); color: var(--txt); border: none; cursor: pointer;
+        font-family: var(--mono); font-size: 11px; padding: 4px 7px;
+      }
+      .tw-go:hover { background: var(--dim-2); }
       .tw-range { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
       .tw-range input { width: 96px; }
       .tw-num { font-size: 11.5px; color: var(--txt); min-width: 46px; text-align: right; }

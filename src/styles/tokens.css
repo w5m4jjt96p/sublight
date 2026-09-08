@@ -85,4 +85,18 @@
   --fs-about-p: calc(15.5px * var(--font-scale));
   --fs-about-ul: calc(15.5px * var(--font-scale));
   --fs-about-a-back: calc(12px * var(--font-scale)); /* "← back to the map" */
+
+  /* Gallery, feed and chrome. These were hard-coded px until the type work of
+     September 2026; tokenised so the dev panel can drive them like the rest. */
+  --fs-gal-h1: calc(30px * var(--font-scale));
+  --fs-gal-lede: calc(14px * var(--font-scale));
+  --fs-gal-shelf: calc(11px * var(--font-scale));   /* "From the mission archives" */
+  --fs-post-craft: calc(14px * var(--font-scale));
+  --fs-post-loc: calc(11px * var(--font-scale));
+  --fs-post-when: calc(11.5px * var(--font-scale));
+  --fs-post-caption: calc(12.5px * var(--font-scale));
+  --fs-post-light: calc(12px * var(--font-scale));
+  --fs-mast-stat: calc(17px * var(--font-scale));
+  --fs-mast-stat-em: calc(11.5px * var(--font-scale));
+  --fs-nav-label: calc(13px * var(--font-scale));
 }
