@@ -14,7 +14,6 @@ import { RoverStory } from './ui/RoverStory.tsx';
 import { MarsGlobe } from './ui/MarsGlobe.tsx';
 import { DeepSky } from './ui/DeepSky.tsx';
 import { SpaceWeather } from './ui/SpaceWeather.tsx';
-import { TweakPanel } from './ui/TweakPanel.tsx';
 import { useData } from './data/useData.ts';
 import { useNow } from './data/useNow.ts';
 import { useDsn } from './data/useDsn.ts';
@@ -416,7 +415,6 @@ export function App() {
           onOpenArchive={openArchive}
           onOpenList={(frameList, index, craftName, owlt) =>
             setLightbox({ frames: frameList, index, craftName, credit: 'NASA/JPL-Caltech', owlt })}
-          onBack={() => navigate('map')}
         />
       )}
 
@@ -497,7 +495,6 @@ export function App() {
         <CommandPalette items={searchItems} onPick={onPick} onClose={() => setPaletteOpen(false)} />
       )}
 
-      {import.meta.env.DEV && <TweakPanel />}
     </>
   );
 }

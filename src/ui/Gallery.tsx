@@ -20,10 +20,9 @@ interface GalleryProps {
   now: number;
   onOpenArchive: (craftId: string) => void;
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
-  onBack: () => void;
 }
 
-export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchive, onOpenList, onBack }: GalleryProps) {
+export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchive, onOpenList }: GalleryProps) {
   const archiveCraft = (model?.craft ?? []).filter((c) => !frames[c.entry.id] && archive[c.entry.id]);
 
   // The freshest arrival, for the lede. The bundled snapshot only seeds it:
@@ -48,9 +47,6 @@ export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchiv
   return (
     <div className="gallery-overlay">
       <div className="gallery">
-        <a className="back" href="#map" onClick={(e) => { e.preventDefault(); onBack(); }}>
-          ← Back to the map
-        </a>
         <h1>The wall of arriving light</h1>
         <p className="gallery-lede">
           Every frame the fleet has sent home, in one stream ordered by when its light actually

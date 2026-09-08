@@ -99,6 +99,7 @@ a {
   display: block;
   width: 100%;
   height: 100%;
+  font-family: var(--sans);
 }
 
 .hud {
@@ -159,7 +160,7 @@ a {
 }
 .stat-l {
   font-size: var(--fs-stat-l);
-  letter-spacing: 0.16em;
+  font-family: var(--sans);
   text-transform: uppercase;
   color: var(--dim-2);
   margin-bottom: 7px;
@@ -225,6 +226,7 @@ a {
 .thumb-credit {
   margin-top: 6px;
   font-size: var(--fs-thumb-credit);
+  font-family: var(--sans);
   letter-spacing: 0.1em;
   color: var(--dim-2);
   text-align: right;
@@ -259,8 +261,9 @@ a {
   line-height: 1.0;
 }
 .detail-sub {
+  font-family: var(--sans);
   font-size: var(--fs-detail-sub);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--dim);
   margin-top: 6px;
@@ -269,8 +272,8 @@ a {
   background: none;
   border: 1px solid var(--rule-2);
   color: var(--dim);
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   cursor: pointer;
   flex: 0 0 auto;
 }
@@ -283,6 +286,7 @@ a {
   letter-spacing: 0em;
   color: var(--signal);
   margin-top: 6px;
+  font-family: var(--sans);
 }
 .detail-hero {
   display: block;
@@ -332,6 +336,7 @@ a {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--dim-2);
+  font-family: var(--sans);
 }
 .detail-hero-foot b {
   color: var(--delay);
@@ -398,10 +403,10 @@ a {
   outline-offset: 2px;
 }
 .detail-section-l {
-  font-size: var(--fs-detail-section-l);
-  letter-spacing: 0.18em;
+  font-size: var(--fs-stat-l);
+  font-family: var(--sans);
   text-transform: uppercase;
-  color: var(--dim-2);
+  color: var(--dim-2);  
   margin-bottom: 10px;
 }
 .detail-source {
@@ -809,9 +814,9 @@ a {
   color: var(--txt);
 }
 .gallery-lede {
+  line-height: 1.4;
   color: var(--dim);
   font-size: var(--fs-gal-lede);
-  line-height: 1.7;
   max-width: 680px;
   margin-bottom: 34px;
 }
@@ -886,12 +891,13 @@ a {
   cursor: pointer;
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
+  font-family: var(--sans);
 }
 .detail-traverse:hover { border-color: var(--signal); background: rgba(143, 214, 230, 0.08); }
 .detail-traverse .dt-ico { font-size: 20px; color: var(--signal); line-height: 1; }
 .detail-traverse .dt-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.detail-traverse .dt-text b { font-family: var(--sans); font-size: 15px; letter-spacing: 0.01em; }
-.detail-traverse .dt-text span { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.detail-traverse .dt-text b { font-family: var(--sans); font-size: 20px; letter-spacing: 0.01em; font-weight: normal }
+.detail-traverse .dt-text span { font-family: var(--mono); font-size: 14px; color: var(--dim); }
 .detail-traverse .dt-go { color: var(--dim); font-size: 16px; }
 
 .traverse {
@@ -1089,7 +1095,7 @@ a {
   background: none;
   border: 1px solid var(--rule-2);
   color: var(--signal);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: var(--fs-detail-sub);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1462,9 +1468,9 @@ a {
 .post { border: 1px solid var(--rule-2); border-radius: 8px; overflow: hidden; background: #05070a; }
 .post-head { display: flex; align-items: center; gap: 10px; padding: 11px 12px; }
 .post-head .ga-avatar { width: 36px; height: 36px; }
-.post-who { display: flex; flex-direction: column; gap: 1px; margin-right: auto; min-width: 0; }
-.post-craft { font-family: var(--mono); font-weight: 500; font-size: var(--fs-post-craft); color: var(--txt); }
-.post-loc { font-family: var(--mono); font-size: var(--fs-post-loc); color: var(--dim); }
+.post-who { display: flex; flex-direction: column; gap: 1px; margin-right: auto; min-width: 0;}
+.post-craft { font-family: var(--sans); font-weight: 500; font-size: var(--fs-post-craft); color: var(--txt); line-height: 1.0}
+.post-loc { font-family: var(--sans); font-size: var(--fs-post-loc); color: var(--dim); }
 .post-when { font-family: var(--mono); font-size: var(--fs-post-when); color: var(--delay); white-space: nowrap; }
 
 /* The height lives on the stage, not the image: a frame that is still loading
@@ -1506,14 +1512,14 @@ a {
 .pub-thumb.is-on { opacity: 1; outline: 1px solid var(--signal); outline-offset: -1px; }
 
 .post-foot { padding: 10px 12px 13px; }
-.post-caption { font-family: var(--mono); font-size: var(--fs-post-caption); color: var(--txt); }
+.post-caption { font-family: var(--sans); font-size: var(--fs-post-caption); color: var(--txt); }
 .post-of { color: var(--dim); }
 .post-light { font-family: var(--mono); font-size: var(--fs-post-light); color: var(--delay); margin-top: 5px; }
 
 /* Retired craft: one curated still each, off the dated stream. */
 .archive-shelf { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--rule); }
 .archive-shelf h2 {
-  font-family: var(--mono); font-size: var(--fs-gal-shelf); letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--sans); font-size: var(--fs-gal-shelf); text-transform: uppercase;
   color: var(--dim); font-weight: 400; margin: 0 0 16px;
 }
 .shelf { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
@@ -1528,7 +1534,7 @@ a {
 }
 .shelf-craft {
   display: flex; align-items: center; gap: 7px;
-  font-family: var(--mono); font-size: 12px; color: var(--txt);
+  font-family: var(--sans); font-size: 18px; color: var(--txt);
 }
 .shelf-craft .ga-avatar { width: 22px; height: 22px; }
 .shelf-title {
@@ -1543,7 +1549,7 @@ a {
 
 /* ---------- masthead readouts ---------- */
 .mast-status { display: flex; align-items: center; gap: 20px; margin-left: 22px; margin-right: auto; }
-.mast-stat { display: flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: var(--fs-mast-stat); color: var(--dim); }
+.mast-stat { display: flex; align-items: center; gap: 9px; font-family: var(--sans); font-size: var(--fs-mast-stat); color: var(--dim); }
 .mast-stat b { color: var(--txt); font-weight: 400; font-variant-numeric: tabular-nums; }
 .mast-stat em {
   font-style: normal; font-size: var(--fs-mast-stat-em); letter-spacing: 0.12em;
@@ -1576,8 +1582,8 @@ a {
   color: var(--dim); cursor: pointer;
 }
 .bn-item svg { width: 25px; height: 25px; }
-.bn-item span {
-  font-family: var(--mono); font-size: var(--fs-nav-label); letter-spacing: 0.03em; white-space: nowrap;
+.bn-item span {font-size: var(--fs-nav-label); letter-spacing: 0.03em; white-space: nowrap;
+  font-family: var(--sans);
 }
 .bn-item:hover { color: var(--txt); }
 .bn-item.is-on { color: var(--signal); }
