@@ -165,12 +165,12 @@ struct FeedGroupCard: View {
             .frame(width: 36, height: 36).clipShape(Circle())
             .overlay(Circle().stroke(Theme.rule2, lineWidth: 1))
             VStack(alignment: .leading, spacing: 2) {
-                Text(group.craftName).font(.monoMed(14)).foregroundColor(Theme.txt)
-                Text(group.location).font(.mono(11)).foregroundColor(Theme.dim)
+                Text(group.craftName).font(.monoMed(17)).foregroundColor(Theme.txt)
+                Text(group.location).font(.mono(12)).foregroundColor(Theme.dim)
             }
             Spacer()
             if let n = group.newest {
-                Text(Fmt.ago(n)).font(.mono(11)).foregroundColor(Theme.dim2)
+                Text(Fmt.ago(n)).font(.mono(11.5)).foregroundColor(Theme.dim2)
             }
         }
         .padding(.horizontal, 14).padding(.bottom, 10)
@@ -281,12 +281,12 @@ struct FeedGroupCard: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let p = current {
-                Text(p.caption).font(.mono(12)).foregroundColor(Theme.txt)
+                Text(p.caption).font(.mono(12.5)).foregroundColor(Theme.txt)
             }
             if let l = group.lightLine {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
-                    Text(l).font(.mono(11)).foregroundColor(Theme.delay)
+                    Text(l).font(.mono(12)).foregroundColor(Theme.delay)
                 }
             }
         }
@@ -621,7 +621,7 @@ struct FeedView: View {
     @ViewBuilder private var archiveSection: some View {
         if !archiveCraft.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                Text("MISSION ARCHIVE").font(.mono(10)).tracking(1.5).foregroundColor(Theme.dim)
+                Text("MISSION ARCHIVE").font(.mono(12)).tracking(1.5).foregroundColor(Theme.dim)
                     .padding(.horizontal, 14)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {

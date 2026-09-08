@@ -16,7 +16,7 @@ func mslVariant(_ url: URL, _ suffix: String) -> URL {
     return URL(string: String(s[s.startIndex..<dot.lowerBound]) + suffix + ext) ?? url
 }
 
-struct RoverImage: Identifiable {
+struct RoverImage: Identifiable, Sendable {
     let id = UUID()
     /// Smallest size: the scrub strip.
     let thumb: URL
@@ -72,22 +72,40 @@ func cameraRank(_ instrument: String) -> Int {
     return 4
 }
 
-struct SolImages {
+struct SolImages: Sendable {
     let sol: Int
     let count: Int
     let images: [RoverImage]
     let moreURL: URL?
 }
 
+/// The caches are touched by several tasks at once: the feed's own refresh, a
+/// pull to refresh, a return to the foreground, and the background check behind
+/// notifications. A Swift Dictionary is not safe under concurrent writes, and
+/// this crashed the app on launch with a segfault inside
+/// `Dictionary._Variant.setValue`. An actor serialises every access.
+private actor ImageCache {
+    private var sols: [String: SolImages] = [:]
+    private var latest: [String: (at: Date, images: [RoverImage])] = [:]
+
+    func sol(_ key: String) -> SolImages? { sols[key] }
+    func store(_ key: String, _ value: SolImages) { sols[key] = value }
+
+    func latestFresh(_ key: String, ttl: TimeInterval) -> [RoverImage]? {
+        guard let hit = latest[key], Date().timeIntervalSince(hit.at) < ttl else { return nil }
+        return hit.images
+    }
+    func storeLatest(_ key: String, _ images: [RoverImage]) { latest[key] = (Date(), images) }
+}
+
 enum RoverImages {
-    private static var cache: [String: SolImages] = [:]
+    private static let store = ImageCache()
 
     // ---- newest published frames --------------------------------------------
     // The bundled snapshot is only as fresh as the last data refresh, and NASA
     // publishes in bursts through the day, so the feed asks for the most
     // recently *published* frames (ordered by date_received) rather than
     // guessing a sol.
-    private static var latestCache: [String: (at: Date, images: [RoverImage])] = [:]
     private static let latestTTL: TimeInterval = 300
 
     /// `force` skips the cache on the way in (never on the way out). Re-opening
@@ -96,7 +114,7 @@ enum RoverImages {
     /// the wrong answer.
     static func fetchLatest(roverId: String, limit: Int = 48, force: Bool = false) async -> [RoverImage] {
         let key = "\(roverId):\(limit)"
-        if !force, let hit = latestCache[key], Date().timeIntervalSince(hit.at) < latestTTL { return hit.images }
+        if !force, let hit = await store.latestFresh(key, ttl: latestTTL) { return hit }
         let images: [RoverImage]
         if roverId == "curiosity" {
             images = (try? await latestCuriosity(limit: limit)) ?? []
@@ -104,7 +122,7 @@ enum RoverImages {
             images = (try? await latestPerseverance(limit: limit)) ?? []
         }
         let deduped = dropStereoTwins(images)
-        if !deduped.isEmpty { latestCache[key] = (Date(), deduped) }
+        if !deduped.isEmpty { await store.storeLatest(key, deduped) }
         return deduped
     }
 
@@ -143,14 +161,14 @@ enum RoverImages {
 
     static func fetch(roverId: String, sol: Int, limit: Int = 120, force: Bool = false) async -> SolImages {
         let key = "\(roverId):\(sol):\(limit)"
-        if !force, let hit = cache[key] { return hit }
+        if !force, let hit = await store.sol(key) { return hit }
         let result: SolImages
         if roverId == "curiosity" {
             result = (try? await fetchCuriosity(sol: sol, limit: limit)) ?? SolImages(sol: sol, count: 0, images: [], moreURL: nil)
         } else {
             result = (try? await fetchPerseverance(sol: sol, limit: limit)) ?? SolImages(sol: sol, count: 0, images: [], moreURL: nil)
         }
-        cache[key] = result
+        await store.store(key, result)
         return result
     }
 
