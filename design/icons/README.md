@@ -4,20 +4,26 @@ Drop your SVGs here, one file per icon, and I convert them for both platforms.
 Nothing in this folder is shipped as-is: the web inlines them into
 `src/ui/Icons.tsx`, iOS gets symbol sets in `ios/Sublight/Assets.xcassets`.
 
-## Filenames I expect
+## The eight files
 
 | file | where it appears |
 |---|---|
-| `gallery.svg` | bottom nav, both platforms |
-| `mars.svg` | bottom nav, both platforms |
-| `sun.svg` | the centre button of the nav (returns to the map) |
-| `deepsky.svg` | bottom nav, both platforms |
-| `settings.svg` | bottom nav, iOS only |
-| `clock.svg` | masthead UTC readout, web only |
-| `tracking.svg` | masthead craft counter, web only |
-| `search.svg` | masthead, both platforms |
+| `gallery.svg` | bottom nav, web and iOS |
+| `mars.svg` | bottom nav, web and iOS |
+| `sun.svg` | the centre button of the nav, which returns to the map |
+| `deepsky.svg` | bottom nav, web and iOS |
+| `settings.svg` | bottom nav, iOS only (the web has no settings screen) |
+| `search.svg` | masthead on the web, top bar on iOS |
+| `clock.svg` | the UTC readout, web only |
+| `tracking.svg` | the craft counter, web only |
 
-Anything extra is fine, just tell me where it goes.
+Five of them carry the whole nav, so those are the ones to draw first:
+gallery, mars, sun, deepsky, settings.
+
+Two notes on what is *not* in this list. Near-Earth is gone: the tab was
+removed on 8 September, so no icon is needed. And the iOS nav is icons only
+now, with no labels underneath, so those five shapes have to identify their
+destination on their own.
 
 ## What the file must contain
 

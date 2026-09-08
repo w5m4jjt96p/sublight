@@ -47,17 +47,6 @@ export function IconMars(p: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Near-Earth — a globe inside a tilted orbit, with something on it. */
-export function IconNearEarth(p: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...p}>
-      <circle cx="12" cy="12" r="5.4" />
-      <ellipse cx="12" cy="12" rx="9" ry="3.9" transform="rotate(-25 12 12)" />
-      <circle cx="20.2" cy="8.2" r="1.4" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 /** Deep Sky — one bright star and two far fainter ones. */
 export function IconDeepSky(p: SVGProps<SVGSVGElement>) {
   return (
