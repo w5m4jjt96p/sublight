@@ -1588,17 +1588,6 @@ a {
 .bn-item:hover { color: var(--txt); }
 .bn-item.is-on { color: var(--signal); }
 
-/* The Sun sits at the centre: the map everything else orbits. */
-.bn-home {
-  display: flex; align-items: center; justify-content: center;
-  width: 60px; height: 60px; margin: 0 4px; border-radius: 50%;
-  border: none; cursor: pointer; color: var(--txt); background: var(--rule-2);
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.bn-home svg { width: 29px; height: 29px; }
-.bn-home.is-on { background: var(--delay); color: var(--void); box-shadow: 0 0 18px rgba(229, 181, 113, 0.45); }
-.bn-home:hover { color: #fff; }
-.bn-home.is-on:hover { color: var(--void); }
 
 /* Keep the floating bar from sitting on top of scrollable content. */
 .gallery, .deepsky-overlay > *, .orbit-overlay > * { padding-bottom: 110px; }
@@ -1607,8 +1596,6 @@ a {
   .bn-item { min-width: 0; padding: 6px 4px; }
   .bn-item span { font-size: calc(var(--fs-nav-label) * 0.88); letter-spacing: 0; }
   .bn-item svg { width: 23px; height: 23px; }
-  .bn-home { width: 54px; height: 54px; }
-  .bn-home svg { width: 26px; height: 26px; }
   .bn-capsule { gap: 0; padding: 6px 8px; }
 }
 

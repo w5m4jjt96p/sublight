@@ -32,15 +32,19 @@ export function BottomNav({ view, onNavigate, onHome }: BottomNavProps) {
   return (
     <nav className="bottom-nav" aria-label="Sections">
       <div className="bn-capsule">
-        {item('gallery', 'Gallery', <IconGallery />)}
-        {item('mars', 'Mars', <IconMars />)}
+        {/* The map leads: it is home, and the Sun no longer needs a raised
+            button to say so now that its icon sits at the set's weight. */}
         <button
-          className={`bn-home${view === 'map' ? ' is-on' : ''}`}
+          className={`bn-item${view === 'map' ? ' is-on' : ''}`}
           onClick={onHome}
           aria-label="Solar system map"
+          aria-current={view === 'map' ? 'page' : undefined}
         >
           <IconSun />
+          <span>Map</span>
         </button>
+        {item('gallery', 'Gallery', <IconGallery />)}
+        {item('mars', 'Mars', <IconMars />)}
         {item('deepsky', 'Deep Sky', <IconDeepSky />)}
       </div>
     </nav>

@@ -221,9 +221,11 @@ private struct NavBar: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            // The map leads: it is home, and the Sun no longer needs a raised
+            // button to say so now that its icon sits at the set's weight.
+            mapItem
             item(.gallery, icon: .gallery, label: "Gallery")
             item(.mars, icon: .mars, label: "Mars")
-            mapButton
             item(.deepSky, icon: .deepSky, label: "Deep Sky")
             // No drawn glyph for settings yet, so the system one stays.
             systemItem(.settings, systemName: "gearshape", label: "Settings")
@@ -271,19 +273,16 @@ private struct NavBar: View {
         .accessibilityAddTraits(tab == t ? [.isButton, .isSelected] : .isButton)
     }
 
-    private var mapButton: some View {
+    /// Same shape as the other items, but it also recentres the map.
+    private var mapItem: some View {
         Button {
             onMapReset()
             tab = .map
         } label: {
-            IconView(icon: .sun, size: 26)
-                .foregroundColor(tab == .map ? Theme.void : Theme.txt)
-                .frame(width: 54, height: 54)
-                .background(
-                    Circle().fill(tab == .map ? Theme.delay : Theme.rule2)
-                        .shadow(color: tab == .map ? Theme.delay.opacity(0.5) : .clear, radius: 10)
-                )
-                .padding(.horizontal, 4)
+            IconView(icon: .sun, size: 23)
+                .foregroundColor(tab == .map ? Theme.signal : Theme.dim)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6).padding(.horizontal, 2)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Solar system map")
