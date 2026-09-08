@@ -75,6 +75,9 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
   const cursors = useRef<Record<string, Cursor>>({});
   const loadingRef = useRef(false);
   const seeded = useRef(false);
+  /** Guards against overlapping live loads, and paces the polling. */
+  const loadingLive = useRef(false);
+  const lastLive = useRef(0);
   const sentinel = useRef<HTMLDivElement>(null);
 
   // Craft identity + light-time, recomputed as the clock ticks.
@@ -113,19 +116,20 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
     () => Object.entries(frames).filter(([, f]) => f.sol != null).map(([id]) => id),
     [frames],
   );
-  useEffect(() => {
-    if (!roverIds.length) return;
-    let cancelled = false;
-    // One publication of state for the whole live load, not one per rover per
-    // step. Resolving each rover on its own re-sorted the entire stream every
-    // time a request landed: two rovers, two steps each, five reshuffles in a
-    // few seconds, and the reader watched the top post jump between craft and
-    // ages. The seed paints instantly; this replaces it once, complete.
-    (async () => {
+  // One publication of state for the whole live load, not one per rover per
+  // step. Resolving each rover on its own re-sorted the entire stream every
+  // time a request landed: two rovers, two steps each, five reshuffles in a
+  // few seconds, and the reader watched the top post jump between craft and
+  // ages. The seed paints instantly; this replaces it once, complete.
+  const loadLive = useCallback(async (force: boolean) => {
+    if (!roverIds.length || loadingLive.current) return;
+    loadingLive.current = true;
+    lastLive.current = Date.now();
+    try {
       const results = await Promise.all(
         roverIds.map(async (id) => {
           try {
-            const fresh = await fetchLatestFrames(id, 48);
+            const fresh = await fetchLatestFrames(id, 48, force);
             if (!fresh.length) return null;
             // Every sol in the newest downlink, not just the highest one. A
             // rover can send an older sol home after a newer one, and the
@@ -136,7 +140,7 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
               .slice(0, 3);
             if (!sols.length) return { id, frames: fresh, nextSol: null };
             const whole = await Promise.all(
-              sols.map((sn) => fetchSolImages(id, sn, 600).then((r) => r.frames).catch(() => [])),
+              sols.map((sn) => fetchSolImages(id, sn, 600, force).then((r) => r.frames).catch(() => [])),
             );
             const merged = whole.flat();
             if (!merged.length) return { id, frames: fresh, nextSol: null };
@@ -146,7 +150,6 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
           }
         }),
       );
-      if (cancelled) return;
       const next: Record<string, FrameThumb[]> = {};
       for (const r of results) {
         if (!r) continue;
@@ -156,9 +159,33 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
         }
       }
       if (Object.keys(next).length) setByCraft((prev) => ({ ...prev, ...next }));
-    })();
-    return () => { cancelled = true; };
+    } finally {
+      loadingLive.current = false;
+    }
   }, [roverIds]);
+
+  useEffect(() => { void loadLive(false); }, [loadLive]);
+
+  // The page used to fetch once and then sit there: a tab left open all
+  // afternoon never saw a new burst. NASA publishes every four to seven hours
+  // on average, so polling is cheap relative to that; the guard below is what
+  // stops a reader flicking between tabs from hammering an endpoint that takes
+  // eleven to sixteen seconds to answer.
+  useEffect(() => {
+    const MIN_GAP = 2 * 60 * 1000;   // never twice within two minutes
+    const POLL = 15 * 60 * 1000;     // and at most four times an hour
+    const maybe = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - lastLive.current < MIN_GAP) return;
+      void loadLive(true);
+    };
+    document.addEventListener('visibilitychange', maybe);
+    const t = window.setInterval(maybe, POLL);
+    return () => {
+      document.removeEventListener('visibilitychange', maybe);
+      window.clearInterval(t);
+    };
+  }, [loadLive]);
 
   // Flatten the fleet, sort by arrival, then fold each craft's sol into one post.
   const pubs = useMemo(() => {

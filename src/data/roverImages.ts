@@ -77,10 +77,19 @@ const cache = new Map<string, SolImages>();
 const latestCache = new Map<string, { at: number; frames: FrameThumb[] }>();
 const LATEST_TTL_MS = 5 * 60 * 1000;
 
-export async function fetchLatestFrames(roverId: string, limit = 48): Promise<FrameThumb[]> {
+/**
+ * `force` skips the cache on the way in, never on the way out. A poll that
+ * reads a five-minute-old answer defeats the point of polling, and the sol a
+ * rover is filling right now keeps growing under the same key.
+ */
+export async function fetchLatestFrames(
+  roverId: string,
+  limit = 48,
+  force = false,
+): Promise<FrameThumb[]> {
   const key = `${roverId}:${limit}`;
   const hit = latestCache.get(key);
-  if (hit && Date.now() - hit.at < LATEST_TTL_MS) return hit.frames;
+  if (!force && hit && Date.now() - hit.at < LATEST_TTL_MS) return hit.frames;
 
   const url =
     roverId === 'curiosity'
@@ -130,10 +139,11 @@ export async function fetchSolImages(
   roverId: string,
   sol: number,
   limit = 120,
+  force = false,
 ): Promise<SolImages> {
   const key = `${roverId}:${sol}:${limit}`;
   const hit = cache.get(key);
-  if (hit) return hit;
+  if (!force && hit) return hit;
 
   const result =
     roverId === 'curiosity'
