@@ -1,8 +1,9 @@
 // The tilted, three-dimensional reading of the map, behind a flag while it is
 // a prototype. Everything in here is camera and light: no body moves faster
 // than Horizons says, and none sits anywhere other than where Horizons puts
-// it. The plane leans back, the view turns slowly on its own, and fronts of
-// light leave the Sun at a stated scale. That is the whole trick.
+// it. The plane leans back, the view turns slowly on its own, and every live
+// craft is seen sending its signal home at a stated scale. That is the whole
+// trick.
 //
 // Enable with ?map3d=1 (sticks in localStorage), disable with ?map3d=0.
 
@@ -35,16 +36,14 @@ export const IDLE_YAW_DEG_PER_S = 0.15;
 /** Seconds without input before the idle yaw resumes. */
 export const IDLE_AFTER_S = 4;
 
-/** Light fronts: on screen, one second stands for this many light-minutes. */
+/**
+ * Inbound signals: on screen, one second stands for this many light-minutes.
+ * A pulse from Mars takes about three seconds to reach Earth; one from
+ * Voyager 1, nearly five minutes. The far ones crawl, which is the point.
+ */
 export const LIGHT_MIN_PER_S = 5;
-/** Seconds between two fronts leaving the Sun. */
-export const FRONT_PERIOD_S = 12;
-/** Fronts in flight at once. */
-export const FRONT_MAX = 3;
-/** Light-time from the Sun to 1 AU, seconds (IAU 2012 au, c). */
-export const SECONDS_PER_AU = 499.004784;
-/** How far a front has travelled, in AU, per second on screen. */
-export const AU_PER_S = (LIGHT_MIN_PER_S * 60) / SECONDS_PER_AU;
+/** Seconds between two pulses leaving the same craft. */
+export const PULSE_PERIOD_S = 12;
 
 export interface Projected {
   px: number;
@@ -82,6 +81,11 @@ export function tiltProject(
 export interface SceneState {
   tiltRad: number;
   yawRad: number;
-  /** `performance.now()` at which each front left the Sun, oldest first. */
-  fronts: number[];
+}
+
+/** Stable per-craft phase in [0,1), so pulses don't all leave in lockstep. */
+export function phaseOf(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return ((h >>> 0) % 1000) / 1000;
 }

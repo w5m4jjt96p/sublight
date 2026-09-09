@@ -4,15 +4,15 @@
 //
 // With `scene` set the same pass draws the tilted reading of the map: every
 // world point goes through one projection that leans the plane back and turns
-// it slowly, bodies leave the plane by their real ecliptic latitude, and fronts
-// of light leave the Sun at a stated scale. With `scene` null the output is the
-// flat map, unchanged.
+// it slowly, bodies leave the plane by their real ecliptic latitude, and every
+// live craft is seen sending its signal home at a stated scale. With `scene`
+// null the output is the flat map, unchanged.
 import type { Camera } from './camera.ts';
 import type { MapModel } from './model.ts';
 import type { Star } from './stars.ts';
-import { rOf, R_MAX } from './projection.ts';
+import { rOf } from './projection.ts';
 import { PAL, craftColor } from './palette.ts';
-import { tiltProject, AU_PER_S, LIGHT_MIN_PER_S, type SceneState, type Projected } from './scene.ts';
+import { tiltProject, LIGHT_MIN_PER_S, PULSE_PERIOD_S, phaseOf, type SceneState, type Projected } from './scene.ts';
 
 const TWO_PI = Math.PI * 2;
 const DEG = Math.PI / 180;
@@ -156,34 +156,6 @@ export function render(input: RenderInput): void {
   // --- planet rings ---
   for (const p of model.planets) ring(rOf(p.auT), 'rgba(70,82,102,.34)');
 
-  // --- light fronts: each ring is a wavefront that left the Sun at a known
-  // moment and has travelled age × scale since. The label is its age in
-  // light-minutes, which is exactly the number the whole map is about. ---
-  if (scene && scene.fronts.length) {
-    ctx.save();
-    ctx.lineWidth = 1;
-    for (let i = 0; i < scene.fronts.length; i++) {
-      const age = (now - scene.fronts[i]!) / 1000;
-      const R = rOf(age * AU_PER_S);
-      if (R >= R_MAX) continue;
-      const fade = 1 - R / R_MAX;
-      ctx.strokeStyle = `rgba(229,181,113,${(0.1 + 0.32 * fade).toFixed(3)})`;
-      ringPath(R);
-      ctx.stroke();
-      if (i >= scene.fronts.length - 2) {
-        const [lx, ly] = project(0, -R, 0);
-        ctx.globalAlpha = 0.35 + 0.65 * fade;
-        labelAt(ctx, lx, ly, `${Math.round(age * LIGHT_MIN_PER_S)} LIGHT-MIN`, PAL.delay, -6);
-        ctx.globalAlpha = 1;
-      }
-    }
-    ctx.restore();
-    ctx.fillStyle = PAL.faint;
-    ctx.font = labelFont;
-    ctx.textAlign = 'right';
-    ctx.fillText(`LIGHT FRONTS · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`, w - 16, 112);
-  }
-
   // --- AU scale ticks ---
   ctx.fillStyle = PAL.faint;
   ctx.font = labelFont;
@@ -324,9 +296,11 @@ export function render(input: RenderInput): void {
 
   // --- signal path to selected craft ---
   const sel = selectedId ? model.craft.find((c) => c.entry.id === selectedId) ?? null : null;
-  if (showPath && sel && model.earth && sel.entry.status !== 'silent' && sel.entry.status !== 'retired') {
-    const e = model.earth;
-    const [ex, ey] = project(...inPlane(e.x, e.y, e.lat), e.z);
+  const earthSxy: [number, number] | null = model.earth
+    ? project(...inPlane(model.earth.x, model.earth.y, model.earth.lat), model.earth.z)
+    : null;
+  if (showPath && sel && earthSxy && sel.entry.status !== 'silent' && sel.entry.status !== 'retired') {
+    const [ex, ey] = earthSxy;
     ctx.save();
     ctx.strokeStyle = 'rgba(229,181,113,.32)';
     ctx.lineWidth = 1;
@@ -336,12 +310,58 @@ export function render(input: RenderInput): void {
     ctx.lineTo(sel.sx, sel.sy);
     ctx.stroke();
     ctx.restore();
-    // travelling pulse — frozen at midpoint under reduced motion
-    const u = reducedMotion ? 0.5 : (now / 5200) % 1;
+    if (!scene) {
+      // flat map: the one travelling pulse — frozen at midpoint under reduced motion
+      const u = reducedMotion ? 0.5 : (now / 5200) % 1;
+      ctx.fillStyle = PAL.delay;
+      ctx.globalAlpha = reducedMotion ? 0.6 : Math.sin(u * Math.PI);
+      ctx.fillRect(ex + (sel.sx - ex) * u - 1.6, ey + (sel.sy - ey) * u - 1.6, 3.2, 3.2);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // --- tilted only: inbound signals. Every live craft sends a pulse home on a
+  // fixed period; each one crosses at a stated scale, so a pulse from Mars
+  // lands in about three seconds and one from Voyager 1 takes nearly five
+  // minutes, with two dozen of them strung along the way. The data comes
+  // *to* Earth, so that is the direction everything moves. Pulses brighten
+  // as they close in. Nothing moves under reduced motion. ---
+  if (scene && earthSxy && !reducedMotion) {
+    const [ex, ey] = earthSxy;
+    const tS = now / 1000;
+    ctx.save();
     ctx.fillStyle = PAL.delay;
-    ctx.globalAlpha = reducedMotion ? 0.6 : Math.sin(u * Math.PI);
-    ctx.fillRect(ex + (sel.sx - ex) * u - 1.6, ey + (sel.sy - ey) * u - 1.6, 3.2, 3.2);
-    ctx.globalAlpha = 1;
+    for (const f of model.craft) {
+      if (f.entry.status === 'silent' || f.entry.status === 'retired') continue;
+      const owlt = f.eph.owltSeconds;
+      if (!(owlt > 0)) continue;
+      const trip = owlt / (LIGHT_MIN_PER_S * 60); // seconds on screen, craft to Earth
+      const phase = phaseOf(f.entry.id) * PULSE_PERIOD_S;
+      const first = Math.floor((tS - trip - phase) / PULSE_PERIOD_S);
+      const last = Math.floor((tS - phase) / PULSE_PERIOD_S);
+      let lead = -1;
+      for (let k = first; k <= last; k++) {
+        const u = (tS - (k * PULSE_PERIOD_S + phase)) / trip;
+        if (u < 0 || u > 1) continue;
+        const px = f.sx + (ex - f.sx) * u;
+        const py = f.sy + (ey - f.sy) * u;
+        ctx.globalAlpha = 0.3 + 0.7 * u;
+        ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+        if (u > lead) lead = u;
+      }
+      // the selected craft's leading pulse carries its remaining light-time
+      if (f === sel && lead >= 0) {
+        const minutes = ((1 - lead) * owlt) / 60;
+        const label = minutes >= 90 ? `${(minutes / 60).toFixed(1)} LIGHT-H OUT` : `${Math.max(1, Math.round(minutes))} LIGHT-MIN OUT`;
+        ctx.globalAlpha = 1;
+        labelAt(ctx, f.sx + (ex - f.sx) * lead, f.sy + (ey - f.sy) * lead, label, PAL.delay, -8);
+      }
+    }
+    ctx.restore();
+    ctx.fillStyle = PAL.faint;
+    ctx.font = labelFont;
+    ctx.textAlign = 'right';
+    ctx.fillText(`SIGNALS INBOUND · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`, w - 16, 112);
   }
 
   // --- craft markers (imaging craft show their latest frame as a thumbnail).

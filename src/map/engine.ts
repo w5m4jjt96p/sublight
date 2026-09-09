@@ -5,10 +5,8 @@ import { render } from './render.ts';
 import { makeStars, type Star } from './stars.ts';
 import { attachInteraction } from './interaction.ts';
 import { advance, type MapModel } from './model.ts';
-import { rOf, R_MAX } from './projection.ts';
 import {
-  readSceneFlags, tiltProject, TILT_DEG, IDLE_YAW_DEG_PER_S, IDLE_AFTER_S,
-  FRONT_PERIOD_S, FRONT_MAX, AU_PER_S, type Projected,
+  readSceneFlags, tiltProject, TILT_DEG, IDLE_YAW_DEG_PER_S, IDLE_AFTER_S, type Projected,
 } from './scene.ts';
 
 /** What the pointer landed on: a craft or a body (planet / Moon / Sun). */
@@ -44,9 +42,6 @@ export class MapEngine {
   /** Camera yaw about the Sun, radians. Drifts while nobody is touching. */
   private yaw = 0;
   private idleSince = 0;
-  /** performance.now() at which each light front left the Sun. */
-  private fronts: number[] = [];
-  private lastFront = -Infinity;
   private P: Projected = { px: 0, py: 0, depth: 0 };
   private onInput = (): void => {
     this.idleSince = performance.now();
@@ -213,8 +208,7 @@ export class MapEngine {
       if (isFinite(n) && n > 0) this.fontScale = n;
     }
     // The tilted scene: yaw drifts only at overview zoom and only while idle,
-    // so a framed body never slides out from under the reader; light fronts
-    // leave the Sun on a fixed period and are dropped once past the heliopause.
+    // so a framed body never slides out from under the reader.
     let sceneState = null;
     if (this.scene.tilt) {
       const idle = (now - this.idleSince) / 1000 > IDLE_AFTER_S;
@@ -222,16 +216,7 @@ export class MapEngine {
       if (idle && overview && !this.camera.reducedMotion) {
         this.yaw += ((IDLE_YAW_DEG_PER_S * Math.PI) / 180) * dt;
       }
-      if (!this.camera.reducedMotion) {
-        if ((now - this.lastFront) / 1000 >= FRONT_PERIOD_S && this.fronts.length < FRONT_MAX) {
-          this.fronts.push(now);
-          this.lastFront = now;
-        }
-        if (this.fronts.length && rOf(((now - this.fronts[0]!) / 1000) * AU_PER_S) >= R_MAX) {
-          this.fronts.shift();
-        }
-      }
-      sceneState = { tiltRad: (TILT_DEG * Math.PI) / 180, yawRad: this.yaw, fronts: this.fronts };
+      sceneState = { tiltRad: (TILT_DEG * Math.PI) / 180, yawRad: this.yaw };
     }
     if (this.model) {
       // Advance every body to real wall-clock time before drawing.
