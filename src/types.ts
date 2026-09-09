@@ -72,6 +72,10 @@ export interface CraftEphemeris {
   heliocentricAuNextDay: number;
   /** Ecliptic longitude at J+1, degrees — for smooth real-time orbital motion. */
   eclipticLonDegNextDay: number;
+  /** Ecliptic latitude today / at J+1, degrees. Optional: builds before the
+   *  tilted map carried none, and the flat map does not need it. */
+  eclipticLatDeg?: number;
+  eclipticLatDegNextDay?: number;
   /** Geocentric range today, AU. Drives one-way light time. */
   rangeAu: number;
   /** Geocentric range at J+1, AU. For smooth client-side interpolation. */
@@ -99,6 +103,8 @@ export interface PlanetEphemeris {
   eclipticLonDeg: number;
   heliocentricAuNextDay: number;
   eclipticLonDegNextDay: number;
+  eclipticLatDeg?: number;
+  eclipticLatDegNextDay?: number;
 }
 
 export interface PlanetsData {

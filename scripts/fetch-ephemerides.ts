@@ -99,6 +99,8 @@ async function resolveCraft(
         eclipticLonDeg: round(g.helio.lonDeg, 4),
         heliocentricAuNextDay: round(g.helioNextDay.radiusAu, 6),
         eclipticLonDegNextDay: round(g.helioNextDay.lonDeg, 4),
+        eclipticLatDeg: round(g.helio.latDeg, 4),
+        eclipticLatDegNextDay: round(g.helioNextDay.latDeg, 4),
         rangeAu: round(g.rangeAu, 6),
         rangeAuNextDay: round(g.rangeAuNextDay, 6),
         owltSeconds: round(g.owltSeconds, 3),
@@ -168,6 +170,8 @@ async function main() {
         eclipticLonDeg: round(g.helio.lonDeg, 4),
         heliocentricAuNextDay: round(g.helioNextDay.radiusAu, 6),
         eclipticLonDegNextDay: round(g.helioNextDay.lonDeg, 4),
+        eclipticLatDeg: round(g.helio.latDeg, 4),
+        eclipticLatDegNextDay: round(g.helioNextDay.latDeg, 4),
       });
       console.log(`  ✓ ${p.name.padEnd(10)} ${g.helio.radiusAu.toFixed(3)} AU`);
     } catch (err) {

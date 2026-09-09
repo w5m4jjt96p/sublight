@@ -22,6 +22,9 @@ export interface EclipticPosition {
   radiusAu: number;
   /** Ecliptic longitude, degrees in [0,360). */
   lonDeg: number;
+  /** Ecliptic latitude, degrees in [-90,90]. Voyager 1 sits ~35° north of
+   *  the plane; a flat map hides that by construction. */
+  latDeg: number;
 }
 
 function isoDay(d: Date): string {
@@ -100,7 +103,9 @@ export function magnitude(v: StateVector): number {
 /** Radius + ecliptic longitude from a state vector. */
 export function toEcliptic(v: StateVector): EclipticPosition {
   const lon = (Math.atan2(v.y, v.x) * 180) / Math.PI;
-  return { radiusAu: magnitude(v), lonDeg: (lon + 360) % 360 };
+  const r = magnitude(v);
+  const lat = r > 0 ? (Math.asin(v.z / r) * 180) / Math.PI : 0;
+  return { radiusAu: r, lonDeg: (lon + 360) % 360, latDeg: lat };
 }
 
 export interface HorizonsGeometry {

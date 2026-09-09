@@ -1,13 +1,21 @@
 // The draw loop — a faithful port of the prototype's canvas, reading from the
 // live model. One function, called once per animation frame. No allocations in
 // the hot path beyond the unavoidable.
+//
+// With `scene` set the same pass draws the tilted reading of the map: every
+// world point goes through one projection that leans the plane back and turns
+// it slowly, bodies leave the plane by their real ecliptic latitude, and fronts
+// of light leave the Sun at a stated scale. With `scene` null the output is the
+// flat map, unchanged.
 import type { Camera } from './camera.ts';
 import type { MapModel } from './model.ts';
 import type { Star } from './stars.ts';
-import { rOf } from './projection.ts';
+import { rOf, R_MAX } from './projection.ts';
 import { PAL, craftColor } from './palette.ts';
+import { tiltProject, AU_PER_S, LIGHT_MIN_PER_S, type SceneState, type Projected } from './scene.ts';
 
 const TWO_PI = Math.PI * 2;
+const DEG = Math.PI / 180;
 
 export interface RenderInput {
   ctx: CanvasRenderingContext2D;
@@ -28,6 +36,8 @@ export interface RenderInput {
   fontScale: number;
   /** Horizontal inset (px) reserved by the right info panel; shifts the map left. */
   focusInsetX: number;
+  /** The tilted scene, or null for the flat map. */
+  scene: SceneState | null;
 }
 
 // No trailing semicolon: this is concatenated into `ctx.font`, which parses a
@@ -38,13 +48,20 @@ const LABEL_FACE = '"Stack Sans Notch", "IBM Plex Sans", system-ui, sans-serif';
 // the global --font-scale.
 let labelFont = `11px ${LABEL_FACE}`;
 
+/** Parallax strength per star layer when the scene is on; one layer when flat. */
+const STAR_PARALLAX = [0.03, 0.07, 0.14];
+const FLAT_PARALLAX = 0.05;
+
+/** Scratch for the projection; the hot path allocates nothing. */
+const P: Projected = { px: 0, py: 0, depth: 0 };
+
 /** True when the image is decoded and safe to drawImage. */
 function ready(img: HTMLImageElement | undefined): img is HTMLImageElement {
   return !!img && img.complete && img.naturalWidth > 0;
 }
 
 export function render(input: RenderInput): void {
-  const { ctx, w, h, model, camera, stars, selectedId, showPath, now, reducedMotion, frameImages, planetImages, fontScale, focusInsetX } =
+  const { ctx, w, h, model, camera, stars, selectedId, showPath, now, reducedMotion, frameImages, planetImages, fontScale, focusInsetX, scene } =
     input;
   const cam = camera.cur;
   const zoomFactor = cam.k / camera.base;
@@ -53,19 +70,61 @@ export function render(input: RenderInput): void {
   // Shift the whole scene left by half the panel inset so a centred (flown-to)
   // craft lands in the middle of the *visible* map, not behind the panel.
   const cx0 = w / 2 - focusInsetX / 2;
-  const project = (x: number, y: number): [number, number] => [
-    cx0 + (x - cam.x) * cam.k,
-    h / 2 + (y - cam.y) * cam.k,
-  ];
+
+  // One projection for everything. Flat: world is the view plane. Tilted: the
+  // world turns by the idle yaw and leans back by the tilt first, and the
+  // camera pans in that view plane.
+  const project = (x: number, y: number, z = 0): [number, number] => {
+    if (!scene) return [cx0 + (x - cam.x) * cam.k, h / 2 + (y - cam.y) * cam.k];
+    tiltProject(x, y, z, scene.yawRad, scene.tiltRad, P);
+    return [cx0 + (P.px - cam.x) * cam.k, h / 2 + (P.py - cam.y) * cam.k];
+  };
+  const depthOf = (x: number, y: number, z: number): number =>
+    scene ? tiltProject(x, y, z, scene.yawRad, scene.tiltRad, P).depth : 0;
+  // A body's in-plane footprint shrinks by cos(lat) as it lifts out of the
+  // plane, so that direction from the Sun stays exact in three dimensions.
+  const inPlane = (x: number, y: number, latDeg: number): [number, number] => {
+    if (!scene) return [x, y];
+    const c = Math.cos(latDeg * DEG);
+    return [x * c, y * c];
+  };
+  /** Trace a circle of world radius R in the plane; an ellipse once tilted. */
+  const ringPath = (R: number): void => {
+    ctx.beginPath();
+    if (!scene) {
+      const [sx, sy] = project(0, 0);
+      ctx.arc(sx, sy, R * cam.k, 0, TWO_PI);
+      return;
+    }
+    const N = 96;
+    for (let i = 0; i <= N; i++) {
+      const a = (i / N) * TWO_PI;
+      const [sx, sy] = project(Math.cos(a) * R, Math.sin(a) * R, 0);
+      if (i === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+  };
+  const ring = (R: number, color: string, dash?: number[]): void => {
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    if (dash) ctx.setLineDash(dash);
+    ringPath(R);
+    ctx.stroke();
+    ctx.restore();
+  };
 
   ctx.clearRect(0, 0, w, h);
 
-  // --- starfield: screen-space, wrapped so it fills the viewport at any zoom ---
+  // --- starfield: screen-space, wrapped so it fills the viewport at any zoom.
+  // Tilted, the stars sit on three depths and slide at three rates, which is
+  // what gives the pan a sense of distance. ---
   ctx.fillStyle = PAL.star;
-  const PX = 0.05; // parallax drift strength
-  const offX = cam.x * cam.k * PX;
-  const offY = cam.y * cam.k * PX;
-  for (const s of stars) {
+  for (let i = 0; i < stars.length; i++) {
+    const s = stars[i]!;
+    const px = scene ? STAR_PARALLAX[i % 3]! : FLAT_PARALLAX;
+    const offX = cam.x * cam.k * px;
+    const offY = cam.y * cam.k * px;
     const sx = (((s.u * w - offX) % w) + w) % w;
     const sy = (((s.v * h - offY) % h) + h) % h;
     if (s.bright) {
@@ -77,36 +136,67 @@ export function render(input: RenderInput): void {
   }
   ctx.globalAlpha = 1;
 
-  ring(ctx, project, rOf(120) * cam.k, 'rgba(143,214,230,.10)', [3, 6]);
-  labelAt(ctx, project(0, -rOf(120))[0], project(0, -rOf(120))[1], 'HELIOPAUSE ≈ 120 AU', PAL.faint, -8);
+  ring(rOf(120), 'rgba(143,214,230,.10)', [3, 6]);
+  {
+    const [hx, hy] = project(0, -rOf(120), 0);
+    labelAt(ctx, hx, hy, 'HELIOPAUSE ≈ 120 AU', PAL.faint, -8);
+  }
 
   // --- Kuiper-belt speckle ---
   ctx.globalAlpha = 0.5;
   ctx.fillStyle = PAL.rule2;
   for (let i = 0; i < 220; i++) {
-    const a = i * 137.508 * (Math.PI / 180);
+    const a = i * 137.508 * DEG;
     const au = 32 + (i % 17) * 1.6;
-    const [sx, sy] = project(Math.cos(a) * rOf(au), Math.sin(a) * rOf(au));
+    const [sx, sy] = project(Math.cos(a) * rOf(au), Math.sin(a) * rOf(au), 0);
     ctx.fillRect(sx, sy, 1.2, 1.2);
   }
   ctx.globalAlpha = 1;
 
   // --- planet rings ---
-  for (const p of model.planets) ring(ctx, project, rOf(p.auT) * cam.k, 'rgba(70,82,102,.34)');
+  for (const p of model.planets) ring(rOf(p.auT), 'rgba(70,82,102,.34)');
+
+  // --- light fronts: each ring is a wavefront that left the Sun at a known
+  // moment and has travelled age × scale since. The label is its age in
+  // light-minutes, which is exactly the number the whole map is about. ---
+  if (scene && scene.fronts.length) {
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (let i = 0; i < scene.fronts.length; i++) {
+      const age = (now - scene.fronts[i]!) / 1000;
+      const R = rOf(age * AU_PER_S);
+      if (R >= R_MAX) continue;
+      const fade = 1 - R / R_MAX;
+      ctx.strokeStyle = `rgba(229,181,113,${(0.1 + 0.32 * fade).toFixed(3)})`;
+      ringPath(R);
+      ctx.stroke();
+      if (i >= scene.fronts.length - 2) {
+        const [lx, ly] = project(0, -R, 0);
+        ctx.globalAlpha = 0.35 + 0.65 * fade;
+        labelAt(ctx, lx, ly, `${Math.round(age * LIGHT_MIN_PER_S)} LIGHT-MIN`, PAL.delay, -6);
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+    ctx.fillStyle = PAL.faint;
+    ctx.font = labelFont;
+    ctx.textAlign = 'right';
+    ctx.fillText(`LIGHT FRONTS · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`, w - 16, 112);
+  }
 
   // --- AU scale ticks ---
   ctx.fillStyle = PAL.faint;
   ctx.font = labelFont;
   ctx.textAlign = 'left';
   for (const au of [1, 10, 100]) {
-    const [sx, sy] = project(rOf(au), 0);
+    const [sx, sy] = project(rOf(au), 0, 0);
     ctx.fillText(`${au} AU`, sx + 5, sy - 5);
   }
 
   const planetZoom = Math.min(2.2, Math.max(0.6, zoomFactor * 0.72));
 
   // --- Sun: stylized amber disc + glow, sized to be the largest body ---
-  const [ox, oy] = project(0, 0);
+  const [ox, oy] = project(0, 0, 0);
   const sunR = 16 * planetZoom; // clearly the largest body (Jupiter ≈ 13px here)
   const glow = ctx.createRadialGradient(ox, oy, sunR * 0.5, ox, oy, sunR * 3);
   glow.addColorStop(0, 'rgba(229,181,113,.30)');
@@ -120,9 +210,13 @@ export function render(input: RenderInput): void {
   ctx.arc(ox, oy, sunR, 0, TWO_PI);
   ctx.fill();
 
-  // --- planet markers (mini planet icons, with a plain disc as fallback) ---
-  for (const p of model.planets) {
-    let [sx, sy] = project(p.x, p.y);
+  // --- planet markers (mini planet icons, with a plain disc as fallback).
+  // Tilted, far bodies paint first so a near one can pass in front. ---
+  const planets = scene
+    ? [...model.planets].sort((a, b) => depthOf(...inPlane(a.x, a.y, a.lat), a.z) - depthOf(...inPlane(b.x, b.y, b.lat), b.z))
+    : model.planets;
+  for (const p of planets) {
+    let [sx, sy] = project(...inPlane(p.x, p.y, p.lat), p.z);
     const img = planetImages.get(p.id);
     const moon = p.id === 'moon'; // small, and labelled above so it clears Earth
     // The Moon is heliocentrically glued to Earth (0.0026 AU away). Keep its real
@@ -130,9 +224,10 @@ export function render(input: RenderInput): void {
     // minimum on-screen gap so it stays a distinct companion. Distance is
     // abstracted, like everything on this log map (see /about).
     if (moon && model.earth) {
-      const [ex, ey] = project(model.earth.x, model.earth.y);
-      let dx = p.x - model.earth.x;
-      let dy = p.y - model.earth.y;
+      const e = model.earth;
+      const [ex, ey] = project(...inPlane(e.x, e.y, e.lat), e.z);
+      let dx = p.x - e.x;
+      let dy = p.y - e.y;
       const wd = Math.hypot(dx, dy) || 1;
       dx /= wd;
       dy /= wd;
@@ -166,7 +261,7 @@ export function render(input: RenderInput): void {
   // --- fan out co-located craft (screen space) ---
   const baseSpread = 17 + Math.min(3.4, zoomFactor - 1) * 13;
   for (const g of model.clusters) {
-    const [ax, ay] = project(g.x, g.y);
+    const [ax, ay] = project(...inPlane(g.x, g.y, g.lat), g.z);
     g.ax = ax;
     g.ay = ay;
     const n = g.members.length;
@@ -179,13 +274,34 @@ export function render(input: RenderInput): void {
     // Clusters holding an imaged craft fan wider so the thumbnails don't overlap.
     const hasImaging = g.members.some((m) => m.entry.imagery && ready(frameImages.get(m.entry.id)));
     const spread = hasImaging ? Math.max(baseSpread, chipW * 1.35) : baseSpread;
-    const span = (Math.PI / 180) * 88;
+    const span = DEG * 88;
     const a0 = Math.atan2(g.uy, g.ux) - span / 2;
     for (const f of g.members) {
       const a = a0 + span * (f.clusterIndex / (n - 1));
       f.sx = ax + Math.cos(a) * spread;
       f.sy = ay + Math.sin(a) * spread;
     }
+  }
+
+  // --- tilted only: a thin stem from each out-of-plane craft down to its
+  // foot on the ecliptic, so height reads as height and not as a misplaced
+  // dot. Voyager 1 is the one that earns this. ---
+  if (scene) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(110,120,137,.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+    for (const g of model.clusters) {
+      if (Math.abs(g.lat) < 2) continue;
+      const [fx, fy] = project(...inPlane(g.x, g.y, g.lat), 0);
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(g.ax, g.ay);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(110,120,137,.5)';
+      ctx.fillRect(fx - 1, fy - 1, 2, 2);
+    }
+    ctx.restore();
   }
 
   // --- cluster anchors + leader lines ---
@@ -209,7 +325,8 @@ export function render(input: RenderInput): void {
   // --- signal path to selected craft ---
   const sel = selectedId ? model.craft.find((c) => c.entry.id === selectedId) ?? null : null;
   if (showPath && sel && model.earth && sel.entry.status !== 'silent' && sel.entry.status !== 'retired') {
-    const [ex, ey] = project(model.earth.x, model.earth.y);
+    const e = model.earth;
+    const [ex, ey] = project(...inPlane(e.x, e.y, e.lat), e.z);
     ctx.save();
     ctx.strokeStyle = 'rgba(229,181,113,.32)';
     ctx.lineWidth = 1;
@@ -227,8 +344,12 @@ export function render(input: RenderInput): void {
     ctx.globalAlpha = 1;
   }
 
-  // --- craft markers (imaging craft show their latest frame as a thumbnail) ---
-  for (const f of model.craft) {
+  // --- craft markers (imaging craft show their latest frame as a thumbnail).
+  // Tilted, far craft paint first. ---
+  const craft = scene
+    ? [...model.craft].sort((a, b) => depthOf(...inPlane(a.x, a.y, a.lat), a.z) - depthOf(...inPlane(b.x, b.y, b.lat), b.z))
+    : model.craft;
+  for (const f of craft) {
     const on = f.entry.id === selectedId;
     const col = craftColor(f.entry.status, f.entry.imagery !== null);
     const img = frameImages.get(f.entry.id);
@@ -331,24 +452,6 @@ function drawChip(
     ctx.strokeRect(x - p + 0.5, y - p + 0.5, w + 2 * p - 1, h + 2 * p - 1);
     ctx.globalAlpha = 1;
   }
-}
-
-function ring(
-  ctx: CanvasRenderingContext2D,
-  project: (x: number, y: number) => [number, number],
-  screenRadius: number,
-  color: string,
-  dash?: number[],
-): void {
-  const [sx, sy] = project(0, 0);
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  if (dash) ctx.setLineDash(dash);
-  ctx.beginPath();
-  ctx.arc(sx, sy, screenRadius, 0, TWO_PI);
-  ctx.stroke();
-  ctx.restore();
 }
 
 function labelAt(

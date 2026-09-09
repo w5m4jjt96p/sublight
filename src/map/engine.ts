@@ -5,6 +5,11 @@ import { render } from './render.ts';
 import { makeStars, type Star } from './stars.ts';
 import { attachInteraction } from './interaction.ts';
 import { advance, type MapModel } from './model.ts';
+import { rOf, R_MAX } from './projection.ts';
+import {
+  readSceneFlags, tiltProject, TILT_DEG, IDLE_YAW_DEG_PER_S, IDLE_AFTER_S,
+  FRONT_PERIOD_S, FRONT_MAX, AU_PER_S, type Projected,
+} from './scene.ts';
 
 /** What the pointer landed on: a craft or a body (planet / Moon / Sun). */
 export type Pick = { kind: 'craft' | 'body'; id: string };
@@ -34,6 +39,20 @@ export class MapEngine {
   private detachInteraction: () => void;
   private resizeObs: ResizeObserver;
 
+  // --- the tilted scene (prototype, behind ?map3d=1) ---
+  private scene = readSceneFlags();
+  /** Camera yaw about the Sun, radians. Drifts while nobody is touching. */
+  private yaw = 0;
+  private idleSince = 0;
+  /** performance.now() at which each light front left the Sun. */
+  private fronts: number[] = [];
+  private lastFront = -Infinity;
+  private P: Projected = { px: 0, py: 0, depth: 0 };
+  private onInput = (): void => {
+    this.idleSince = performance.now();
+  };
+  private static readonly INPUT_EVENTS = ['pointerdown', 'wheel', 'touchstart'] as const;
+
   constructor(
     private canvas: HTMLCanvasElement,
     private stage: HTMLElement,
@@ -58,6 +77,14 @@ export class MapEngine {
     this.resizeObs = new ResizeObserver(() => this.resize());
     this.resizeObs.observe(stage);
     this.resize();
+
+    // Any touch on the map pauses the idle yaw for a few seconds.
+    for (const ev of MapEngine.INPUT_EVENTS) canvas.addEventListener(ev, this.onInput, { passive: true });
+    this.idleSince = performance.now();
+
+    // DEV only: let the console read camera, model and scene while the tilted
+    // map is a prototype. Never reaches a build.
+    if (import.meta.env.DEV) (window as unknown as { __sublightMap?: MapEngine }).__sublightMap = this;
 
     this.lastT = performance.now();
     this.loop = this.loop.bind(this);
@@ -91,18 +118,37 @@ export class MapEngine {
     this.focusInsetX = px;
   }
 
+  /**
+   * Where a world point lands in the plane the camera pans in. Flat, that is
+   * the world itself; tilted, it is the leaned, turned view plane, so a fly-to
+   * has to aim there or it centres on the wrong spot.
+   */
+  private toView(x: number, y: number, z: number, latDeg: number): [number, number] {
+    if (!this.scene.tilt) return [x, y];
+    const c = Math.cos((latDeg * Math.PI) / 180);
+    tiltProject(x * c, y * c, z, this.yaw, (TILT_DEG * Math.PI) / 180, this.P);
+    return [this.P.px, this.P.py];
+  }
+
   flyToId(id: string): void {
     const c = this.model?.craft.find((c) => c.entry.id === id);
-    if (c) this.camera.flyTo(c.x, c.y, c.eph.heliocentricAu);
+    if (!c) return;
+    const [vx, vy] = this.toView(c.x, c.y, c.z, c.lat);
+    this.camera.flyTo(vx, vy, c.eph.heliocentricAu);
+    this.onInput();
   }
 
   flyToBody(id: string): void {
     if (id === 'sun') {
       this.camera.flyTo(0, 0, 8); // moderate zoom on the centre
+      this.onInput();
       return;
     }
     const p = this.model?.planets.find((p) => p.id === id);
-    if (p) this.camera.flyTo(p.x, p.y, p.auT);
+    if (!p) return;
+    const [vx, vy] = this.toView(p.x, p.y, p.z, p.lat);
+    this.camera.flyTo(vx, vy, p.auT);
+    this.onInput();
   }
 
   reset(): void {
@@ -166,6 +212,27 @@ export class MapEngine {
       const n = parseFloat(raw);
       if (isFinite(n) && n > 0) this.fontScale = n;
     }
+    // The tilted scene: yaw drifts only at overview zoom and only while idle,
+    // so a framed body never slides out from under the reader; light fronts
+    // leave the Sun on a fixed period and are dropped once past the heliopause.
+    let sceneState = null;
+    if (this.scene.tilt) {
+      const idle = (now - this.idleSince) / 1000 > IDLE_AFTER_S;
+      const overview = this.camera.cur.k <= this.camera.base * 1.2;
+      if (idle && overview && !this.camera.reducedMotion) {
+        this.yaw += ((IDLE_YAW_DEG_PER_S * Math.PI) / 180) * dt;
+      }
+      if (!this.camera.reducedMotion) {
+        if ((now - this.lastFront) / 1000 >= FRONT_PERIOD_S && this.fronts.length < FRONT_MAX) {
+          this.fronts.push(now);
+          this.lastFront = now;
+        }
+        if (this.fronts.length && rOf(((now - this.fronts[0]!) / 1000) * AU_PER_S) >= R_MAX) {
+          this.fronts.shift();
+        }
+      }
+      sceneState = { tiltRad: (TILT_DEG * Math.PI) / 180, yawRad: this.yaw, fronts: this.fronts };
+    }
     if (this.model) {
       // Advance every body to real wall-clock time before drawing.
       advance(this.model, Date.now());
@@ -184,6 +251,7 @@ export class MapEngine {
         planetImages: this.planetImages,
         fontScale: this.fontScale,
         focusInsetX: this.focusInsetX,
+        scene: sceneState,
       });
     }
     this.raf = requestAnimationFrame(this.loop);
@@ -191,6 +259,7 @@ export class MapEngine {
 
   destroy(): void {
     cancelAnimationFrame(this.raf);
+    for (const ev of MapEngine.INPUT_EVENTS) this.canvas.removeEventListener(ev, this.onInput);
     this.detachInteraction();
     this.resizeObs.disconnect();
   }
