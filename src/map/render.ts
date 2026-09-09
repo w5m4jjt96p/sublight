@@ -43,7 +43,7 @@ export interface RenderInput {
 // No trailing semicolon: this is concatenated into `ctx.font`, which parses a
 // CSS font *value*, not a declaration. With one, canvas rejects the whole
 // assignment silently and the labels stay at the default 10px sans-serif.
-const LABEL_FACE = '"Stack Sans Notch", "IBM Plex Sans", system-ui, sans-serif';
+export const LABEL_FACE = '"Stack Sans Notch", "IBM Plex Sans", system-ui, sans-serif';
 // Set once per frame in render(), reused by labelAt so the label size tracks
 // the global --font-scale.
 let labelFont = `11px ${LABEL_FACE}`;
@@ -420,7 +420,7 @@ export function render(input: RenderInput): void {
 }
 
 /** Draw one craft's frame as a framed, amber-bordered thumbnail centred at (cx,cy). */
-function drawChip(
+export function drawChip(
   ctx: CanvasRenderingContext2D,
   cx: number,
   cy: number,
@@ -490,7 +490,7 @@ function labelAt(
 
 /** Relative on-map body sizes — not to scale, but roughly true proportions
  *  (gas giants clearly larger, Mercury/Mars/Moon smallest). */
-const PLANET_R: Record<string, number> = {
+export const PLANET_R: Record<string, number> = {
   mercury: 2.0,
   venus: 2.9,
   earth: 3.1,

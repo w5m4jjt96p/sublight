@@ -2,7 +2,12 @@
 // sync with declarative props (model, selection, path toggle).
 import { useEffect, useRef } from 'react';
 import { MapEngine } from './engine.ts';
+import { GlMapEngine } from './gl/GlMapEngine.ts';
+import { readSceneFlags } from './scene.ts';
 import type { MapModel } from './model.ts';
+
+/** What the hook needs from whichever engine is mounted. */
+type AnyEngine = MapEngine | GlMapEngine;
 import type { FramesData } from '../types.ts';
 
 export interface UseMapEngineArgs {
@@ -26,7 +31,7 @@ export interface MapControls {
 
 export function useMapEngine(args: UseMapEngineArgs): MapControls {
   const { canvasRef, stageRef, model, frames, selectedId, showPath, focusInset, onPick } = args;
-  const engineRef = useRef<MapEngine | null>(null);
+  const engineRef = useRef<AnyEngine | null>(null);
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;
 
@@ -34,10 +39,24 @@ export function useMapEngine(args: UseMapEngineArgs): MapControls {
     const canvas = canvasRef.current;
     const stage = stageRef.current;
     if (!canvas || !stage) return;
-    const engine = new MapEngine(canvas, stage, {
-      onPick: (kind, id) => onPickRef.current(kind, id),
-      onDragStateChange: (dragging) => stage.classList.toggle('drag', dragging),
-    });
+    const opts = {
+      onPick: (kind: 'craft' | 'body', id: string) => onPickRef.current(kind, id),
+      onDragStateChange: (dragging: boolean) => stage.classList.toggle('drag', dragging),
+    };
+    // Behind ?map3d=1 the GPU engine takes over the same canvas as its
+    // overlay. If WebGL is missing or refuses, the flat map is the fallback,
+    // not a blank stage.
+    let engine: AnyEngine;
+    if (readSceneFlags().tilt) {
+      try {
+        engine = new GlMapEngine(canvas, stage, opts);
+      } catch (err) {
+        console.warn('3D map unavailable, using the flat map:', err);
+        engine = new MapEngine(canvas, stage, opts);
+      }
+    } else {
+      engine = new MapEngine(canvas, stage, opts);
+    }
     engineRef.current = engine;
     return () => {
       engine.destroy();
