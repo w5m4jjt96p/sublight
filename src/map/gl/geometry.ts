@@ -1,9 +1,15 @@
 // Static geometry for the 3D map, built once. World units are the map's
 // log-compressed ones (see projection.ts), so nothing here knows about AU.
 
-/** A unit sphere as an indexed triangle mesh, positions doubling as normals. */
-export function sphere(lat = 14, lon = 22): { pos: Float32Array; idx: Uint16Array } {
+/**
+ * A unit sphere as an indexed triangle mesh, positions doubling as normals.
+ * Texture coordinates wrap an equirectangular map with its north at local +Y
+ * and east running counter-clockwise seen from above that pole, as on the
+ * real thing; the model matrix then leans the body onto its true pole.
+ */
+export function sphere(lat = 24, lon = 36): { pos: Float32Array; uv: Float32Array; idx: Uint16Array } {
   const pos: number[] = [];
+  const uv: number[] = [];
   const idx: number[] = [];
   for (let i = 0; i <= lat; i++) {
     const t = (i / lat) * Math.PI;
@@ -11,6 +17,7 @@ export function sphere(lat = 14, lon = 22): { pos: Float32Array; idx: Uint16Arra
     for (let j = 0; j <= lon; j++) {
       const p = (j / lon) * Math.PI * 2;
       pos.push(st * Math.cos(p), ct, st * Math.sin(p));
+      uv.push(1 - j / lon, i / lat);
     }
   }
   for (let i = 0; i < lat; i++) {
@@ -20,7 +27,18 @@ export function sphere(lat = 14, lon = 22): { pos: Float32Array; idx: Uint16Arra
       idx.push(a, b, a + 1, b, b + 1, a + 1);
     }
   }
-  return { pos: new Float32Array(pos), idx: new Uint16Array(idx) };
+  return { pos: new Float32Array(pos), uv: new Float32Array(uv), idx: new Uint16Array(idx) };
+}
+
+/** A flat annulus in the local XZ plane, as a triangle strip: Saturn's rings. */
+export function annulus(r0: number, r1: number, segments = 96): Float32Array {
+  const out = new Float32Array((segments + 1) * 6);
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    const c = Math.cos(a), s = Math.sin(a);
+    out.set([r0 * c, 0, r0 * s, r1 * c, 0, r1 * s], i * 6);
+  }
+  return out;
 }
 
 /**

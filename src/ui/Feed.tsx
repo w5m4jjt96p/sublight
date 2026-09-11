@@ -478,7 +478,7 @@ function PublicationCard({
              page comes from one host, and a post fires up to 40 strip requests,
              so without this the picture the reader is looking at queues behind
              its own filmstrip and the stage stays black. */
-          fetchPriority="high"
+          {...({ fetchpriority: 'high' } as object)}
           onError={(e) => {
             // A dropped frame leaves the stage blank; give it one retry.
             const el = e.currentTarget;
@@ -515,7 +515,7 @@ function PublicationCard({
         >
           {stripFrames.map(({ p, i }, k) => (
             <span key={`${p.file}-${i}`} className={`pub-thumb${k === activeThumb ? ' is-on' : ''}`}>
-              <img src={asset(p.file)} alt="" loading="lazy" decoding="async" fetchPriority="low" draggable={false} />
+              <img src={asset(p.file)} alt="" loading="lazy" decoding="async" {...({ fetchpriority: 'low' } as object)} draggable={false} />
             </span>
           ))}
         </div>

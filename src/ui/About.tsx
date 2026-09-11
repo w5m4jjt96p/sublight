@@ -202,8 +202,19 @@ export function About({ model, onBack }: AboutProps) {
             SIL Open Font License 1.1
           </a>
           . NASA imagery and data are in the public domain, credited to their source under each
-          frame. Sublight is an independent project, not affiliated with or endorsed by NASA or any
-          space agency.
+          frame. The sky behind the three-dimensional map is NASA's{' '}
+          <a href="https://svs.gsfc.nasa.gov/4851" target="_blank" rel="noreferrer">
+            Deep Star Maps 2020
+          </a>{' '}
+          (NASA/GSFC Scientific Visualization Studio; Gaia DR2: ESA/Gaia/DPAC), turned so that the
+          Milky Way lies where it really does relative to the planets. Sun and planets keep their
+          true proportions to one another and lean on their real poles, and the planets wear NASA and USGS colour
+          maps (MESSENGER, Magellan, Blue Marble, LRO, Viking, Cassini; sources in{' '}
+          <a href="/licenses/planet-maps.txt" target="_blank" rel="noreferrer">
+            planet-maps.txt
+          </a>
+          ). No size is to scale with the compressed distances. Sublight is an independent project, not affiliated
+          with or endorsed by NASA or any space agency.
         </p>
       </div>
     </div>

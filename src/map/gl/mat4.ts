@@ -60,3 +60,13 @@ export function transform(m: Mat4, x: number, y: number, z: number, out: number[
   out[3] = m[3]! * x + m[7]! * y + m[11]! * z + m[15]!;
   return out;
 }
+
+/** Model matrix from an orthonormal basis (columns), a uniform scale and a translation. */
+export function basisScale(xa: number[], ya: number[], za: number[], x: number, y: number, z: number, s: number): Mat4 {
+  const m = new Float32Array(16);
+  m[0] = xa[0]! * s; m[1] = xa[1]! * s; m[2] = xa[2]! * s;
+  m[4] = ya[0]! * s; m[5] = ya[1]! * s; m[6] = ya[2]! * s;
+  m[8] = za[0]! * s; m[9] = za[1]! * s; m[10] = za[2]! * s;
+  m[12] = x; m[13] = y; m[14] = z; m[15] = 1;
+  return m;
+}

@@ -1,0 +1,16 @@
+Planet colour maps used by the three-dimensional map (public/bodies/maps/*.jpg),
+each resampled to 1024x512 by scripts/fetch-planet-maps.ts. All NASA/USGS
+material, in the public domain.
+
+mercury  MESSENGER MDIS global mosaic (2013). NASA/JHUAPL/Carnegie Institution of Washington.
+venus    Magellan radar cylindrical map. NASA/JPL/USGS.
+earth    Blue Marble, land_shallow_topo_2048. NASA Visible Earth (Reto Stöckli, NASA Earth Observatory).
+moon     LRO LROC WAC colour mosaic, CGI Moon Kit. NASA/GSFC Scientific Visualization Studio. https://svs.gsfc.nasa.gov/4720
+mars     Viking MDIM 2.1 colorized mosaic. NASA/JPL/USGS.
+jupiter  Cassini ISS cylindrical map, PIA07782 (December 2000). NASA/JPL/Space Science Institute.
+
+Saturn, Uranus and Neptune have no public-domain NASA colour map we could
+find and are drawn as plain tinted spheres; Saturn's rings are an untextured
+disc. Every body leans on its IAU north pole; Sun and planets keep their true
+proportions to one another but are not to scale with the compressed distances. Sublight is an independent project, not affiliated
+with or endorsed by NASA or any space agency.

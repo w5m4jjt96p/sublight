@@ -1,0 +1,9 @@
+Deep Star Maps 2020
+NASA/Goddard Space Flight Center Scientific Visualization Studio
+Gaia DR2: ESA/Gaia/DPAC
+https://svs.gsfc.nasa.gov/4851
+
+Used for the sky behind the three-dimensional map (public/sky/starmap-*.jpg),
+derived from starmap_2020_4k.exr by scripts/build-sky.py. NASA material is in
+the public domain. Sublight is an independent project, not affiliated with or
+endorsed by NASA or ESA.
