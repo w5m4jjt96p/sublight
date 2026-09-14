@@ -198,7 +198,7 @@
         "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05014/opgs/edr/fcam/FLB_842615254EDR_D1243166TRAV01522M_.JPG",
         "instrument": "FHAZ_LEFT_B",
         "capturedUtc": "2026-09-14T00:59:46.000Z",
-        "receivedUtc": "2026-09-14T04:07:39.000Z",
+        "receivedUtc": "2026-09-14T19:48:39.000Z",
         "sol": 5014
       },
       {
@@ -207,7 +207,7 @@
         "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05014/opgs/edr/fcam/FRB_842615254EDR_D1243166TRAV01522M_.JPG",
         "instrument": "FHAZ_RIGHT_B",
         "capturedUtc": "2026-09-14T00:59:46.000Z",
-        "receivedUtc": "2026-09-14T04:07:34.000Z",
+        "receivedUtc": "2026-09-14T19:48:58.000Z",
         "sol": 5014
       },
       {
