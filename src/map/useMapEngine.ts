@@ -43,15 +43,17 @@ export function useMapEngine(args: UseMapEngineArgs): MapControls {
       onPick: (kind: 'craft' | 'body', id: string) => onPickRef.current(kind, id),
       onDragStateChange: (dragging: boolean) => stage.classList.toggle('drag', dragging),
     };
-    // Behind ?map3d=1 the GPU engine takes over the same canvas as its
-    // overlay. If WebGL is missing or refuses, the flat map is the fallback,
-    // not a blank stage.
+    // The GPU engine is the default and takes the same canvas as its overlay.
+    // If WebGL is missing or refuses, the flat map is the fallback, not a
+    // blank stage; whatever the failed attempt left on the stage is undone.
     let engine: AnyEngine;
-    if (readSceneFlags().tilt) {
+    if (readSceneFlags().gl) {
       try {
         engine = new GlMapEngine(canvas, stage, opts);
       } catch (err) {
         console.warn('3D map unavailable, using the flat map:', err);
+        stage.querySelectorAll('canvas.sky-gl').forEach((c) => c.remove());
+        canvas.style.position = '';
         engine = new MapEngine(canvas, stage, opts);
       }
     } else {

@@ -17,9 +17,15 @@ export interface WorldPoint {
   y: number;
 }
 
-/** (AU, ecliptic-longitude °) → world coordinates. deg-90 keeps 0° pointing up. */
+/**
+ * (AU, ecliptic-longitude °) → world coordinates. deg-90 keeps 0° pointing
+ * up; the negated x makes longitude grow counter-clockwise on screen, which
+ * is the solar system seen from the ecliptic north, the way every chart and
+ * the 3D map read it (before this the map was, unnoticed, the view from the
+ * south).
+ */
 export function worldPos(au: number, deg: number): WorldPoint {
   const a = ((deg - 90) * Math.PI) / 180;
   const r = rOf(au);
-  return { x: Math.cos(a) * r, y: Math.sin(a) * r };
+  return { x: -Math.cos(a) * r, y: Math.sin(a) * r };
 }

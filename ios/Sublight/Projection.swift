@@ -16,7 +16,9 @@ enum Projection {
     static func worldPos(au: Double, lonDeg: Double) -> CGPoint {
         let a = (lonDeg - 90) * .pi / 180
         let r = rOf(au)
-        return CGPoint(x: cos(a) * r, y: sin(a) * r)
+        // Negated x: longitude grows counter-clockwise, the view from the ecliptic
+        // north, as on the web map and every chart.
+        return CGPoint(x: -cos(a) * r, y: sin(a) * r)
     }
 
     /// Shortest-arc longitude interpolation between two samples.

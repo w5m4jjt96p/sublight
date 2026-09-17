@@ -13,12 +13,10 @@
 // three dimensions, distance is stretched by r = log10(1 + AU·400), and the
 // legend says so on screen. Nothing moves faster than Horizons says.
 //
-// Handedness: the flat map has longitude running clockwise, which is the solar
-// system seen from the ecliptic *south*. Here north is up, as on every chart,
-// and the frame is a proper rotation of the real one (so the sky and the
-// planets' maps come out true, not mirrored), which makes this scene the flat
-// map's mirror image in the plane. GL frame: x = -map x, y = ecliptic z
-// (north), z = map y.
+// Handedness: north is up, longitude grows counter-clockwise, as on the flat
+// map and every chart; the frame is a proper rotation of the real one, so the
+// sky and the planets' maps come out true, not mirrored. GL frame: x = map x,
+// y = ecliptic z (north), z = map y.
 
 import type { Pick, EngineOptions } from '../engine.ts';
 import { advance, type MapModel } from '../model.ts';
@@ -585,7 +583,9 @@ export class GlMapEngine {
   private loadSky(): void {
     const gl = this.gl;
     const maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
-    const wide = this.glCanvas.width >= 1600;
+    // What matters is pixels per degree of sky, set by the longer side: a
+    // phone in portrait magnifies the map as much as a desktop does.
+    const wide = Math.max(this.glCanvas.width, this.glCanvas.height) >= 1500;
     const size = wide && maxTex >= 4096 ? '4k' : '2k';
     const img = new Image();
     img.decoding = 'async';
@@ -915,8 +915,8 @@ export class GlMapEngine {
     const e = this.model?.earth;
     if (b.id === 'moon' && e && e !== b) {
       const ce = Math.cos(e.lat * DEG);
-      const ex = -e.x * ce, ez = e.y * ce;
-      let dx = -b.x * c - ex, dz = b.y * c - ez;
+      const ex = e.x * ce, ez = e.y * ce;
+      let dx = b.x * c - ex, dz = b.y * c - ez;
       const wd = Math.hypot(dx, dz) || 1;
       dx /= wd; dz /= wd;
       // Three Earth radii out up close (the real sixty would leave the frame);
@@ -925,7 +925,7 @@ export class GlMapEngine {
       const gap = Math.max(wd, 3 * rE + rM, 16 / this.pxPerUnit(ex, e.z, ez));
       return [ex + dx * gap, b.z, ez + dz * gap];
     }
-    return [-b.x * c, b.z, b.y * c];
+    return [b.x * c, b.z, b.y * c];
   }
 
   /** Model matrix for a body whose north pole points along `pole` (local +Y is north). */
@@ -1030,10 +1030,23 @@ export class GlMapEngine {
     const hp = this.toScreen(0, 0, -rOf(120));
     if (hp) label(hp[0], hp[1], 'HELIOPAUSE ≈ 120 AU', PAL.faint, -8);
     ctx.fillStyle = PAL.faint; ctx.font = font; ctx.textAlign = 'right';
-    ctx.fillText('DISTANCE · LOG SCALE, r = log10(1 + AU×400) · DIRECTIONS TRUE', w - 16, 112);
-    ctx.fillText('BODIES · TRUE PROPORTIONS, SUN INCLUDED · NOT TO DISTANCE', w - 16, 112 + labelPx * 1.5);
-    ctx.fillText(`SIGNALS INBOUND · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`, w - 16, 112 + labelPx * 3);
-    ctx.fillText('DRAG TO ORBIT · SCROLL TO APPROACH', w - 16, 112 + labelPx * 4.5);
-    if (this.skyTex) ctx.fillText('SKY · NASA/GSFC SVS · ESA GAIA DR2', w - 16, 112 + labelPx * 6);
+    // The legend names every distortion. On a phone the long form would run
+    // off the left edge, so it is said shorter, and the gesture is the touch one.
+    const narrow = w < 700;
+    const lines = narrow
+      ? [
+          'DISTANCE LOG · DIRECTIONS TRUE',
+          'BODIES IN TRUE PROPORTION',
+          `SIGNALS · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`,
+          'DRAG TO ORBIT · PINCH TO APPROACH',
+        ]
+      : [
+          'DISTANCE · LOG SCALE, r = log10(1 + AU×400) · DIRECTIONS TRUE',
+          'BODIES · TRUE PROPORTIONS, SUN INCLUDED · NOT TO DISTANCE',
+          `SIGNALS INBOUND · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`,
+          'DRAG TO ORBIT · SCROLL TO APPROACH',
+        ];
+    if (this.skyTex) lines.push(narrow ? 'SKY · NASA SVS · ESA GAIA' : 'SKY · NASA/GSFC SVS · ESA GAIA DR2');
+    lines.forEach((t, i) => ctx.fillText(t, w - 16, 112 + labelPx * 1.5 * i));
   }
 }

@@ -140,7 +140,7 @@ void main() {
  * infinity. One full-screen quad; each fragment turns its view ray into a
  * world direction, then into right ascension and declination, and samples the
  * map there. So the Milky Way sits where it really is relative to the planets,
- * in the scene's frame (x = -map x, up = ecliptic north, z = map y). Map layout: RA 0h at the centre, increasing leftward,
+ * in the scene's frame (x = map x, up = ecliptic north, z = map y). Map layout: RA 0h at the centre, increasing leftward,
  * north up (verified against the Magellanic Clouds).
  */
 const SKY_VS = `

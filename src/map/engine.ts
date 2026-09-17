@@ -37,7 +37,7 @@ export class MapEngine {
   private detachInteraction: () => void;
   private resizeObs: ResizeObserver;
 
-  // --- the tilted scene (prototype, behind ?map3d=1) ---
+  // --- the tilted Canvas 2D study (only with ?map3d=tilt) ---
   private scene = readSceneFlags();
   /** Camera yaw about the Sun, radians. Drifts while nobody is touching. */
   private yaw = 0;

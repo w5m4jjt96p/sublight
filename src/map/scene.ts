@@ -1,32 +1,32 @@
-// The tilted, three-dimensional reading of the map, behind a flag while it is
-// a prototype. Everything in here is camera and light: no body moves faster
-// than Horizons says, and none sits anywhere other than where Horizons puts
-// it. The plane leans back, the view turns slowly on its own, and every live
-// craft is seen sending its signal home at a stated scale. That is the whole
-// trick.
-//
-// Enable with ?map3d=1 (sticks in localStorage), disable with ?map3d=0.
+// Scene flags and constants shared by the two map engines. The 3D map (raw
+// WebGL, see gl/GlMapEngine.ts) is the default; the flat Canvas 2D map is the
+// fallback when WebGL is missing, and the reader's choice with ?map3d=0.
+// Everything here is camera and light: no body moves faster than Horizons
+// says, and none sits anywhere other than where Horizons puts it.
 
 export interface SceneFlags {
+  /** The WebGL map. */
+  gl: boolean;
+  /** The earlier tilted Canvas 2D study, on request only. */
   tilt: boolean;
 }
 
 export function readSceneFlags(): SceneFlags {
-  let on = false;
+  // The 3D map is the default. `?map3d=0` opts out and is remembered;
+  // `?map3d=1` opts back in. `?map3d=tilt` shows the earlier tilted-canvas
+  // study for one load, never remembered.
+  let gl = true;
+  let tilt = false;
   try {
     const q = new URLSearchParams(location.search).get('map3d');
-    if (q === '1') {
-      localStorage.setItem('sublight.map3d', '1');
-      on = true;
-    } else if (q === '0') {
-      localStorage.removeItem('sublight.map3d');
-    } else {
-      on = localStorage.getItem('sublight.map3d') === '1';
-    }
+    if (q === '0') localStorage.setItem('sublight.map3d', '0');
+    else if (q === '1') localStorage.removeItem('sublight.map3d');
+    if (q === 'tilt') { gl = false; tilt = true; }
+    else gl = localStorage.getItem('sublight.map3d') !== '0';
   } catch {
-    /* storage blocked: the flag simply stays off */
+    /* storage blocked: the default stands */
   }
-  return { tilt: on };
+  return { gl, tilt };
 }
 
 /** Orrery tilt: the ecliptic plane leans away from the viewer by this much. */

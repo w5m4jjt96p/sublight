@@ -6,7 +6,9 @@ is already as old as the signal's travel time.
 
 ## Stack
 - Vite + React + TypeScript
-- Canvas 2D for the map (no 3D lib, no D3)
+- The map is raw WebGL (hand-written shaders and matrices, `src/map/gl/`), with a
+  Canvas 2D overlay for chips and labels. The flat Canvas 2D map is the fallback
+  when WebGL is missing, and the reader's choice with `?map3d=0`. No 3D lib, no D3
 - No runtime dependency beyond React
 - Static deployment (Cloudflare Pages)
 

@@ -20,7 +20,7 @@ scripts/generate-og         → public/og.png
 scripts/verify              sanity checks, logs anomalies by craft
         │
         ▼
-src/  (Vite + React + Canvas 2D)  reads the JSON, renders the map
+src/  (Vite + React + raw WebGL, Canvas 2D fallback)  reads the JSON, renders the map
 ```
 
 The client **only reads static JSON**. The single live call the browser makes is

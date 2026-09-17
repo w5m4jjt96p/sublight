@@ -84,7 +84,7 @@ export function About({ model, onBack }: AboutProps) {
           screen. So the radius is compressed logarithmically, with <code>r = log10(1 + AU·400)</code>,
           which lets a rover on Mars and a probe in interstellar space share one frame while keeping
           their order and rough spacing honest. Angles are the real ecliptic longitude from
-          Horizons; only the radial distance is stretched.
+          Horizons, seen from the ecliptic north; only the radial distance is stretched.
         </p>
         <p>
           Everything moves in real time. Each body's position is interpolated between today's and
