@@ -8,6 +8,7 @@ import { BODIES } from './data/bodies.ts';
 import { Lightbox } from './ui/Lightbox.tsx';
 import { About } from './ui/About.tsx';
 import { Gallery } from './ui/Gallery.tsx';
+import { startLiveFeed } from './data/liveFeed.ts';
 import { BottomNav } from './ui/BottomNav.tsx';
 import { Traverse } from './ui/Traverse.tsx';
 import { RoverStory } from './ui/RoverStory.tsx';
@@ -28,6 +29,13 @@ export function App() {
   const stageRef = useRef<HTMLDivElement>(null);
 
   const { model, frames, archive, bodyPhotos, tracks, deepSky, generatedAt, loading } = useData();
+
+  // Start pulling the live rover stream as soon as the bundle names the
+  // rovers, so the gallery is already fresh when the reader opens it.
+  useEffect(() => {
+    const ids = Object.entries(frames).filter(([, f]) => f.sol != null).map(([id]) => id);
+    if (ids.length) startLiveFeed(ids);
+  }, [frames]);
   const now = useNow();
   const dsn = useDsn();
   const spaceWeather = useSpaceWeather();
