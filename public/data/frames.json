@@ -28,9 +28,9 @@
         "sol": 1983
       },
       {
-        "file": "/frames/perseverance-1982-sherloc-aci-66c96a.jpg",
-        "full": "/frames/perseverance-1982-sherloc-aci-66c96a-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01982/ids/edr/browse/shrlc/SC2_1982_0842924876_210ECM_N0910970SRLC00251_000090J03.png",
+        "file": "/frames/perseverance-1982-sherloc-aci-ab0f04.jpg",
+        "full": "/frames/perseverance-1982-sherloc-aci-ab0f04-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01982/ids/edr/browse/shrlc/SC2_1982_0842924876_210ECM_N0910970SRLC00251_000090J05.png",
         "instrument": "SHERLOC_ACI",
         "capturedUtc": "2026-09-17T14:12:43.184Z",
         "receivedUtc": "2026-09-19T10:25:54.000Z",
@@ -73,9 +73,9 @@
         "sol": 1982
       },
       {
-        "file": "/frames/perseverance-1982-sherloc-aci-4cc084.jpg",
-        "full": "/frames/perseverance-1982-sherloc-aci-4cc084-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01982/ids/edr/browse/shrlc/SC2_1982_0842924802_132ECM_N0910970SRLC00251_000090J04.png",
+        "file": "/frames/perseverance-1982-sherloc-aci-f48b11.jpg",
+        "full": "/frames/perseverance-1982-sherloc-aci-f48b11-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01982/ids/edr/browse/shrlc/SC2_1982_0842924802_132ECM_N0910970SRLC00251_000090J06.png",
         "instrument": "SHERLOC_ACI",
         "capturedUtc": "2026-09-17T14:11:29.183Z",
         "receivedUtc": "2026-09-19T10:25:54.000Z",
@@ -109,9 +109,9 @@
         "sol": 1982
       },
       {
-        "file": "/frames/perseverance-1982-sherloc-aci-e79161.jpg",
-        "full": "/frames/perseverance-1982-sherloc-aci-e79161-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01982/ids/edr/browse/shrlc/SC2_1982_0842924727_332ECM_N0910970SRLC00251_000090J04.png",
+        "file": "/frames/perseverance-1982-sherloc-aci-baecce.jpg",
+        "full": "/frames/perseverance-1982-sherloc-aci-baecce-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01982/ids/edr/browse/shrlc/SC2_1982_0842924727_332ECM_N0910970SRLC00251_000090J06.png",
         "instrument": "SHERLOC_ACI",
         "capturedUtc": "2026-09-17T14:10:15.174Z",
         "receivedUtc": "2026-09-19T10:24:54.000Z",
