@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T03:32:19.771Z",
+  "generatedAt": "2026-09-22T07:33:28.450Z",
   "craft": [
     {
       "id": "perseverance",
@@ -44,7 +44,7 @@
       "id": "jwst",
       "heliocentricAu": 1.011804,
       "eclipticLonDeg": 358.7266,
-      "heliocentricAuNextDay": 1.011528,
+      "heliocentricAuNextDay": 1.011529,
       "eclipticLonDegNextDay": 359.7157,
       "eclipticLatDeg": 0.1,
       "eclipticLatDegNextDay": 0.0985,
@@ -81,15 +81,15 @@
     },
     {
       "id": "bepicolombo",
-      "heliocentricAu": 0.468047,
-      "eclipticLonDeg": 242.8279,
-      "heliocentricAuNextDay": 0.46907,
-      "eclipticLonDegNextDay": 245.5712,
-      "eclipticLatDeg": -1.7525,
-      "eclipticLatDegNextDay": -2.0753,
-      "rangeAu": 1.279021,
-      "rangeAuNextDay": 1.269134,
-      "owltSeconds": 638.238,
+      "heliocentricAu": 0.468046,
+      "eclipticLonDeg": 242.828,
+      "heliocentricAuNextDay": 0.469069,
+      "eclipticLonDegNextDay": 245.5713,
+      "eclipticLatDeg": -1.7527,
+      "eclipticLatDegNextDay": -2.0754,
+      "rangeAu": 1.27902,
+      "rangeAuNextDay": 1.269133,
+      "owltSeconds": 638.237,
       "source": "horizons:-121"
     },
     {
@@ -148,7 +148,7 @@
       "id": "juice",
       "heliocentricAu": 1.044653,
       "eclipticLonDeg": 358.9551,
-      "heliocentricAuNextDay": 1.038139,
+      "heliocentricAuNextDay": 1.03814,
       "eclipticLonDegNextDay": 359.8538,
       "eclipticLatDeg": -0.0174,
       "eclipticLatDegNextDay": -0.0149,
