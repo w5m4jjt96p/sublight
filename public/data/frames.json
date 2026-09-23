@@ -91,6 +91,15 @@
         "sol": 1988
       },
       {
+        "file": "/frames/perseverance-1987-front-hazcam-left-a-04d314.jpg",
+        "full": "/frames/perseverance-1987-front-hazcam-left-a-04d314-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01987/ids/edr/browse/fcam/FLF_1987_0843346871_738ECM_N0910970FHAZ00911_07_195J01.png",
+        "instrument": "FRONT_HAZCAM_LEFT_A",
+        "capturedUtc": "2026-09-22T11:26:02.965Z",
+        "receivedUtc": "2026-09-23T03:59:56.000Z",
+        "sol": 1987
+      },
+      {
         "file": "/frames/perseverance-1987-front-hazcam-right-a-9aaabf.jpg",
         "full": "/frames/perseverance-1987-front-hazcam-right-a-9aaabf-full.jpg",
         "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01987/ids/edr/browse/fcam/FRF_1987_0843346871_738ECM_N0910970FHAZ00911_13_195J01.png",
