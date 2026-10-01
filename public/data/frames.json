@@ -37,13 +37,22 @@
         "sol": 1994
       },
       {
-        "file": "/frames/perseverance-1994-navcam-right-44923d.jpg",
-        "full": "/frames/perseverance-1994-navcam-right-44923d-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01994/ids/edr/browse/ncam/NRF_1994_0843972077_551ECM_N0910970NCAM00709_01_095J01.png",
-        "instrument": "NAVCAM_RIGHT",
-        "capturedUtc": "2026-09-29T17:06:13.333Z",
-        "receivedUtc": "2026-09-30T02:37:34.000Z",
-        "sol": 1994
+        "file": "/frames/perseverance-1995-supercam-rmi-62907b.jpg",
+        "full": "/frames/perseverance-1995-supercam-rmi-62907b-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01995/ids/edr/browse/scam/LRF_1995_0844045620_163EBY_N0910970SCAM01995_0060I6J01.png",
+        "instrument": "SUPERCAM_RMI",
+        "capturedUtc": "2026-09-30T13:31:55.354Z",
+        "receivedUtc": "2026-09-30T19:17:55.000Z",
+        "sol": 1995
+      },
+      {
+        "file": "/frames/perseverance-1995-pixl-mcc-962343.jpg",
+        "full": "/frames/perseverance-1995-pixl-mcc-962343-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01995/ids/edr/browse/pixl/PCW_1995_0844016530_000ECM_N09109707584486431667075J01.png",
+        "instrument": "PIXL_MCC",
+        "capturedUtc": "2026-09-30T05:27:04.852Z",
+        "receivedUtc": "2026-09-30T19:06:54.000Z",
+        "sol": 1995
       },
       {
         "file": "/frames/perseverance-1994-sherloc-aci-cd76f1.jpg",
@@ -91,31 +100,22 @@
         "sol": 1994
       },
       {
-        "file": "/frames/perseverance-1994-navcam-right-86bf98.jpg",
-        "full": "/frames/perseverance-1994-navcam-right-86bf98-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01994/ids/edr/browse/ncam/NRF_1994_0843972077_551ECM_N0910970NCAM00709_02_095J01.png",
-        "instrument": "NAVCAM_RIGHT",
-        "capturedUtc": "2026-09-29T17:06:13.333Z",
-        "receivedUtc": "2026-09-30T02:37:34.000Z",
-        "sol": 1994
+        "file": "/frames/perseverance-1995-supercam-rmi-345e05.jpg",
+        "full": "/frames/perseverance-1995-supercam-rmi-345e05-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01995/ids/edr/browse/scam/LRE_1995_0844045620_163ECM_N0910970SCAM01995_0060I6J01.png",
+        "instrument": "SUPERCAM_RMI",
+        "capturedUtc": "2026-09-30T13:31:55.354Z",
+        "receivedUtc": "2026-09-30T19:04:55.000Z",
+        "sol": 1995
       },
       {
-        "file": "/frames/perseverance-1994-sherloc-aci-70d0bb.jpg",
-        "full": "/frames/perseverance-1994-sherloc-aci-70d0bb-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01994/ids/edr/browse/shrlc/SC2_1994_0843990017_488ECM_N0910970SRLC00251_0000LMJ01.png",
-        "instrument": "SHERLOC_ACI",
-        "capturedUtc": "2026-09-29T22:05:16.645Z",
-        "receivedUtc": "2026-09-30T02:59:03.000Z",
-        "sol": 1994
-      },
-      {
-        "file": "/frames/perseverance-1994-sherloc-watson-41bd8e.jpg",
-        "full": "/frames/perseverance-1994-sherloc-watson-41bd8e-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01994/ids/edr/browse/shrlc/SI1_1994_0843987463_546ECM_N0910970SRLC08060_0000LMJ01.png",
-        "instrument": "SHERLOC_WATSON",
-        "capturedUtc": "2026-09-29T21:23:41.634Z",
-        "receivedUtc": "2026-09-30T05:48:08.000Z",
-        "sol": 1994
+        "file": "/frames/perseverance-1995-pixl-mcc-09ebfd.jpg",
+        "full": "/frames/perseverance-1995-pixl-mcc-09ebfd-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/01995/ids/edr/browse/pixl/PCW_1995_0844016426_000ECM_N09109707584486431665075J01.png",
+        "instrument": "PIXL_MCC",
+        "capturedUtc": "2026-09-30T05:25:20.851Z",
+        "receivedUtc": "2026-09-30T19:04:55.000Z",
+        "sol": 1995
       }
     ]
   },
