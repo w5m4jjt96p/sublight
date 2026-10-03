@@ -120,15 +120,24 @@
     ]
   },
   "curiosity": {
-    "sol": 5033,
-    "instrument": "NAV_LEFT_B",
-    "capturedUtc": "2026-10-03T11:06:04.000Z",
-    "receivedUtc": "2026-10-03T11:58:57.000Z",
-    "file": "/frames/curiosity-5033-nav-left-b-9156f7.jpg",
-    "full": "/frames/curiosity-5033-nav-left-b-9156f7-full.jpg",
-    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05033/opgs/edr/ncam/NLB_844293215EDR_S1250558NCAM00593M_.JPG",
+    "sol": 5032,
+    "instrument": "MAST_RIGHT",
+    "capturedUtc": "2026-10-02T11:11:37.000Z",
+    "receivedUtc": "2026-10-03T14:31:30.000Z",
+    "file": "/frames/curiosity-5032-mast-right-4f3340.jpg",
+    "full": "/frames/curiosity-5032-mast-right-4f3340-full.jpg",
+    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05032/mcam/5032MR1101030002601327C00_DXXX.jpg",
     "credit": "NASA/JPL-Caltech/MSSS",
     "recent": [
+      {
+        "file": "/frames/curiosity-5032-mast-right-4f3340.jpg",
+        "full": "/frames/curiosity-5032-mast-right-4f3340-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05032/mcam/5032MR1101030002601327C00_DXXX.jpg",
+        "instrument": "MAST_RIGHT",
+        "capturedUtc": "2026-10-02T11:11:37.000Z",
+        "receivedUtc": "2026-10-03T14:31:30.000Z",
+        "sol": 5032
+      },
       {
         "file": "/frames/curiosity-5033-nav-left-b-9156f7.jpg",
         "full": "/frames/curiosity-5033-nav-left-b-9156f7-full.jpg",
@@ -226,15 +235,6 @@
         "instrument": "NAV_RIGHT_B",
         "capturedUtc": "2026-10-03T11:05:12.000Z",
         "receivedUtc": "2026-10-03T11:55:56.000Z",
-        "sol": 5033
-      },
-      {
-        "file": "/frames/curiosity-5033-chemcam-rmi-d64c50.jpg",
-        "full": "/frames/curiosity-5033-chemcam-rmi-d64c50-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05033/opgs/edr/ccam/CR0_844291713EDR_F1250558CCAM02033M_.JPG",
-        "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-10-03T10:41:02.000Z",
-        "receivedUtc": "2026-10-03T11:39:53.000Z",
         "sol": 5033
       }
     ]
