@@ -120,22 +120,31 @@
     ]
   },
   "curiosity": {
-    "sol": 5034,
+    "sol": 5035,
     "instrument": "MAST_RIGHT",
-    "capturedUtc": "2026-10-04T14:11:23.000Z",
-    "receivedUtc": "2026-10-05T15:30:56.000Z",
-    "file": "/frames/curiosity-5034-mast-right-d55526.jpg",
-    "full": "/frames/curiosity-5034-mast-right-d55526-full.jpg",
-    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100152601361C00_DXXX.jpg",
+    "capturedUtc": "2026-10-05T11:47:43.000Z",
+    "receivedUtc": "2026-10-06T13:30:06.000Z",
+    "file": "/frames/curiosity-5035-mast-right-fd1cca.jpg",
+    "full": "/frames/curiosity-5035-mast-right-fd1cca-full.jpg",
+    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05035/mcam/5035MR1101110002601408C00_DXXX.jpg",
     "credit": "NASA/JPL-Caltech/MSSS",
     "recent": [
       {
-        "file": "/frames/curiosity-5034-mast-right-d55526.jpg",
-        "full": "/frames/curiosity-5034-mast-right-d55526-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100152601361C00_DXXX.jpg",
+        "file": "/frames/curiosity-5035-mast-right-fd1cca.jpg",
+        "full": "/frames/curiosity-5035-mast-right-fd1cca-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05035/mcam/5035MR1101110002601408C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-04T14:11:23.000Z",
-        "receivedUtc": "2026-10-05T15:30:56.000Z",
+        "capturedUtc": "2026-10-05T11:47:43.000Z",
+        "receivedUtc": "2026-10-06T13:30:06.000Z",
+        "sol": 5035
+      },
+      {
+        "file": "/frames/curiosity-5034-mast-left-045c26.jpg",
+        "full": "/frames/curiosity-5034-mast-left-045c26-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034ML1101100611506363C00_DXXX.jpg",
+        "instrument": "MAST_LEFT",
+        "capturedUtc": "2026-10-04T14:22:18.000Z",
+        "receivedUtc": "2026-10-06T01:00:38.000Z",
         "sol": 5034
       },
       {
@@ -157,12 +166,21 @@
         "sol": 5035
       },
       {
-        "file": "/frames/curiosity-5034-mast-right-f3ecca.jpg",
-        "full": "/frames/curiosity-5034-mast-right-f3ecca-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100142601360C00_DXXX.jpg",
+        "file": "/frames/curiosity-5034-mast-right-b256f9.jpg",
+        "full": "/frames/curiosity-5034-mast-right-b256f9-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100612601407C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-04T14:11:09.000Z",
-        "receivedUtc": "2026-10-05T15:30:54.000Z",
+        "capturedUtc": "2026-10-04T14:22:20.000Z",
+        "receivedUtc": "2026-10-06T01:00:41.000Z",
+        "sol": 5034
+      },
+      {
+        "file": "/frames/curiosity-5034-mast-left-f5e858.jpg",
+        "full": "/frames/curiosity-5034-mast-left-f5e858-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034ML1101100601506362C00_DXXX.jpg",
+        "instrument": "MAST_LEFT",
+        "capturedUtc": "2026-10-04T14:22:06.000Z",
+        "receivedUtc": "2026-10-06T01:00:38.000Z",
         "sol": 5034
       },
       {
@@ -184,12 +202,21 @@
         "sol": 5035
       },
       {
-        "file": "/frames/curiosity-5034-mast-right-500a8a.jpg",
-        "full": "/frames/curiosity-5034-mast-right-500a8a-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100132601359C00_DXXX.jpg",
+        "file": "/frames/curiosity-5034-mast-right-928f10.jpg",
+        "full": "/frames/curiosity-5034-mast-right-928f10-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100602601406C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-04T14:10:56.000Z",
-        "receivedUtc": "2026-10-05T15:30:54.000Z",
+        "capturedUtc": "2026-10-04T14:22:07.000Z",
+        "receivedUtc": "2026-10-06T01:00:41.000Z",
+        "sol": 5034
+      },
+      {
+        "file": "/frames/curiosity-5034-mast-left-8c772d.jpg",
+        "full": "/frames/curiosity-5034-mast-left-8c772d-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034ML1101100591506361C00_DXXX.jpg",
+        "instrument": "MAST_LEFT",
+        "capturedUtc": "2026-10-04T14:21:50.000Z",
+        "receivedUtc": "2026-10-06T01:00:37.000Z",
         "sol": 5034
       },
       {
@@ -208,33 +235,6 @@
         "instrument": "CHEMCAM_RMI",
         "capturedUtc": "2026-10-05T11:38:05.000Z",
         "receivedUtc": "2026-10-05T13:02:48.000Z",
-        "sol": 5035
-      },
-      {
-        "file": "/frames/curiosity-5034-mast-right-ef4506.jpg",
-        "full": "/frames/curiosity-5034-mast-right-ef4506-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05034/mcam/5034MR1101100122601358C00_DXXX.jpg",
-        "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-04T14:10:42.000Z",
-        "receivedUtc": "2026-10-05T15:30:52.000Z",
-        "sol": 5034
-      },
-      {
-        "file": "/frames/curiosity-5035-nav-right-b-16e300.jpg",
-        "full": "/frames/curiosity-5035-nav-right-b-16e300-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05035/opgs/edr/ncam/NRB_844468973EDR_S1250558NCAM00594M_.JPG",
-        "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-10-05T11:55:23.000Z",
-        "receivedUtc": "2026-10-05T13:05:38.000Z",
-        "sol": 5035
-      },
-      {
-        "file": "/frames/curiosity-5035-chemcam-rmi-1bb183.jpg",
-        "full": "/frames/curiosity-5035-chemcam-rmi-1bb183-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05035/opgs/edr/ccam/CR0_844467893EDR_F1250558CCAM05033M_.JPG",
-        "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-10-05T11:37:23.000Z",
-        "receivedUtc": "2026-10-05T13:02:37.000Z",
         "sol": 5035
       }
     ]
