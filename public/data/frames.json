@@ -175,30 +175,30 @@
         "sol": 5037
       },
       {
+        "file": "/frames/curiosity-5039-nav-right-b-d1e795.jpg",
+        "full": "/frames/curiosity-5039-nav-right-b-d1e795-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05039/opgs/edr/ncam/NRB_844823745EDR_S1250558NCAM00560M_.JPG",
+        "instrument": "NAV_RIGHT_B",
+        "capturedUtc": "2026-10-09T14:28:18.000Z",
+        "receivedUtc": "2026-10-09T15:22:02.000Z",
+        "sol": 5039
+      },
+      {
+        "file": "/frames/curiosity-5039-chemcam-rmi-143e2c.jpg",
+        "full": "/frames/curiosity-5039-chemcam-rmi-143e2c-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05039/opgs/edr/ccam/CR0_844822699EDR_F1250558CCAM06036M_.JPG",
+        "instrument": "CHEMCAM_RMI",
+        "capturedUtc": "2026-10-09T14:10:53.000Z",
+        "receivedUtc": "2026-10-09T15:10:20.000Z",
+        "sol": 5039
+      },
+      {
         "file": "/frames/curiosity-5038-mahli-fa5873.jpg",
         "full": "/frames/curiosity-5038-mahli-fa5873-full.jpg",
         "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05038/mhli/5038MH0002580001804408S00_DXXX.jpg",
         "instrument": "MAHLI",
         "capturedUtc": "2026-10-09T00:26:24.000Z",
         "receivedUtc": "2026-10-09T03:00:11.000Z",
-        "sol": 5038
-      },
-      {
-        "file": "/frames/curiosity-5038-nav-right-b-4d910e.jpg",
-        "full": "/frames/curiosity-5038-nav-right-b-4d910e-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05038/opgs/edr/ncam/NRB_844757084EDR_F1250558NCAM00200M_.JPG",
-        "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-10-08T19:57:17.000Z",
-        "receivedUtc": "2026-10-09T02:37:14.000Z",
-        "sol": 5038
-      },
-      {
-        "file": "/frames/curiosity-5038-chemcam-rmi-a08e38.jpg",
-        "full": "/frames/curiosity-5038-chemcam-rmi-a08e38-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05038/opgs/edr/ccam/CR0_844736168EDR_F1250558CCAM04036M_.JPG",
-        "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-10-08T14:08:40.000Z",
-        "receivedUtc": "2026-10-09T02:33:52.000Z",
         "sol": 5038
       },
       {
@@ -220,22 +220,22 @@
         "sol": 5037
       },
       {
-        "file": "/frames/curiosity-5038-mahli-de85bd.jpg",
-        "full": "/frames/curiosity-5038-mahli-de85bd-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05038/mhli/5038MH0002580001804407R00_DXXX.jpg",
-        "instrument": "MAHLI",
-        "capturedUtc": "2026-10-09T00:26:20.000Z",
-        "receivedUtc": "2026-10-09T03:00:10.000Z",
-        "sol": 5038
+        "file": "/frames/curiosity-5039-nav-right-b-d62a0c.jpg",
+        "full": "/frames/curiosity-5039-nav-right-b-d62a0c-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05039/opgs/edr/ncam/NRB_844823732EDR_S1250558NCAM00560M_.JPG",
+        "instrument": "NAV_RIGHT_B",
+        "capturedUtc": "2026-10-09T14:28:05.000Z",
+        "receivedUtc": "2026-10-09T15:22:02.000Z",
+        "sol": 5039
       },
       {
-        "file": "/frames/curiosity-5038-nav-right-b-3e1f58.jpg",
-        "full": "/frames/curiosity-5038-nav-right-b-3e1f58-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05038/opgs/edr/ncam/NRB_844755481EDR_F1250558NCAM00200M_.JPG",
-        "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-10-08T19:30:34.000Z",
-        "receivedUtc": "2026-10-09T02:35:34.000Z",
-        "sol": 5038
+        "file": "/frames/curiosity-5039-chemcam-rmi-dc4181.jpg",
+        "full": "/frames/curiosity-5039-chemcam-rmi-dc4181-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05039/opgs/edr/ccam/CR0_844822657EDR_F1250558CCAM06036M_.JPG",
+        "instrument": "CHEMCAM_RMI",
+        "capturedUtc": "2026-10-09T14:10:11.000Z",
+        "receivedUtc": "2026-10-09T15:10:15.000Z",
+        "sol": 5039
       }
     ]
   },
