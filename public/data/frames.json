@@ -64,6 +64,15 @@
         "sol": 2009
       },
       {
+        "file": "/frames/perseverance-2010-supercam-rmi-f24424.jpg",
+        "full": "/frames/perseverance-2010-supercam-rmi-f24424-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02010/ids/edr/browse/scam/LRF_2010_0845363407_018EBY_N0920000SCAM01010_0010I6J01.png",
+        "instrument": "SUPERCAM_RMI",
+        "capturedUtc": "2026-10-15T19:35:12.616Z",
+        "receivedUtc": "2026-10-15T20:39:04.000Z",
+        "sol": 2010
+      },
+      {
         "file": "/frames/perseverance-2009-navcam-right-b89058.jpg",
         "full": "/frames/perseverance-2009-navcam-right-b89058-full.jpg",
         "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02009/ids/edr/browse/ncam/NRF_2009_0845300908_284ECM_N0920000NCAM02009_01_195J01.png",
@@ -100,22 +109,13 @@
         "sol": 2009
       },
       {
-        "file": "/frames/perseverance-2009-navcam-right-e9a437.jpg",
-        "full": "/frames/perseverance-2009-navcam-right-e9a437-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02009/ids/edr/browse/ncam/NRF_2009_0845300908_284ECM_N0920000NCAM02009_04_195J01.png",
-        "instrument": "NAVCAM_RIGHT",
-        "capturedUtc": "2026-10-15T02:13:34.149Z",
-        "receivedUtc": "2026-10-15T12:18:06.000Z",
-        "sol": 2009
-      },
-      {
-        "file": "/frames/perseverance-2009-navcam-left-9b4f28.jpg",
-        "full": "/frames/perseverance-2009-navcam-left-9b4f28-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02009/ids/edr/browse/ncam/NLF_2009_0845300908_284ECM_N0920000NCAM02009_04_195J01.png",
-        "instrument": "NAVCAM_LEFT",
-        "capturedUtc": "2026-10-15T02:13:34.114Z",
-        "receivedUtc": "2026-10-15T12:18:06.000Z",
-        "sol": 2009
+        "file": "/frames/perseverance-2010-supercam-rmi-157540.jpg",
+        "full": "/frames/perseverance-2010-supercam-rmi-157540-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02010/ids/edr/browse/scam/LRE_2010_0845363407_018ECM_N0920000SCAM01010_0010I6J01.png",
+        "instrument": "SUPERCAM_RMI",
+        "capturedUtc": "2026-10-15T19:35:12.616Z",
+        "receivedUtc": "2026-10-15T20:29:58.000Z",
+        "sol": 2010
       }
     ]
   },
