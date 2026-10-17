@@ -166,6 +166,24 @@
         "sol": 5045
       },
       {
+        "file": "/frames/curiosity-5046-chemcam-rmi-0201e0.jpg",
+        "full": "/frames/curiosity-5046-chemcam-rmi-0201e0-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05046/opgs/edr/ccam/CR0_845444104EDR_F1251326CCAM10043M_.JPG",
+        "instrument": "CHEMCAM_RMI",
+        "capturedUtc": "2026-10-16T18:47:43.000Z",
+        "receivedUtc": "2026-10-17T06:48:59.000Z",
+        "sol": 5046
+      },
+      {
+        "file": "/frames/curiosity-5046-nav-right-b-642ac7.jpg",
+        "full": "/frames/curiosity-5046-nav-right-b-642ac7-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05046/opgs/edr/ncam/NRB_845442529EDR_M1251326NCAM00579M_.JPG",
+        "instrument": "NAV_RIGHT_B",
+        "capturedUtc": "2026-10-16T18:21:29.000Z",
+        "receivedUtc": "2026-10-17T06:50:39.000Z",
+        "sol": 5046
+      },
+      {
         "file": "/frames/curiosity-5045-nav-left-b-f0330d.jpg",
         "full": "/frames/curiosity-5045-nav-left-b-f0330d-full.jpg",
         "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05045/opgs/edr/ncam/NLB_845366823EDR_F1251326CCAM09043M_.JPG",
@@ -184,13 +202,22 @@
         "sol": 5045
       },
       {
-        "file": "/frames/curiosity-5045-chemcam-rmi-091cd7.jpg",
-        "full": "/frames/curiosity-5045-chemcam-rmi-091cd7-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05045/opgs/edr/ccam/CR0_845355826EDR_F1251194CCAM08043M_.JPG",
+        "file": "/frames/curiosity-5046-chemcam-rmi-1d8231.jpg",
+        "full": "/frames/curiosity-5046-chemcam-rmi-1d8231-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05046/opgs/edr/ccam/CR0_845443318EDR_F1251326CCAM10043M_.JPG",
         "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-10-15T18:16:24.000Z",
-        "receivedUtc": "2026-10-16T14:32:17.000Z",
-        "sol": 5045
+        "capturedUtc": "2026-10-16T18:34:38.000Z",
+        "receivedUtc": "2026-10-17T06:48:49.000Z",
+        "sol": 5046
+      },
+      {
+        "file": "/frames/curiosity-5046-nav-right-b-ed434b.jpg",
+        "full": "/frames/curiosity-5046-nav-right-b-ed434b-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05046/opgs/edr/ncam/NRB_845442448EDR_M1251326NCAM00579M_.JPG",
+        "instrument": "NAV_RIGHT_B",
+        "capturedUtc": "2026-10-16T18:20:07.000Z",
+        "receivedUtc": "2026-10-17T06:50:33.000Z",
+        "sol": 5046
       },
       {
         "file": "/frames/curiosity-5045-nav-left-b-6c3789.jpg",
@@ -208,33 +235,6 @@
         "instrument": "MAHLI",
         "capturedUtc": "2026-10-15T20:32:43.000Z",
         "receivedUtc": "2026-10-16T15:00:12.000Z",
-        "sol": 5045
-      },
-      {
-        "file": "/frames/curiosity-5045-chemcam-rmi-4fcc20.jpg",
-        "full": "/frames/curiosity-5045-chemcam-rmi-4fcc20-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05045/opgs/edr/ccam/CR0_845355785EDR_F1251194CCAM08043M_.JPG",
-        "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-10-15T18:15:43.000Z",
-        "receivedUtc": "2026-10-16T14:32:10.000Z",
-        "sol": 5045
-      },
-      {
-        "file": "/frames/curiosity-5045-nav-left-b-85c494.jpg",
-        "full": "/frames/curiosity-5045-nav-left-b-85c494-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05045/opgs/edr/ncam/NLB_845366729EDR_S1251326NCAM00274M_.JPG",
-        "instrument": "NAV_LEFT_B",
-        "capturedUtc": "2026-10-15T21:18:08.000Z",
-        "receivedUtc": "2026-10-16T14:31:11.000Z",
-        "sol": 5045
-      },
-      {
-        "file": "/frames/curiosity-5045-mahli-721e2e.jpg",
-        "full": "/frames/curiosity-5045-mahli-721e2e-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05045/mhli/5045MH0001530001804473S00_DXXX.jpg",
-        "instrument": "MAHLI",
-        "capturedUtc": "2026-10-15T20:27:12.000Z",
-        "receivedUtc": "2026-10-16T15:00:11.000Z",
         "sol": 5045
       }
     ]
