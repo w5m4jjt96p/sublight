@@ -184,12 +184,12 @@
         "sol": 5048
       },
       {
-        "file": "/frames/curiosity-5048-nav-left-b-9fc419.jpg",
-        "full": "/frames/curiosity-5048-nav-left-b-9fc419-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05048/opgs/edr/ncam/NLB_845622889EDR_F1251326NCAM00353M_.JPG",
+        "file": "/frames/curiosity-5048-nav-left-b-123ad1.jpg",
+        "full": "/frames/curiosity-5048-nav-left-b-123ad1-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05048/opgs/edr/ncam/NLB_845623484EDR_S1251326NCAM00593M_.JPG",
         "instrument": "NAV_LEFT_B",
-        "capturedUtc": "2026-10-18T20:27:30.000Z",
-        "receivedUtc": "2026-10-19T00:46:54.000Z",
+        "capturedUtc": "2026-10-18T20:37:25.000Z",
+        "receivedUtc": "2026-10-19T05:55:46.000Z",
         "sol": 5048
       },
       {
