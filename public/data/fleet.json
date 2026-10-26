@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T01:36:48.829Z",
+  "generatedAt": "2026-10-26T09:07:53.262Z",
   "craft": [
     {
       "id": "perseverance",
@@ -12,7 +12,8 @@
       "rangeAu": 1.480626,
       "rangeAuNextDay": 1.472711,
       "owltSeconds": 738.84,
-      "source": "horizons:499"
+      "source": "horizons:499",
+      "stale": true
     },
     {
       "id": "curiosity",
@@ -25,7 +26,8 @@
       "rangeAu": 1.480618,
       "rangeAuNextDay": 1.472706,
       "owltSeconds": 738.835,
-      "source": "horizons:-76"
+      "source": "horizons:-76",
+      "stale": true
     },
     {
       "id": "ingenuity",
@@ -38,7 +40,8 @@
       "rangeAu": 1.480626,
       "rangeAuNextDay": 1.472711,
       "owltSeconds": 738.84,
-      "source": "horizons:499"
+      "source": "horizons:499",
+      "stale": true
     },
     {
       "id": "jwst",
@@ -51,7 +54,8 @@
       "rangeAu": 0.010369,
       "rangeAuNextDay": 0.010429,
       "owltSeconds": 5.174,
-      "source": "horizons:-170"
+      "source": "horizons:-170",
+      "stale": true
     },
     {
       "id": "dscovr",
@@ -64,7 +68,8 @@
       "rangeAu": 0.010109,
       "rangeAuNextDay": 0.010088,
       "owltSeconds": 5.045,
-      "source": "horizons:-78"
+      "source": "horizons:-78",
+      "stale": true
     },
     {
       "id": "yutu-2",
@@ -77,7 +82,8 @@
       "rangeAu": 0.00247,
       "rangeAuNextDay": 0.00245,
       "owltSeconds": 1.232,
-      "source": "horizons:301"
+      "source": "horizons:301",
+      "stale": true
     },
     {
       "id": "bepicolombo",
@@ -90,7 +96,8 @@
       "rangeAu": 0.75624,
       "rangeAuNextDay": 0.740574,
       "owltSeconds": 377.367,
-      "source": "horizons:-121"
+      "source": "horizons:-121",
+      "stale": true
     },
     {
       "id": "parker-solar-probe",
@@ -103,7 +110,8 @@
       "rangeAu": 0.928045,
       "rangeAuNextDay": 0.931898,
       "owltSeconds": 463.099,
-      "source": "horizons:-96"
+      "source": "horizons:-96",
+      "stale": true
     },
     {
       "id": "solar-orbiter",
@@ -116,7 +124,8 @@
       "rangeAu": 0.719132,
       "rangeAuNextDay": 0.71764,
       "owltSeconds": 358.85,
-      "source": "horizons:-144"
+      "source": "horizons:-144",
+      "stale": true
     },
     {
       "id": "akatsuki",
@@ -129,7 +138,8 @@
       "rangeAu": 0.272926,
       "rangeAuNextDay": 0.273347,
       "owltSeconds": 136.191,
-      "source": "horizons:299"
+      "source": "horizons:299",
+      "stale": true
     },
     {
       "id": "europa-clipper",
@@ -142,7 +152,8 @@
       "rangeAu": 0.280147,
       "rangeAuNextDay": 0.272381,
       "owltSeconds": 139.795,
-      "source": "horizons:-159"
+      "source": "horizons:-159",
+      "stale": true
     },
     {
       "id": "juice",
@@ -155,7 +166,8 @@
       "rangeAu": 0.181333,
       "rangeAuNextDay": 0.188368,
       "owltSeconds": 90.486,
-      "source": "horizons:-28"
+      "source": "horizons:-28",
+      "stale": true
     },
     {
       "id": "psyche",
@@ -168,7 +180,8 @@
       "rangeAu": 1.760737,
       "rangeAuNextDay": 1.754612,
       "owltSeconds": 878.616,
-      "source": "horizons:-255"
+      "source": "horizons:-255",
+      "stale": true
     },
     {
       "id": "lucy",
@@ -181,7 +194,8 @@
       "rangeAu": 6.127607,
       "rangeAuNextDay": 6.13298,
       "owltSeconds": 3057.705,
-      "source": "horizons:-49"
+      "source": "horizons:-49",
+      "stale": true
     },
     {
       "id": "new-horizons",
@@ -194,7 +208,8 @@
       "rangeAu": 66.150233,
       "rangeAuNextDay": 66.174662,
       "owltSeconds": 33009.283,
-      "source": "horizons:-98"
+      "source": "horizons:-98",
+      "stale": true
     },
     {
       "id": "voyager-2",
@@ -207,7 +222,8 @@
       "rangeAu": 144.461109,
       "rangeAuNextDay": 144.482969,
       "owltSeconds": 72086.785,
-      "source": "horizons:-32"
+      "source": "horizons:-32",
+      "stale": true
     },
     {
       "id": "voyager-1",
@@ -220,7 +236,8 @@
       "rangeAu": 172.74191,
       "rangeAuNextDay": 172.761297,
       "owltSeconds": 86199.039,
-      "source": "horizons:-31"
+      "source": "horizons:-31",
+      "stale": true
     }
   ]
 }
