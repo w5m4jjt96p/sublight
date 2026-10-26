@@ -1,14 +1,41 @@
 {
   "perseverance": {
-    "sol": 2019,
-    "instrument": "FRONT_HAZCAM_RIGHT_A",
-    "capturedUtc": "2026-10-25T07:59:13.012Z",
-    "receivedUtc": "2026-10-25T15:32:01.000Z",
-    "file": "/frames/perseverance-2019-front-hazcam-right-a-61c08e.jpg",
-    "full": "/frames/perseverance-2019-front-hazcam-right-a-61c08e-full.jpg",
-    "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/fcam/FRF_2019_0846185639_601ECM_N0920000FHAZ00206_01_295J01.png",
-    "credit": "NASA/JPL-Caltech",
+    "sol": 2020,
+    "instrument": "MCZ_RIGHT",
+    "capturedUtc": "2026-10-26T05:32:54.720Z",
+    "receivedUtc": "2026-10-26T14:23:55.000Z",
+    "file": "/frames/perseverance-2020-mcz-right-6a4cfe.jpg",
+    "full": "/frames/perseverance-2020-mcz-right-6a4cfe-full.jpg",
+    "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/zcam/ZR0_2020_0846263247_193ECM_N0920000ZCAM10053_0480LMJ01.png",
+    "credit": "NASA/JPL-Caltech/ASU",
     "recent": [
+      {
+        "file": "/frames/perseverance-2020-mcz-right-6a4cfe.jpg",
+        "full": "/frames/perseverance-2020-mcz-right-6a4cfe-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/zcam/ZR0_2020_0846263247_193ECM_N0920000ZCAM10053_0480LMJ01.png",
+        "instrument": "MCZ_RIGHT",
+        "capturedUtc": "2026-10-26T05:32:54.720Z",
+        "receivedUtc": "2026-10-26T14:23:55.000Z",
+        "sol": 2020
+      },
+      {
+        "file": "/frames/perseverance-2020-mcz-left-e51c5b.jpg",
+        "full": "/frames/perseverance-2020-mcz-left-e51c5b-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/zcam/ZL0_2020_0846262963_275EBY_N0920000ZCAM10052_1100LMJ01.png",
+        "instrument": "MCZ_LEFT",
+        "capturedUtc": "2026-10-26T05:27:59.718Z",
+        "receivedUtc": "2026-10-26T10:24:56.000Z",
+        "sol": 2020
+      },
+      {
+        "file": "/frames/perseverance-2020-navcam-left-449529.jpg",
+        "full": "/frames/perseverance-2020-navcam-left-449529-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/ncam/NLG_2020_0846253386_988ECM_N0920000NCAM00518_00_2I3J01.png",
+        "instrument": "NAVCAM_LEFT",
+        "capturedUtc": "2026-10-26T02:48:21.097Z",
+        "receivedUtc": "2026-10-26T10:08:59.000Z",
+        "sol": 2020
+      },
       {
         "file": "/frames/perseverance-2019-front-hazcam-right-a-61c08e.jpg",
         "full": "/frames/perseverance-2019-front-hazcam-right-a-61c08e-full.jpg",
@@ -28,22 +55,13 @@
         "sol": 2019
       },
       {
-        "file": "/frames/perseverance-2019-mcz-left-04ad97.jpg",
-        "full": "/frames/perseverance-2019-mcz-left-04ad97-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/zcam/ZL0_2019_0846182612_570EBY_N0920000ZCAM05072_1100LMJ02.png",
-        "instrument": "MCZ_LEFT",
-        "capturedUtc": "2026-10-25T07:08:47.082Z",
-        "receivedUtc": "2026-10-25T10:48:56.000Z",
-        "sol": 2019
-      },
-      {
-        "file": "/frames/perseverance-2019-mcz-right-39cbcd.jpg",
-        "full": "/frames/perseverance-2019-mcz-right-39cbcd-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/zcam/ZR0_2019_0846180328_818EBY_N0920000ZCAM10051_0630LMJ01.png",
-        "instrument": "MCZ_RIGHT",
-        "capturedUtc": "2026-10-25T06:30:53.061Z",
-        "receivedUtc": "2026-10-26T02:21:57.000Z",
-        "sol": 2019
+        "file": "/frames/perseverance-2020-supercam-rmi-27a57d.jpg",
+        "full": "/frames/perseverance-2020-supercam-rmi-27a57d-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/scam/LRF_2020_0846262690_242EBY_N0920000SCAM01020_0100I6J01.png",
+        "instrument": "SUPERCAM_RMI",
+        "capturedUtc": "2026-10-26T05:23:23.089Z",
+        "receivedUtc": "2026-10-26T10:24:56.000Z",
+        "sol": 2020
       },
       {
         "file": "/frames/perseverance-2019-skycam-dc380b.jpg",
@@ -64,79 +82,61 @@
         "sol": 2019
       },
       {
-        "file": "/frames/perseverance-2019-mcz-left-a8d063.jpg",
-        "full": "/frames/perseverance-2019-mcz-left-a8d063-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/zcam/ZL0_2019_0846182612_570ECM_N0920000ZCAM05072_1100LMJ02.png",
-        "instrument": "MCZ_LEFT",
-        "capturedUtc": "2026-10-25T07:08:47.082Z",
-        "receivedUtc": "2026-10-25T10:26:06.000Z",
-        "sol": 2019
-      },
-      {
-        "file": "/frames/perseverance-2019-mcz-right-87c993.jpg",
-        "full": "/frames/perseverance-2019-mcz-right-87c993-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/zcam/ZR0_2019_0846180328_818ECM_N0920000ZCAM10051_0630LMJ01.png",
+        "file": "/frames/perseverance-2020-mcz-right-93352b.jpg",
+        "full": "/frames/perseverance-2020-mcz-right-93352b-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/zcam/ZR0_2020_0846263233_193EBY_N0920000ZCAM10053_0480LMJ01.png",
         "instrument": "MCZ_RIGHT",
-        "capturedUtc": "2026-10-25T06:30:53.061Z",
-        "receivedUtc": "2026-10-26T02:07:00.000Z",
-        "sol": 2019
+        "capturedUtc": "2026-10-26T05:32:38.719Z",
+        "receivedUtc": "2026-10-26T14:23:55.000Z",
+        "sol": 2020
       },
       {
-        "file": "/frames/perseverance-2019-sherloc-watson-96f7c5.jpg",
-        "full": "/frames/perseverance-2019-sherloc-watson-96f7c5-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/shrlc/SI1_2019_0846185735_851ECM_N0920000SRLC00878_0000LMJ01.png",
-        "instrument": "SHERLOC_WATSON",
-        "capturedUtc": "2026-10-25T08:00:51.112Z",
-        "receivedUtc": "2026-10-25T15:32:01.000Z",
-        "sol": 2019
-      },
-      {
-        "file": "/frames/perseverance-2019-mcz-left-5a662c.jpg",
-        "full": "/frames/perseverance-2019-mcz-left-5a662c-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/zcam/ZL0_2019_0846182611_835EBY_N0920000ZCAM05072_1100LMJ02.png",
+        "file": "/frames/perseverance-2020-mcz-left-b56c37.jpg",
+        "full": "/frames/perseverance-2020-mcz-left-b56c37-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/zcam/ZL0_2020_0846262963_275ECM_N0920000ZCAM10052_1100LMJ01.png",
         "instrument": "MCZ_LEFT",
-        "capturedUtc": "2026-10-25T07:08:47.077Z",
-        "receivedUtc": "2026-10-25T10:48:01.000Z",
-        "sol": 2019
+        "capturedUtc": "2026-10-26T05:27:59.718Z",
+        "receivedUtc": "2026-10-26T10:08:59.000Z",
+        "sol": 2020
       },
       {
-        "file": "/frames/perseverance-2019-mcz-right-137f8a.jpg",
-        "full": "/frames/perseverance-2019-mcz-right-137f8a-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/zcam/ZR0_2019_0846180315_848EBY_N0920000ZCAM10051_0630LMJ01.png",
-        "instrument": "MCZ_RIGHT",
-        "capturedUtc": "2026-10-25T06:30:40.064Z",
-        "receivedUtc": "2026-10-26T02:18:59.000Z",
-        "sol": 2019
+        "file": "/frames/perseverance-2020-navcam-left-6fd7df.jpg",
+        "full": "/frames/perseverance-2020-navcam-left-6fd7df-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/ncam/NLG_2020_0846253361_987ECM_N0920000NCAM00518_00_2I3J01.png",
+        "instrument": "NAVCAM_LEFT",
+        "capturedUtc": "2026-10-26T02:47:56.095Z",
+        "receivedUtc": "2026-10-26T10:08:59.000Z",
+        "sol": 2020
       },
       {
-        "file": "/frames/perseverance-2019-sherloc-watson-de14d0.jpg",
-        "full": "/frames/perseverance-2019-sherloc-watson-de14d0-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02019/ids/edr/browse/shrlc/SIF_2019_0846185600_945EBY_N0920000SRLC02500_0000LMJ01.png",
-        "instrument": "SHERLOC_WATSON",
-        "capturedUtc": "2026-10-25T07:58:37.103Z",
-        "receivedUtc": "2026-10-25T15:49:55.000Z",
-        "sol": 2019
+        "file": "/frames/perseverance-2020-supercam-rmi-6ce3c1.jpg",
+        "full": "/frames/perseverance-2020-supercam-rmi-6ce3c1-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/02020/ids/edr/browse/scam/LRE_2020_0846262690_242ECM_N0920000SCAM01020_0100I6J01.png",
+        "instrument": "SUPERCAM_RMI",
+        "capturedUtc": "2026-10-26T05:23:23.089Z",
+        "receivedUtc": "2026-10-26T10:08:59.000Z",
+        "sol": 2020
       }
     ]
   },
   "curiosity": {
-    "sol": 5053,
+    "sol": 5054,
     "instrument": "MAST_RIGHT",
-    "capturedUtc": "2026-10-23T23:54:11.000Z",
-    "receivedUtc": "2026-10-26T02:30:32.000Z",
-    "file": "/frames/curiosity-5053-mast-right-8ba35a.jpg",
-    "full": "/frames/curiosity-5053-mast-right-8ba35a-full.jpg",
-    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05053/mcam/5053MR1101810392601721C00_DXXX.jpg",
+    "capturedUtc": "2026-10-25T00:55:55.000Z",
+    "receivedUtc": "2026-10-26T11:30:52.000Z",
+    "file": "/frames/curiosity-5054-mast-right-9dbcf1.jpg",
+    "full": "/frames/curiosity-5054-mast-right-9dbcf1-full.jpg",
+    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05054/mcam/5054MR1101870062601825C00_DXXX.jpg",
     "credit": "NASA/JPL-Caltech/MSSS",
     "recent": [
       {
-        "file": "/frames/curiosity-5053-mast-right-8ba35a.jpg",
-        "full": "/frames/curiosity-5053-mast-right-8ba35a-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05053/mcam/5053MR1101810392601721C00_DXXX.jpg",
+        "file": "/frames/curiosity-5054-mast-right-9dbcf1.jpg",
+        "full": "/frames/curiosity-5054-mast-right-9dbcf1-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05054/mcam/5054MR1101870062601825C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-23T23:54:11.000Z",
-        "receivedUtc": "2026-10-26T02:30:32.000Z",
-        "sol": 5053
+        "capturedUtc": "2026-10-25T00:55:55.000Z",
+        "receivedUtc": "2026-10-26T11:30:52.000Z",
+        "sol": 5054
       },
       {
         "file": "/frames/curiosity-5055-nav-right-b-793d1f.jpg",
@@ -157,13 +157,13 @@
         "sol": 5055
       },
       {
-        "file": "/frames/curiosity-5053-mast-right-265baf.jpg",
-        "full": "/frames/curiosity-5053-mast-right-265baf-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05053/mcam/5053MR1101810382601720C00_DXXX.jpg",
+        "file": "/frames/curiosity-5054-mast-right-fe6d3e.jpg",
+        "full": "/frames/curiosity-5054-mast-right-fe6d3e-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05054/mcam/5054MR1101870052601824C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-23T23:53:56.000Z",
-        "receivedUtc": "2026-10-26T02:30:31.000Z",
-        "sol": 5053
+        "capturedUtc": "2026-10-25T00:55:42.000Z",
+        "receivedUtc": "2026-10-26T11:30:51.000Z",
+        "sol": 5054
       },
       {
         "file": "/frames/curiosity-5055-nav-right-b-a1f8af.jpg",
@@ -184,13 +184,13 @@
         "sol": 5055
       },
       {
-        "file": "/frames/curiosity-5053-mast-right-422080.jpg",
-        "full": "/frames/curiosity-5053-mast-right-422080-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05053/mcam/5053MR1101810372601719C00_DXXX.jpg",
+        "file": "/frames/curiosity-5054-mast-right-9633a4.jpg",
+        "full": "/frames/curiosity-5054-mast-right-9633a4-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05054/mcam/5054MR1101870042601823C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-23T23:53:41.000Z",
-        "receivedUtc": "2026-10-26T02:30:31.000Z",
-        "sol": 5053
+        "capturedUtc": "2026-10-25T00:55:30.000Z",
+        "receivedUtc": "2026-10-26T11:30:50.000Z",
+        "sol": 5054
       },
       {
         "file": "/frames/curiosity-5055-nav-right-b-ab4666.jpg",
@@ -211,13 +211,13 @@
         "sol": 5055
       },
       {
-        "file": "/frames/curiosity-5053-mast-right-39cced.jpg",
-        "full": "/frames/curiosity-5053-mast-right-39cced-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05053/mcam/5053MR1101810362601718C00_DXXX.jpg",
+        "file": "/frames/curiosity-5054-mast-right-b3e67a.jpg",
+        "full": "/frames/curiosity-5054-mast-right-b3e67a-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/msss/05054/mcam/5054MR1101870032601822C00_DXXX.jpg",
         "instrument": "MAST_RIGHT",
-        "capturedUtc": "2026-10-23T23:53:24.000Z",
-        "receivedUtc": "2026-10-26T02:30:30.000Z",
-        "sol": 5053
+        "capturedUtc": "2026-10-25T00:55:16.000Z",
+        "receivedUtc": "2026-10-26T11:30:49.000Z",
+        "sol": 5054
       },
       {
         "file": "/frames/curiosity-5055-nav-right-b-e660f9.jpg",
