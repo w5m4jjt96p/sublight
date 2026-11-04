@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T03:10:59.576Z",
+  "generatedAt": "2026-11-04T11:10:11.798Z",
   "craft": [
     {
       "id": "perseverance",
@@ -94,15 +94,15 @@
     },
     {
       "id": "parker-solar-probe",
-      "heliocentricAu": 0.665257,
-      "eclipticLonDeg": 334.4314,
-      "heliocentricAuNextDay": 0.656588,
-      "eclipticLonDegNextDay": 335.095,
+      "heliocentricAu": 0.665254,
+      "eclipticLonDeg": 334.4315,
+      "heliocentricAuNextDay": 0.656585,
+      "eclipticLonDegNextDay": 335.0951,
       "eclipticLatDeg": -3.3165,
       "eclipticLatDegNextDay": -3.3245,
-      "rangeAu": 0.952335,
-      "rangeAuNextDay": 0.953395,
-      "owltSeconds": 475.22,
+      "rangeAu": 0.952333,
+      "rangeAuNextDay": 0.953393,
+      "owltSeconds": 475.219,
       "source": "horizons:-96"
     },
     {
