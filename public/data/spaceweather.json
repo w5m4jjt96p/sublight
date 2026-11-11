@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-11-11T15:27:49.093Z",
-  "kp": 1,
+  "generatedAt": "2026-11-11T19:38:40.621Z",
+  "kp": 1.33,
   "rScale": 0,
   "sScale": 0,
   "gScale": 0,
-  "windSpeed": 509,
-  "bz": 3,
-  "bt": 5,
-  "sampledAt": "2026-11-11T15:22:00Z"
+  "windSpeed": 501,
+  "bz": 2,
+  "bt": 4,
+  "sampledAt": "2026-11-11T19:34:00Z"
 }
