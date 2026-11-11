@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T02:58:02.399Z",
+  "generatedAt": "2026-11-11T11:12:04.795Z",
   "craft": [
     {
       "id": "perseverance",
@@ -43,14 +43,14 @@
     {
       "id": "jwst",
       "heliocentricAu": 1.000101,
-      "eclipticLonDeg": 48.5044,
-      "heliocentricAuNextDay": 0.999931,
+      "eclipticLonDeg": 48.5045,
+      "heliocentricAuNextDay": 0.999932,
       "eclipticLonDegNextDay": 49.5049,
       "eclipticLatDeg": -0.08,
       "eclipticLatDegNextDay": -0.0835,
-      "rangeAu": 0.011011,
-      "rangeAuNextDay": 0.011039,
-      "owltSeconds": 5.494,
+      "rangeAu": 0.011012,
+      "rangeAuNextDay": 0.01104,
+      "owltSeconds": 5.495,
       "source": "horizons:-170"
     },
     {
