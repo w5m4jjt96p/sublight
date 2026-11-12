@@ -27,10 +27,10 @@ struct Lightbox: View {
                     Spacer()
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(Theme.txt)
-                            .padding(12)
-                            .background(Circle().fill(Color.black.opacity(0.5)))
+                            .frame(width: 40, height: 40)
+                            .glassPill()
                     }
                 }
                 Spacer()

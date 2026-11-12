@@ -19,19 +19,19 @@ struct DeepSkyView: View {
             Theme.void.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Button(action: onClose) {
-                        Text("← BACK TO THE MAP").font(.mono(11)).tracking(1.5).foregroundColor(Theme.dim)
-                    }
-                    Text("Nothing here is new.").font(.title(30)).foregroundColor(Theme.txt)
+                    // A tab root: the nav bar is the way out, so no back button.
+                    Text("Nothing here is new.").font(.titleSemi(34)).titleTracking(34).foregroundColor(Theme.txt)
+                        .padding(.top, 8)
                     Text("Beyond the fleet, the light-time stops being minutes and starts being millennia. Every object below is labelled by the age of the light reaching you now.")
-                        .font(.mono(13)).foregroundColor(Theme.dim).lineSpacing(5)
+                        .font(.sans(17)).foregroundColor(Theme.dim).lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 8)
 
                     ForEach(sorted) { o in
                         Button { open = o } label: { card(o) }.buttonStyle(.plain)
                     }
                 }
-                .padding(20).padding(.bottom, 100)
+                .padding(20).padding(.bottom, 118)
             }
             if let o = open { viewer(o) }
         }
@@ -40,7 +40,7 @@ struct DeepSkyView: View {
 
     private func card(_ o: DeepSkyObject) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Rectangle().fill(Color(hex: "05070a"))
+            Rectangle().fill(Theme.panel2)
                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
                 .frame(maxWidth: .infinity)
                 .overlay(
@@ -52,19 +52,18 @@ struct DeepSkyView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(o.name).font(.title(19)).foregroundColor(Theme.txt)
-                    Text(o.catalog).font(.mono(11)).foregroundColor(Theme.dim2)
+                    Text(o.name).font(.titleSemi(20)).titleTracking(20).foregroundColor(Theme.txt)
+                    Text(o.catalog).font(.mono(12)).foregroundColor(Theme.dim2)
                 }
-                Text("\(Fmt.lightYears(o.distanceLy)) old").font(.monoMed(19)).foregroundColor(Theme.delay)
-                Text(o.note).font(.mono(13)).foregroundColor(Theme.dim).lineSpacing(4)
+                Text("\(Fmt.lightYears(o.distanceLy)) old").font(.monoMed(17)).foregroundColor(Theme.delay)
+                Text(o.note).font(.sans(15)).foregroundColor(Theme.dim).lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(o.credit).font(.mono(9)).foregroundColor(Theme.dim2).padding(.top, 4)
+                Text(o.credit).font(.sans(12)).foregroundColor(Theme.dim2).padding(.top, 4)
             }
-            .padding(16)
+            .padding(18)
         }
-        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.panel))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.rule2, lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .card()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.rL, style: .continuous))
     }
 
     private func viewer(_ o: DeepSkyObject) -> some View {
@@ -79,17 +78,20 @@ struct DeepSkyView: View {
                     }
                 }
                 .frame(maxHeight: 420)
-                .overlay(RoundedRectangle(cornerRadius: 2).stroke(Theme.rule2, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.rS, style: .continuous))
 
                 VStack(spacing: 8) {
                     HStack(spacing: 8) {
-                        Text(o.name).font(.title(22)).foregroundColor(Theme.txt)
-                        Text(o.catalog).font(.mono(11)).foregroundColor(Theme.dim2)
+                        Text(o.name).font(.titleSemi(22)).titleTracking(22).foregroundColor(Theme.txt)
+                        Text(o.catalog).font(.mono(12)).foregroundColor(Theme.dim2)
                     }
-                    Text("Its light is \(Fmt.lightYears(o.distanceLy)) old").font(.monoMed(16)).foregroundColor(Theme.delay)
-                    Text(o.note).font(.mono(13)).foregroundColor(Theme.dim).multilineTextAlignment(.center).lineSpacing(4)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        MicroLabel("Light age")
+                        Text("\(Fmt.lightYears(o.distanceLy))").font(.monoMed(16)).foregroundColor(Theme.delay)
+                    }
+                    Text(o.note).font(.sans(15)).foregroundColor(Theme.dim).multilineTextAlignment(.center).lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 24)
-                    Text(o.credit).font(.mono(10)).foregroundColor(Theme.dim2).padding(.top, 4)
+                    Text(o.credit).font(.sans(12)).foregroundColor(Theme.dim2).padding(.top, 4)
                 }
             }
             .padding(24)
@@ -97,8 +99,9 @@ struct DeepSkyView: View {
                 HStack {
                     Spacer()
                     Button { open = nil } label: {
-                        Image(systemName: "xmark").font(.system(size: 16, weight: .medium)).foregroundColor(Theme.dim)
+                        Image(systemName: "xmark").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.txt)
                             .frame(width: 40, height: 40)
+                            .glassPill()
                     }
                 }
                 Spacer()

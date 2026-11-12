@@ -1,102 +1,149 @@
-/* Design tokens — single source of truth, mirrored from CLAUDE.md.
-   Do not introduce colour values outside this file. */
+/* Design tokens: the single source of truth for the web, mirrored in
+   ios/Sublight/Theme.swift and src/map/palette.ts. The brand itself is
+   described in docs/brand.md. Do not introduce colour values outside this file. */
 :root {
-  --void: #06080b;
-  --panel: #0c0f15;
-  --rule: #171c25;
-  --rule-2: #232b37;
-  --txt: #dce2ec;
-  --dim: #6e7889;
-  --dim-2: #454d5c;
+  /* ---------------------------------------------------------------- colour */
+  /* Surfaces: true black, then three neutral lifts. No blue cast: the photos
+     carry the colour, the frame stays out of their way. */
+  --void: #000000;
+  --panel: #0b0b0d;
+  --panel-2: #131316;
+  --panel-3: #1b1b1f;
+  /* Hairlines, as light over the surface rather than fixed greys, so they read
+     the same on black, on a panel and over a photo. */
+  --rule: rgb(255 255 255 / 0.08);
+  --rule-2: rgb(255 255 255 / 0.14);
+  /* Text: primary, secondary, tertiary. */
+  --txt: #f5f5f7;
+  --dim: #9d9da5;
+  --dim-2: #67676f;
 
-  --signal: #8fd6e6; /* active */
-  --delay: #e5b571; /* RESERVED: light-time + imaging craft only */
-  --dead: #3b4250; /* silent / retired */
+  --signal: #74d4f0; /* active, interactive, selected */
+  --delay: #f2b766; /* RESERVED: light-time values + imaging craft only */
+  --dead: #3c3c43; /* silent / retired */
+  --alert: #ff7a66; /* storm-level space weather only */
 
-  /* Numbers + small text: Roboto Mono, IBM Plex Mono as glyph fallback. */
-  --mono: 'Roboto Mono', 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  /* Big titles (craft names, headings): Stack Sans Notch. */
-  --sans: 'Stack Sans Notch', 'IBM Plex Sans', system-ui, sans-serif;
+  /* The same colours as channels, for tints: rgb(var(--signal-rgb) / 0.1). */
+  --signal-rgb: 116 212 240;
+  --delay-rgb: 242 183 102;
 
-  --masthead-h: 72px;
+  /* Materials. Glass is for chrome that floats over content (nav, map
+     panels, sheets); solid panels are for content. */
+  --glass: rgb(22 22 26 / 0.7);
+  --glass-strong: rgb(14 14 17 / 0.88);
+  --blur: saturate(180%) blur(24px);
+  --shadow-float: 0 12px 40px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.05) inset;
+  --shadow-pop: 0 24px 80px rgb(0 0 0 / 0.7);
+
+  /* ----------------------------------------------------------- geometry */
+  --r-xs: 6px;
+  --r-s: 10px;
+  --r-m: 14px;
+  --r-l: 22px;
+  --r-pill: 999px;
+  --gutter: 24px;
+  --measure: 640px; /* reading width */
+
+  /* -------------------------------------------------------------- motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-1: 0.15s;
+  --dur-2: 0.28s;
+  --dur-3: 0.5s;
+
+  /* ---------------------------------------------------------------- type */
+  /* Stack Sans Notch for titles and craft names (the brand's display face).
+     Geist for everything else people read; Geist Mono only for what an
+     instrument measured: values, units, timestamps, counts. */
+  --display: 'Stack Sans Notch', 'Geist Variable', -apple-system, system-ui, sans-serif;
+  --sans: 'Geist Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  --mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* The scale. Apple-like steps; every role below picks one of these. */
+  --t-display: clamp(40px, 5.6vw, 64px);
+  --t-title-1: clamp(30px, 3.4vw, 40px);
+  --t-title-2: 24px;
+  --t-title-3: 20px;
+  --t-headline: 17px;
+  --t-body: 17px;
+  --t-callout: 16px;
+  --t-sub: 15px;
+  --t-foot: 13px;
+  --t-cap: 12px;
+  --t-micro: 11px; /* mono eyebrows: uppercase, tracked */
+
+  --track-tight: -0.022em; /* titles */
+  --track-snug: -0.011em; /* body */
+  --track-eyebrow: 0.08em; /* mono uppercase labels */
+
+  --masthead-h: 60px;
   --drawer-h: 238px;
   --sidebar-w: 380px;
 
-  /* Global text multiplier — every per-text token below is scaled by this. */
-  --font-scale: 1.4;
+  /* Map labels only: the map engines read this and multiply their 12px. */
+  --font-scale: 1;
 
-  /* --------------------------------------------------------------------- */
-  /* Per-text font-size tokens. One per text role; edit any value here to   */
-  /* resize just that text. Each is multiplied by --font-scale.             */
-  /* --------------------------------------------------------------------- */
+  /* ------------------------------------------------- per-role type tokens */
+  /* Kept by name so each text can still be tuned alone; all point at the
+     scale above. */
+  --fs-brand: var(--t-headline);
+  --fs-mast-right: var(--t-foot);
+  --fs-body: var(--t-body);
 
-  /* masthead */
-  --fs-brand: calc(18.5px * var(--font-scale)); /* "OUT THERE / v0.4" */
-  --fs-mast-right: calc(12px * var(--font-scale)); /* UTC · tracking · About */
-  --fs-body: calc(16px * var(--font-scale)); /* default body text */
+  --fs-hud-eyebrow: var(--t-micro);
+  --fs-hud-name: var(--t-title-1);
+  --fs-hud-name-caret: var(--t-title-2);
+  --fs-hud-loc: var(--t-sub);
+  --fs-stat-l: var(--t-micro);
+  --fs-stat-v: 30px;
+  --fs-stat-v-small: 24px;
+  --fs-ctrl: var(--t-foot);
 
-  /* HUD (over the map) */
-  --fs-hud-eyebrow: calc(16px * var(--font-scale)); /* "currently tracking" */
-  --fs-hud-name: calc(42px * var(--font-scale)); /* big craft name */
-  --fs-hud-name-caret: calc(38px * var(--font-scale)); /* ↗ next to the name */
-  --fs-hud-loc: calc(20px * var(--font-scale)); /* craft location line */
-  --fs-stat-l: calc(12px * var(--font-scale)); /* stat labels (bottom-left) */
-  --fs-stat-v: calc(30px * var(--font-scale)); /* big stat values */
-  --fs-stat-v-small: calc(24px * var(--font-scale)); /* smaller stat values */
-  --fs-ctrl: calc(12px * var(--font-scale)); /* "Whole system" / "Signal path" */
+  --fs-thumb-foot: var(--t-cap);
+  --fs-thumb-expand: var(--t-cap);
+  --fs-thumb-none: var(--t-foot);
+  --fs-thumb-credit: var(--t-micro);
 
-  /* raw-frame thumbnail */
-  --fs-thumb-foot: calc(12px * var(--font-scale)); /* captured / arrived caption */
-  --fs-thumb-expand: calc(12px * var(--font-scale)); /* "full screen" hint */
-  --fs-thumb-none: calc(12px * var(--font-scale)); /* "telemetry only" */
-  --fs-thumb-credit: calc(12px * var(--font-scale)); /* image credit */
+  --fs-sidebar-title: var(--t-title-2);
+  --fs-sidebar-sub: var(--t-sub);
+  --fs-legend: var(--t-foot);
+  --fs-craft-name: var(--t-headline);
+  --fs-craft-loc: var(--t-sub);
+  --fs-craft-range: var(--t-sub);
+  --fs-craft-owlt: var(--t-sub);
+  --fs-feed: var(--t-cap);
 
-  /* fleet sidebar */
-  --fs-sidebar-title: calc(24px * var(--font-scale)); /* "Fleet register" */
-  --fs-sidebar-sub: calc(16px * var(--font-scale)); /* "N assets · sorted…" */
-  --fs-legend: calc(14px * var(--font-scale)); /* legend chips */
-  --fs-craft-name: calc(20px * var(--font-scale)); /* row craft name */
-  --fs-craft-loc: calc(16px * var(--font-scale)); /* row location */
-  --fs-craft-range: calc(16px * var(--font-scale)); /* row distance */
-  --fs-craft-owlt: calc(16px * var(--font-scale)); /* row light-time */
-  --fs-feed: calc(14px * var(--font-scale)); /* "IMG" tag */
+  --fs-detail-name: 30px;
+  --fs-detail-sub: var(--t-foot);
+  --fs-detail-note: var(--t-sub);
+  --fs-detail-grid-v: var(--t-headline);
+  --fs-detail-section-l: var(--t-micro);
+  --fs-detail-source: var(--t-micro);
 
-  /* detail panel */
-  --fs-detail-name: calc(30px * var(--font-scale));
-  --fs-detail-sub: calc(12px * var(--font-scale)); /* agency · kind · status */
-  --fs-detail-note: calc(12px * var(--font-scale)); /* editorial note */
-  --fs-detail-grid-v: calc(12px * var(--font-scale)); /* stat values */
-  --fs-detail-section-l: calc(12px * var(--font-scale)); /* section labels */
-  --fs-detail-source: calc(10px * var(--font-scale)); /* provenance line */
+  --fs-lb-craft: var(--t-headline);
+  --fs-lb-meta: var(--t-foot);
+  --fs-lb-nav: 22px;
+  --fs-lb-times: var(--t-sub);
+  --fs-lb-times-lb-l: var(--t-micro);
+  --fs-lb-arrow: var(--t-micro);
+  --fs-lb-credit: var(--t-cap);
 
-  /* full-screen viewer (lightbox) */
-  --fs-lb-craft: calc(24px * var(--font-scale)); /* craft name */
-  --fs-lb-meta: calc(16px * var(--font-scale)); /* instrument · sol · n/N */
-  --fs-lb-nav: calc(26px * var(--font-scale)); /* ‹ › arrows */
-  --fs-lb-times: calc(16px * var(--font-scale)); /* captured/arrived */
-  --fs-lb-times-lb-l: calc(14px * var(--font-scale)); /* their labels */
-  --fs-lb-arrow: calc(14px * var(--font-scale)); /* "→ light →" */
-  --fs-lb-credit: calc(14px * var(--font-scale));
+  --fs-about-h1: var(--t-display);
+  --fs-about-lede: 21px;
+  --fs-about-h2: var(--t-title-2);
+  --fs-about-p: var(--t-body);
+  --fs-about-ul: var(--t-body);
+  --fs-about-a-back: var(--t-foot);
 
-  /* about page */
-  --fs-about-h1: calc(26px * var(--font-scale));
-  --fs-about-lede: calc(14px * var(--font-scale));
-  --fs-about-h2: calc(16px * var(--font-scale));
-  --fs-about-p: calc(12px * var(--font-scale));
-  --fs-about-ul: calc(14px * var(--font-scale));
-  --fs-about-a-back: calc(12px * var(--font-scale)); /* "← back to the map" */
-
-  /* Gallery, feed and chrome. These were hard-coded px until the type work of
-     September 2026; tokenised so the dev panel can drive them like the rest. */
-  --fs-gal-h1: calc(32px * var(--font-scale));
-  --fs-gal-lede: calc(12px * var(--font-scale));
-  --fs-gal-shelf: calc(12px * var(--font-scale));   /* "From the mission archives" */
-  --fs-post-craft: calc(18px * var(--font-scale));
-  --fs-post-loc: calc(12px * var(--font-scale));
-  --fs-post-when: calc(11.5px * var(--font-scale));
-  --fs-post-caption: calc(12.5px * var(--font-scale));
-  --fs-post-light: calc(12px * var(--font-scale));
-  --fs-mast-stat: calc(17px * var(--font-scale));
-  --fs-mast-stat-em: calc(11.5px * var(--font-scale));
-  --fs-nav-label: calc(13px * var(--font-scale));
+  --fs-gal-h1: var(--t-title-1);
+  --fs-gal-lede: var(--t-sub);
+  --fs-gal-shelf: var(--t-micro);
+  --fs-post-craft: var(--t-headline);
+  --fs-post-loc: var(--t-foot);
+  --fs-post-when: var(--t-cap);
+  --fs-post-caption: var(--t-sub);
+  --fs-post-light: var(--t-cap);
+  --fs-mast-stat: var(--t-callout);
+  --fs-mast-stat-em: var(--t-micro);
+  --fs-nav-label: var(--t-cap);
 }

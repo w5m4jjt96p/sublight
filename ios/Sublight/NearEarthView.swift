@@ -57,24 +57,29 @@ struct NearEarthView: View {
 
     private var bar: some View {
         HStack(spacing: 14) {
+            // Presented over another screen (not a tab root), so it keeps a way back.
             Button(action: onClose) {
-                Text("← BACK").font(.mono(11)).tracking(1.5).foregroundColor(Theme.dim)
+                Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Theme.txt)
+                    .frame(width: 36, height: 36)
+                    .glassPill()
             }
+            .accessibilityLabel("Back")
             VStack(alignment: .leading, spacing: 2) {
-                Text("Near-Earth").font(.title(22)).foregroundColor(Theme.txt)
-                Text("\(store.satellites.count) objects · live orbits · tap a dot")
-                    .font(.mono(10)).foregroundColor(Theme.dim)
+                Text("Near-Earth").font(.titleSemi(22)).titleTracking(22).foregroundColor(Theme.txt)
+                (Text("\(store.satellites.count)").font(.mono(12))
+                    + Text(" objects · live orbits · tap a dot").font(.sans(13)))
+                    .foregroundColor(Theme.dim)
             }
             Spacer()
             Button(action: onClose) {
-                Text("Deep fleet →").font(.mono(11)).foregroundColor(Theme.signal)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(Theme.signal.opacity(0.08)))
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
+                Text("Deep fleet").font(.sansMed(15)).foregroundColor(Theme.signal)
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(Capsule().fill(Theme.signal.opacity(0.1)))
             }
         }
         .padding(.horizontal, 18).padding(.vertical, 12)
-        .background(Theme.panel)
+        .background(Theme.void)
         .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
     }
 
@@ -130,8 +135,8 @@ struct NearEarthView: View {
         for ring in rings {
             let sr = toScreenR(ring.rKm)
             let rect = CGRect(x: g.cx - sr, y: g.cy - sr, width: sr * 2, height: sr * 2)
-            ctx.stroke(Path(ellipseIn: rect), with: .color(Color(hex: "2E3644")), lineWidth: 1)
-            ctx.draw(Text(ring.label).font(.mono(10)).foregroundColor(Theme.dim),
+            ctx.stroke(Path(ellipseIn: rect), with: .color(Theme.faint), lineWidth: 1)
+            ctx.draw(Text(ring.label).font(.monoMed(10)).foregroundColor(Theme.dim),
                      at: CGPoint(x: g.cx + 8, y: g.cy - sr - 8), anchor: .leading)
             ctx.draw(Text(Fmt.lightScaled(ring.lt)).font(.mono(10)).foregroundColor(Theme.delay),
                      at: CGPoint(x: g.cx + 70, y: g.cy - sr - 8), anchor: .leading)
@@ -159,7 +164,7 @@ struct NearEarthView: View {
             if isSel {
                 let ring = CGRect(x: x - 9, y: y - 9, width: 18, height: 18)
                 ctx.stroke(Path(ellipseIn: ring), with: .color(Theme.signal), lineWidth: 1.4)
-                ctx.draw(Text(s.name).font(.mono(10)).foregroundColor(Theme.txt),
+                ctx.draw(Text(s.name).font(.sansMed(12)).foregroundColor(Theme.txt),
                          at: CGPoint(x: x + 12, y: y), anchor: .leading)
             }
         }
@@ -169,7 +174,7 @@ struct NearEarthView: View {
         let mx = g.cx + CGFloat(cos(-0.6)) * moonR
         let my = g.cy + CGFloat(sin(-0.6)) * moonR
         ctx.fill(Path(ellipseIn: CGRect(x: mx - 3.5, y: my - 3.5, width: 7, height: 7)), with: .color(Theme.dim))
-        ctx.draw(Text("Moon · not to scale").font(.mono(9)).foregroundColor(Theme.dim),
+        ctx.draw(Text("Moon · not to scale").font(.sans(11)).foregroundColor(Theme.dim),
                  at: CGPoint(x: mx - 8, y: my - 4), anchor: .trailing)
         ctx.draw(Text("\(Fmt.lightScaled(MOON_MEAN_KM / C_KM_S)) (mean)").font(.mono(9)).foregroundColor(Theme.delay),
                  at: CGPoint(x: mx - 8, y: my + 8), anchor: .trailing)
@@ -187,11 +192,11 @@ struct NearEarthView: View {
                 }
                 if !decayWatch.isEmpty { decaySection }
             }
-            .padding(18)
+            .padding(20)
             .padding(.bottom, 24)
         }
         .frame(maxHeight: 300)
-        .background(Theme.panel)
+        .background(Theme.panel.ignoresSafeArea(edges: .bottom))
         .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .top)
     }
 
@@ -199,24 +204,25 @@ struct NearEarthView: View {
         TimelineView(.periodic(from: .now, by: 1)) { tl in
             let st = Orbits.propagate(s, atMs: tl.date.timeIntervalSince1970 * 1000)
             VStack(alignment: .leading, spacing: 4) {
-                Text(s.name).font(.title(22)).foregroundColor(Theme.txt)
+                Text(s.name).font(.titleSemi(22)).titleTracking(22).foregroundColor(Theme.txt)
+                // Catalogue number and orbit band are identifiers: mono.
                 Text("NORAD \(s.norad) · \(s.band)\(s.isHero ? "" : " · \(s.group)")")
-                    .font(.mono(10)).foregroundColor(Theme.dim)
+                    .font(.mono(12)).foregroundColor(Theme.dim)
                 VStack(spacing: 0) {
-                    statRow("Light-time to the ground below", Fmt.lightScaled(st.lightSeconds), accent: true)
+                    statRow("Light-time to the ground", Fmt.lightScaled(st.lightSeconds), accent: true)
                     statRow("Altitude", Fmt.kmValue(st.altitude))
                     statRow("Orbital speed", String(format: "%.2f km/s", st.speed))
                     statRow("Period", String(format: "%.1f min", st.periodMin))
                 }
                 .padding(.top, 8)
                 if let note = s.note {
-                    Text(note).font(.mono(12)).foregroundColor(Theme.dim).lineSpacing(4)
+                    Text(note).font(.sans(15)).foregroundColor(Theme.dim).lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
                 }
                 Button { selected = nil } label: {
-                    Text("CLEAR SELECTION").font(.mono(10)).tracking(1.4).foregroundColor(Theme.dim)
-                        .padding(.horizontal, 11).padding(.vertical, 7)
-                        .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.rule2, lineWidth: 1))
+                    Text("Clear selection").font(.sansMed(15)).foregroundColor(Theme.txt)
+                        .padding(.horizontal, 16).padding(.vertical, 9)
+                        .glassPill()
                 }
                 .padding(.top, 10)
             }
@@ -225,7 +231,7 @@ struct NearEarthView: View {
 
     private func statRow(_ label: String, _ value: String, accent: Bool = false) -> some View {
         HStack {
-            Text(label).font(.mono(11)).foregroundColor(Theme.dim)
+            MicroLabel(label)
             Spacer()
             Text(value).font(.monoMed(accent ? 17 : 15)).foregroundColor(accent ? Theme.delay : Theme.txt)
         }
@@ -236,23 +242,23 @@ struct NearEarthView: View {
     private var intro: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("A curated slice of the objects circling Earth, propagated live from today's orbital elements. Tap any dot for its numbers.")
-                .font(.mono(13)).foregroundColor(Theme.dim).lineSpacing(5)
+                .font(.sans(15)).foregroundColor(Theme.dim).lineSpacing(5)
                 .fixedSize(horizontal: false, vertical: true)
             if !heroes.isEmpty {
                 let cols = [GridItem(.adaptive(minimum: 90), spacing: 6)]
                 LazyVGrid(columns: cols, alignment: .leading, spacing: 6) {
                     ForEach(heroes) { h in
                         Button { selected = h.norad } label: {
-                            Text(h.name).font(.mono(11)).foregroundColor(Theme.signal)
-                                .padding(.horizontal, 9).padding(.vertical, 5)
-                                .background(RoundedRectangle(cornerRadius: 5).fill(Theme.signal.opacity(0.07)))
-                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.rule2, lineWidth: 1))
+                            Text(h.name).font(.sansMed(13)).foregroundColor(Theme.signal)
+                                .lineLimit(1)
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(Capsule().fill(Theme.signal.opacity(0.1)))
                         }
                     }
                 }
             }
-            Text("THE NEAR END OF THE LIGHT-TIME LADDER")
-                .font(.mono(10)).tracking(1.2).foregroundColor(Theme.dim2).padding(.top, 4)
+            Text("The near end of the light-time ladder")
+                .font(.sansSemi(17)).foregroundColor(Theme.txt).padding(.top, 8)
             ladderRow("ISS · LEO", 420 / C_KM_S)
             ladderRow("GPS · MEO", (26_560 - Orbits.rEarth) / C_KM_S)
             ladderRow("GEO", (GEO_KM - Orbits.rEarth) / C_KM_S)
@@ -262,7 +268,7 @@ struct NearEarthView: View {
 
     private func ladderRow(_ label: String, _ lt: Double) -> some View {
         HStack {
-            Text(label).font(.mono(12)).foregroundColor(Theme.txt)
+            Text(label).font(.sans(15)).foregroundColor(Theme.txt)
             Spacer()
             Text(Fmt.lightScaled(lt)).font(.monoMed(14)).foregroundColor(Theme.delay)
         }
@@ -272,15 +278,15 @@ struct NearEarthView: View {
 
     private var decaySection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("DECAY WATCH").font(.mono(10)).tracking(1.4).foregroundColor(Theme.dim)
+            Text("Decay watch").font(.titleSemi(17)).foregroundColor(Theme.txt)
             Text("Lowest perigees in the set, closest to re-entry.")
-                .font(.mono(11)).foregroundColor(Theme.dim2)
+                .font(.sans(13)).foregroundColor(Theme.dim)
             ForEach(decayWatch, id: \.sat.norad) { d in
                 Button { selected = d.sat.norad } label: {
                     HStack {
-                        Text(d.sat.name).font(.mono(12)).foregroundColor(Theme.dim)
+                        Text(d.sat.name).font(.sans(15)).foregroundColor(Theme.dim)
                         Spacer()
-                        Text("\(Int(d.perigee.rounded())) km").font(.mono(12)).foregroundColor(Theme.txt)
+                        Text("\(Int(d.perigee.rounded())) km").font(.monoMed(13)).foregroundColor(Theme.txt)
                     }
                     .padding(.vertical, 7)
                     .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)

@@ -43,7 +43,7 @@ export interface RenderInput {
 // No trailing semicolon: this is concatenated into `ctx.font`, which parses a
 // CSS font *value*, not a declaration. With one, canvas rejects the whole
 // assignment silently and the labels stay at the default 10px sans-serif.
-export const LABEL_FACE = '"Stack Sans Notch", "IBM Plex Sans", system-ui, sans-serif';
+export const LABEL_FACE = '"Stack Sans Notch", "Geist Variable", system-ui, sans-serif';
 // Set once per frame in render(), reused by labelAt so the label size tracks
 // the global --font-scale.
 let labelFont = `11px ${LABEL_FACE}`;
@@ -136,7 +136,7 @@ export function render(input: RenderInput): void {
   }
   ctx.globalAlpha = 1;
 
-  ring(rOf(120), 'rgba(143,214,230,.10)', [3, 6]);
+  ring(rOf(120), 'rgba(116,212,240,.10)', [3, 6]);
   {
     const [hx, hy] = project(0, -rOf(120), 0);
     labelAt(ctx, hx, hy, 'HELIOPAUSE ≈ 120 AU', PAL.faint, -8);
@@ -154,7 +154,7 @@ export function render(input: RenderInput): void {
   ctx.globalAlpha = 1;
 
   // --- planet rings ---
-  for (const p of model.planets) ring(rOf(p.auT), 'rgba(70,82,102,.34)');
+  for (const p of model.planets) ring(rOf(p.auT), 'rgba(255,255,255,.12)');
 
   // --- AU scale ticks ---
   ctx.fillStyle = PAL.faint;
@@ -171,8 +171,8 @@ export function render(input: RenderInput): void {
   const [ox, oy] = project(0, 0, 0);
   const sunR = 16 * planetZoom; // clearly the largest body (Jupiter ≈ 13px here)
   const glow = ctx.createRadialGradient(ox, oy, sunR * 0.5, ox, oy, sunR * 3);
-  glow.addColorStop(0, 'rgba(229,181,113,.30)');
-  glow.addColorStop(1, 'rgba(229,181,113,0)');
+  glow.addColorStop(0, 'rgba(242,183,102,.30)');
+  glow.addColorStop(1, 'rgba(242,183,102,0)');
   ctx.fillStyle = glow;
   ctx.beginPath();
   ctx.arc(ox, oy, sunR * 3, 0, TWO_PI);
@@ -260,7 +260,7 @@ export function render(input: RenderInput): void {
   // dot. Voyager 1 is the one that earns this. ---
   if (scene) {
     ctx.save();
-    ctx.strokeStyle = 'rgba(110,120,137,.35)';
+    ctx.strokeStyle = 'rgba(157,157,165,.35)';
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 4]);
     for (const g of model.clusters) {
@@ -270,7 +270,7 @@ export function render(input: RenderInput): void {
       ctx.moveTo(fx, fy);
       ctx.lineTo(g.ax, g.ay);
       ctx.stroke();
-      ctx.fillStyle = 'rgba(110,120,137,.5)';
+      ctx.fillStyle = 'rgba(157,157,165,.5)';
       ctx.fillRect(fx - 1, fy - 1, 2, 2);
     }
     ctx.restore();
@@ -278,7 +278,7 @@ export function render(input: RenderInput): void {
 
   // --- cluster anchors + leader lines ---
   ctx.save();
-  ctx.strokeStyle = 'rgba(70,82,102,.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,.16)';
   ctx.lineWidth = 1;
   for (const g of model.clusters) {
     if (g.members.length === 1) continue;
@@ -302,7 +302,7 @@ export function render(input: RenderInput): void {
   if (showPath && sel && earthSxy && sel.entry.status !== 'silent' && sel.entry.status !== 'retired') {
     const [ex, ey] = earthSxy;
     ctx.save();
-    ctx.strokeStyle = 'rgba(229,181,113,.32)';
+    ctx.strokeStyle = 'rgba(242,183,102,.32)';
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 5]);
     ctx.beginPath();
@@ -451,8 +451,8 @@ export function drawChip(
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
   // bottom gradient so the label stays legible over bright terrain
   const grad = ctx.createLinearGradient(0, y + h - h * 0.5, 0, y + h);
-  grad.addColorStop(0, 'rgba(6,8,11,0)');
-  grad.addColorStop(1, 'rgba(6,8,11,0.55)');
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.55)');
   ctx.fillStyle = grad;
   ctx.fillRect(x, y + h * 0.5, w, h * 0.5);
   ctx.restore();

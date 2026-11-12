@@ -95,7 +95,7 @@ struct RoverStoryView: View {
                     switch phase {
                     case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
                     case .empty: ProgressView().tint(.white)
-                    default: Text("Couldn't load frame").font(.mono(12)).foregroundColor(Theme.dim)
+                    default: Text("Couldn't load frame").font(.sans(15)).foregroundColor(Theme.dim)
                     }
                 }
                 .id(cur.id)
@@ -149,13 +149,14 @@ struct RoverStoryView: View {
             HStack(spacing: 10) {
                 avatar
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(roverName).font(.monoMed(14)).foregroundColor(.white)
-                    Text(location).font(.mono(11)).foregroundColor(.white.opacity(0.6))
+                    Text(roverName).font(.titleSemi(16)).foregroundColor(Theme.txt)
+                    Text(location).font(.sans(13)).foregroundColor(Theme.txt.opacity(0.65))
                 }
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 16, weight: .medium)).foregroundColor(.white)
-                        .padding(8)
+                    Image(systemName: "xmark").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.txt)
+                        .frame(width: 36, height: 36)
+                        .glassPill()
                 }
             }
         }
@@ -169,13 +170,13 @@ struct RoverStoryView: View {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let img): img.resizable().aspectRatio(contentMode: .fill)
-                    default: Circle().fill(Theme.rule2).overlay(
-                        Text(String(roverName.prefix(1))).font(.title(15)).foregroundColor(Theme.dim))
+                    default: Circle().fill(Theme.panel3).overlay(
+                        Text(String(roverName.prefix(1))).font(.sansSemi(15)).foregroundColor(Theme.dim))
                     }
                 }
             } else {
-                Circle().fill(Theme.rule2).overlay(
-                    Text(String(roverName.prefix(1))).font(.title(15)).foregroundColor(Theme.dim))
+                Circle().fill(Theme.panel3).overlay(
+                    Text(String(roverName.prefix(1))).font(.sansSemi(15)).foregroundColor(Theme.dim))
             }
         }
         .frame(width: 34, height: 34).clipShape(Circle())
@@ -185,12 +186,22 @@ struct RoverStoryView: View {
     private var bottomBar: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let cur = model.current {
-                Text(caption(cur)).font(.mono(13)).foregroundColor(.white)
+                caption(cur).foregroundColor(Theme.txt)
                 if owltSeconds > 0 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.up.forward").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.delay)
-                        Text(lightLine(cur)).font(.mono(12)).foregroundColor(Theme.delay)
+                    // Micro-labels name the values: light-time in amber, and
+                    // "taken", not "left": the shutter is not the moment the
+                    // light set off. The frame waits in the rover's memory for a
+                    // relay pass first.
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        MicroLabel("Light-time")
+                        Text(Fmt.lightTime(owltSeconds)).font(.monoMed(13)).foregroundColor(Theme.delay)
+                        if !cur.capturedUtc.isEmpty {
+                            MicroLabel("Taken").padding(.leading, 6)
+                            Text(Fmt.ago(cur.capturedUtc)).font(.mono(13)).foregroundColor(Theme.dim)
+                        }
                     }
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -199,18 +210,12 @@ struct RoverStoryView: View {
         .background(LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom))
     }
 
-    private func caption(_ img: RoverImage) -> String {
+    /// Sol and camera in Geist; the frame counter is a count, so mono.
+    private func caption(_ img: RoverImage) -> Text {
         let instr = img.instrument.replacingOccurrences(of: "_", with: " ")
         let sol = img.sol > 0 ? "Sol \(img.sol) · " : ""
         let tail = model.done ? "" : "+"
-        return "\(sol)\(instr) · \(model.index + 1) of \(model.frames.count)\(tail)"
-    }
-
-    private func lightLine(_ img: RoverImage) -> String {
-        var s = "Its light took \(Fmt.lightTime(owltSeconds)) to cross the void"
-        // "taken", not "left": the shutter is not the moment the light set
-        // off. The frame waits in the rover's memory for a relay pass first.
-        if !img.capturedUtc.isEmpty { s += " · taken \(Fmt.ago(img.capturedUtc))" }
-        return s
+        return Text("\(sol)\(instr) · ").font(.sansMed(15))
+            + Text("\(model.index + 1) of \(model.frames.count)\(tail)").font(.mono(13))
     }
 }

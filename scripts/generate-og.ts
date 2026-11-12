@@ -1,23 +1,26 @@
 // ---------------------------------------------------------------------------
 // generate-og.ts — build the 1200×630 Open Graph card at build time.
-// A log-radial ring motif evoking the map, with Voyager 1's REAL one-way light
-// time (read from fleet.json) overlaid. No invented numbers.
+// The brand card: the wordmark, the thesis, and one real number, Voyager 1's
+// one-way light time read from fleet.json. No invented numbers.
+// The type is Stack Sans Notch and Geist Mono, from scripts/og-fonts, turned into outlines with
+// opentype.js: no system font is involved, so the card is the same on a laptop
+// and in CI.
 // ---------------------------------------------------------------------------
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import sharp from 'sharp';
+import opentype from 'opentype.js';
 import type { FleetData } from '../src/types.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const FONTS = join(ROOT, 'scripts', 'og-fonts');
 const FLEET = join(ROOT, 'public', 'data', 'fleet.json');
 const LOGO = join(ROOT, 'public', 'sublight.svg');
 const OUT = join(ROOT, 'public', 'og.png');
 
 const W = 1200;
 const H = 630;
-const CX = 300;
-const CY = 315;
 
 function fmtOwlt(s: number): string {
   const h = Math.floor(s / 3600);
@@ -38,44 +41,61 @@ async function main() {
     console.warn('generate-og: fleet.json unavailable, using em dash');
   }
 
-  // Embed the Sublight wordmark (strip its outer <svg> wrapper, scale into place).
-  let logo = `<text x="720" y="150" font-family="'IBM Plex Sans', sans-serif" font-size="76" fill="#DCE2EC">Sublight</text>`;
+  // The wordmark is paths already (public/sublight.svg); scale it into place.
+  let logo = `<text x="80" y="118" font-family="Stack Sans Notch" font-size="44" fill="#F5F5F7">Sublight</text>`;
   try {
     const raw = await readFile(LOGO, 'utf8');
+    const vb = raw.match(/viewBox="([^"]+)"/)![1]!.split(/\s+/).map(Number);
     const inner = raw.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
-    logo = `<g transform="translate(720,92) scale(0.42)">${inner}</g>`;
+    const h = 40, k = h / vb[3]!;
+    logo = `<g fill="#F5F5F7" transform="translate(80,80) scale(${k.toFixed(5)}) translate(${-vb[0]!},${-vb[1]!})">${inner}</g>`;
   } catch {
     console.warn('generate-og: sublight.svg unavailable, using text wordmark');
   }
 
-  // Log-radial rings, matching the map's compression.
+  // Log-radial rings, matching the map's compression, rising off the bottom right.
+  const RX = 1040, RY = 640;
   const rings = [1, 5, 30, 120]
-    .map((au) => {
-      const r = (Math.log10(1 + au * 400) / Math.log10(1 + 200 * 400)) * 520;
-      return `<circle cx="${CX}" cy="${CY}" r="${r.toFixed(1)}" fill="none" stroke="#232B37" stroke-width="1"/>`;
+    .map((au, i) => {
+      const r = (Math.log10(1 + au * 400) / Math.log10(1 + 200 * 400)) * 560;
+      return `<circle cx="${RX}" cy="${RY}" r="${r.toFixed(1)}" fill="none" stroke="#FFFFFF" stroke-opacity="${(0.1 - i * 0.015).toFixed(3)}" stroke-width="1"/>`;
     })
     .join('');
 
-  const stars = Array.from({ length: 90 }, () => {
-    const x = Math.random() * W;
-    const y = Math.random() * H;
-    const o = (Math.random() * 0.4 + 0.1).toFixed(2);
-    return `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="1.4" height="1.4" fill="#AEB9CC" opacity="${o}"/>`;
-  }).join('');
+  // Type as outlines: x, baseline y, size px, tracking in em.
+  const semi = await opentype.load(join(FONTS, 'StackSansNotch-SemiBold.ttf'));
+  const mono = await opentype.load(join(FONTS, 'GeistMono-Medium.ttf'));
+  const set = (font: opentype.Font, text: string, x: number, y: number, size: number, trackEm: number, fill: string) => {
+    const k = size / font.unitsPerEm;
+    const glyphs = font.stringToGlyphs(text);
+    let d = '';
+    glyphs.forEach((g, i) => {
+      d += g.getPath(x, y, size).toPathData(2);
+      const next = glyphs[i + 1];
+      x += (g.advanceWidth ?? 0) * k + (next ? font.getKerningValue(g, next) * k : 0) + trackEm * size;
+    });
+    return `<path d="${d}" fill="${fill}"/>`;
+  };
+  const type = [
+    set(semi, 'Nothing you see', 78, 290, 68, -0.03, '#F5F5F7'),
+    set(semi, 'is happening now.', 78, 368, 68, -0.03, '#67676F'),
+    set(mono, 'VOYAGER 1 · ONE-WAY LIGHT-TIME', 80, 500, 15, 0.08, '#67676F'),
+    set(mono, owltLabel, 78, 558, 48, -0.03, '#F2B766'),
+  ].join('');
 
   const svg = `
   <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-    <rect width="${W}" height="${H}" fill="#06080B"/>
-    ${stars}
+    <defs>
+      <radialGradient id="glow" cx="${RX}" cy="${RY}" r="420" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#F2B766" stop-opacity="0.16"/><stop offset="1" stop-color="#F2B766" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="${W}" height="${H}" fill="#000000"/>
+    <rect width="${W}" height="${H}" fill="url(#glow)"/>
     ${rings}
-    <circle cx="${CX}" cy="${CY}" r="34" fill="#E5B571" opacity="0.16"/>
-    <circle cx="${CX}" cy="${CY}" r="5" fill="#E5B571"/>
-    <line x1="${CX}" y1="${CY}" x2="1040" y2="120" stroke="#E5B571" stroke-width="1.5" stroke-dasharray="3 6" opacity="0.5"/>
+    <circle cx="${RX}" cy="${RY}" r="7" fill="#F2B766"/>
     ${logo}
-    <text x="722" y="205" font-family="'IBM Plex Mono', monospace" font-size="19" fill="#6E7889" letter-spacing="1.2">NOTHING YOU SEE IS HAPPENING NOW.</text>
-    <text x="722" y="430" font-family="'IBM Plex Mono', monospace" font-size="17" fill="#454D5C" letter-spacing="3">VOYAGER 1 · ONE-WAY LIGHT TIME</text>
-    <text x="722" y="500" font-family="'IBM Plex Mono', monospace" font-size="64" fill="#E5B571" letter-spacing="-1">${owltLabel}</text>
-    <text x="722" y="560" font-family="'IBM Plex Mono', monospace" font-size="15" fill="#454D5C" letter-spacing="2">${owltLabel === '—' ? '' : 'MEASURED, NOT IMAGINED · JPL HORIZONS'}</text>
+    ${type}
   </svg>`;
 
   await sharp(Buffer.from(svg)).png().toFile(OUT);

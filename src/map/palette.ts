@@ -1,17 +1,17 @@
 // Canvas cannot easily read CSS custom properties per-pixel, so the token
 // values are mirrored here. Keep in lockstep with /src/styles/tokens.css.
 export const PAL = {
-  txt: '#DCE2EC',
-  dim: '#6E7889',
-  dim2: '#454D5C',
-  signal: '#8FD6E6',
-  delay: '#E5B571',
-  dead: '#3B4250',
-  rule2: '#232B37',
-  star: '#AEB9CC',
-  planet: '#5A6678',
-  planetLabel: '#4A5464',
-  faint: '#2E3644',
+  txt: '#F5F5F7',
+  dim: '#9D9DA5',
+  dim2: '#67676F',
+  signal: '#74D4F0',
+  delay: '#F2B766',
+  dead: '#3C3C43',
+  rule2: '#2A2A30',
+  star: '#C9CDD6',
+  planet: '#6A6A74',
+  planetLabel: '#5C5C66',
+  faint: '#2C2C33',
 } as const;
 
 /** The one place craft colour is decided. Amber is imagery-only. */

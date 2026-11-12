@@ -113,7 +113,7 @@ export function NearEarth({ satellites, onBack, onGoDeep }: NearEarthProps) {
         ctx.strokeStyle = PAL.faint;
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.font = '10px "Roboto Mono", monospace';
+        ctx.font = '11px "Geist Mono Variable", ui-monospace, monospace';
         ctx.fillStyle = PAL.dim;
         ctx.fillText(ring.label, cx + 6, cy - sr - 5);
         ctx.fillStyle = PAL.delay; // light-time values are amber
@@ -157,7 +157,7 @@ export function NearEarth({ satellites, onBack, onGoDeep }: NearEarthProps) {
         if (isSel) {
           // Only the selected object is labelled — the LEO shell is far too
           // dense for permanent labels to be legible.
-          ctx.font = '10px "Roboto Mono", monospace';
+          ctx.font = '11px "Geist Mono Variable", ui-monospace, monospace';
           ctx.fillStyle = PAL.txt;
           ctx.textAlign = 'left';
           ctx.fillText(s.name, x + 12, y + 3);
@@ -172,7 +172,7 @@ export function NearEarth({ satellites, onBack, onGoDeep }: NearEarthProps) {
       ctx.arc(mx, my, 3.5, 0, Math.PI * 2);
       ctx.fillStyle = PAL.dim;
       ctx.fill();
-      ctx.font = '10px "Roboto Mono", monospace';
+      ctx.font = '11px "Geist Mono Variable", ui-monospace, monospace';
       ctx.textAlign = 'right';
       ctx.fillStyle = PAL.dim;
       ctx.fillText('Moon · not to scale', mx - 8, my - 2);

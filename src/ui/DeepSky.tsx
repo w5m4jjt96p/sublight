@@ -18,7 +18,7 @@ export function DeepSky({ objects, onBack }: DeepSkyProps) {
   return (
     <div className="deepsky-overlay">
       <div className="deepsky">
-        <button className="back" onClick={onBack}>← Back to the map</button>
+        <button className="back" onClick={onBack}>← Back to the photos</button>
         <h1>Nothing here is new.</h1>
         <p className="deepsky-lede">
           Beyond the fleet, the light-time stops being minutes and starts being millennia. Every

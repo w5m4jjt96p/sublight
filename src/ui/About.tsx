@@ -22,7 +22,7 @@ export function About({ model, onBack }: AboutProps) {
             onBack();
           }}
         >
-          ← Back to the map
+          ← Back to the photos
         </a>
         <h1>Nothing here is happening now.</h1>
         <p className="lede">
@@ -74,7 +74,10 @@ export function About({ model, onBack }: AboutProps) {
         </p>
         <p>
           Imagery is public domain (NASA/JPL-Caltech, with instrument teams credited under each
-          frame). The credit line is always shown; nothing here implies a partnership.
+          frame). The credit line is always shown; nothing here implies a partnership. The stream
+          leaves out what is not a picture of anything: frames shot at night, with the camera
+          pointed at the empty sky, tiny sun-finding crops, and grey filter repeats of a colour
+          scene. That choice is made from each frame's own metadata, and no frame is altered.
         </p>
 
         <h2>Why the map is logarithmic</h2>
@@ -197,8 +200,8 @@ export function About({ model, onBack }: AboutProps) {
 
         <h2>Type and licences</h2>
         <p>
-          Set in Stack Sans Notch and Roboto Mono, with IBM Plex as a fallback, all under the{' '}
-          <a href="/licenses/StackSansNotch-OFL.txt" target="_blank" rel="noreferrer">
+          Titles in Stack Sans Notch, text in Geist and Geist Mono, all under the{' '}
+          <a href="/licenses/Geist-OFL.txt" target="_blank" rel="noreferrer">
             SIL Open Font License 1.1
           </a>
           . NASA imagery and data are in the public domain, credited to their source under each

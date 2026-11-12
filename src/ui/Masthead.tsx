@@ -1,7 +1,7 @@
-// The masthead now carries identity and live readouts only — the clock and the
-// tracking count, each with its icon. Navigation moved to the floating bar at
-// the foot of the screen, which is also what stopped this row overflowing on a
-// phone.
+// The masthead carries identity, and on the map its live readouts: the clock and
+// the tracking count belong to the instrument, not to a stream of photos, where
+// they only push the first picture down. Navigation moved to the floating bar at
+// the foot of the screen, which also stopped this row overflowing on a phone.
 import { IconClock, IconTracking, IconSearch } from './Icons.tsx';
 
 type View = 'map' | 'about' | 'gallery' | 'mars' | 'deepsky' | 'traverse';
@@ -20,22 +20,22 @@ interface MastheadProps {
 export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }: MastheadProps) {
   return (
     <div className="masthead">
-      <button className="brand" onClick={() => onNavigate('map')} aria-label="Sublight, home">
+      <button className="brand" onClick={() => onNavigate('gallery')} aria-label="Sublight, home">
         <img className="brand-logo" src="/sublight.svg" alt="Sublight" />
       </button>
 
-      <div className="mast-status">
+      {view === 'map' && <div className="mast-status">
         <span className="mast-stat" title="Coordinated Universal Time">
           <IconClock className="mast-icon" />
           <b>{utc}</b>
           <em>UTC</em>
         </span>
-        <span className="mast-stat" title="Craft currently tracked">
+        <span className="mast-stat mast-stat-track" title="Craft currently tracked">
           <IconTracking className="mast-icon" />
           <b>{trackingCount}</b>
           <em>tracking</em>
         </span>
-      </div>
+      </div>}
 
       <div className="mast-right">
         <button type="button" className="mast-icon-btn" onClick={onOpenSearch} aria-label="Search (press / or Cmd-K)">
@@ -44,7 +44,7 @@ export function Masthead({ trackingCount, utc, view, onNavigate, onOpenSearch }:
         <a
           className={`mast-link${view === 'about' ? ' active' : ''}`}
           href="#about"
-          onClick={(e) => { e.preventDefault(); onNavigate(view === 'about' ? 'map' : 'about'); }}
+          onClick={(e) => { e.preventDefault(); onNavigate(view === 'about' ? 'gallery' : 'about'); }}
         >
           About
         </a>

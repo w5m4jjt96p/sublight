@@ -16,7 +16,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import type { FramesData, FrameThumb } from '../types.ts';
 import type { MapModel } from '../map/model.ts';
 import { fetchSolImages, openingFrame } from '../data/roverImages.ts';
-import { subscribeLiveFeed, getLiveFeed } from '../data/liveFeed.ts';
+import { visibleFrames, cameraName } from '../data/frameScore.ts';
+import { subscribeLiveFeed, getLiveFeed, type LiveFeedState } from '../data/liveFeed.ts';
 import { fmtSince, fmtDuration } from '../data/format.ts';
 import { owltAt } from '../data/lightTime.ts';
 import { Avatar } from './Avatar.tsx';
@@ -35,6 +36,10 @@ const arrivedMs = (f: FrameThumb, owlt: number) =>
   (f.receivedUtc ? capMs(f.receivedUtc) : 0) || capMs(f.capturedUtc) + owlt * 1000;
 
 const PAGE = 3;       // publications revealed per step
+/** How long the first paint waits for NASA before settling for the bundle. */
+const FIRST_PAINT_WAIT_MS = 500;
+/** A new post that lands this soon after opening is simply the top of the feed. */
+const SETTLE_MS = 5000;
 const STRIP_MAX = 40; // sampled scrub strip; scrubbing still covers every frame
 
 interface CraftMeta {
@@ -64,12 +69,17 @@ interface FeedProps {
   generatedAt: string | null;
   now: number;
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
-  /** Reports the newest publication, so the page lede can quote the same
-   *  arrival the reader sees at the top of the stream. */
-  onFreshest?: (f: { name: string; ms: number }) => void;
 }
 
-export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }: FeedProps) {
+const sinceLabel = (ms: number, now: number) => {
+  const since = fmtSince(new Date(ms).toISOString(), now);
+  return since === 'just now' ? since : `${since} ago`;
+};
+
+/** Same picture, whichever source described it: bundle and live differ in URLs. */
+const frameKey = (f: FrameThumb) => `${capMs(f.capturedUtc)}|${f.instrument}`;
+
+export function Feed({ frames, model, generatedAt, now, onOpenList }: FeedProps) {
   const [byCraft, setByCraft] = useState<Record<string, FrameThumb[]>>({});
   const [visible, setVisible] = useState(PAGE);
   const [loading, setLoading] = useState(false);
@@ -87,7 +97,7 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
         name: c.entry.name,
         location: c.entry.location,
         owlt,
-        lightLine: owlt > 0 ? `Its light took ${fmtDuration(owlt)} to cross the void` : null,
+        lightLine: owlt > 0 ? fmtDuration(owlt) : null,
       };
     }
     return m;
@@ -107,27 +117,65 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
     setByCraft(seed);
   }, [frames]);
 
-  // The live stream is loaded app-wide (see data/liveFeed.ts): it starts on
-  // the map, the moment the site opens, and polls on its own. This component
-  // only folds whatever the store holds into the stream. A cached stream from
-  // the last visit is kept per craft only where it is newer than the bundle,
-  // since a bundle refreshed since that visit is the fresher of the two.
+  // The live stream is loaded app-wide (see data/liveFeed.ts), from the moment
+  // the code runs. This component folds whatever the store holds into the
+  // stream. Sols the reader has already scrolled back to stay: a poll carries
+  // only the latest sols, and dropping the rest would pull the feed out from
+  // under them. A cache from the last visit is kept per craft only where it is
+  // newer than the bundle, since a bundle refreshed since then is the fresher.
   const live = useSyncExternalStore(subscribeLiveFeed, getLiveFeed);
-  useEffect(() => {
-    if (live.stage === 'none' || !seeded.current) return;
+  const applyLive = useCallback((s: LiveFeedState) => {
     const newest = (list: FrameThumb[]) => Math.max(0, ...list.map((f) => capMs(f.receivedUtc || f.capturedUtc)));
     setByCraft((prev) => {
       const next = { ...prev };
-      for (const [id, list] of Object.entries(live.byCraft)) {
-        if (!(id in frames)) continue;
-        if (live.stage === 'cache' && newest(list) < newest(prev[id] ?? [])) continue;
-        next[id] = list;
-        const c = live.cursors[id];
-        if (c) cursors.current[id] = { ...c };
+      for (const [id, list] of Object.entries(s.byCraft)) {
+        if (s.stage === 'cache' && newest(list) < newest(prev[id] ?? [])) continue;
+        const sols = list.map((f) => f.sol ?? 0);
+        const lowest = sols.length ? Math.min(...sols) : 0;
+        const c = cursors.current[id];
+        const older = c?.topSolComplete ? (prev[id] ?? []).filter((f) => (f.sol ?? 0) < lowest) : [];
+        next[id] = [...list, ...older];
+        const incoming = s.cursors[id];
+        if (incoming && !older.length) cursors.current[id] = { ...incoming };
       }
       return next;
     });
-  }, [live, frames]);
+    setHeld(null);
+  }, []);
+
+  // The first paint waits a beat for NASA, which usually answers inside it, so
+  // the reader does not watch a post get replaced a moment after it appears.
+  const [painted, setPainted] = useState(false);
+  useEffect(() => {
+    if (live.stage === 'live') { setPainted(true); return; }
+    const t = window.setTimeout(() => setPainted(true), FIRST_PAINT_WAIT_MS);
+    return () => window.clearTimeout(t);
+  }, [live.stage]);
+
+  // Anything that would change the top of the stream once the reader has
+  // settled waits behind a "New photos" pill: a picture must not swap while it
+  // is being looked at.
+  const [held, setHeld] = useState<LiveFeedState | null>(null);
+  const openedAt = useRef(performance.now());
+  const topArrival = useRef(0);
+  // Coming back to the tab counts as opening: they were not looking at anything.
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') openedAt.current = performance.now(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+  useEffect(() => {
+    if (live.stage === 'none' || !seeded.current) return;
+    const newestLive = Math.max(
+      0,
+      ...Object.values(live.byCraft).flat().filter((f) => (f.score ?? 0) >= 0).map((f) => capMs(f.receivedUtc || f.capturedUtc)),
+    );
+    const settled = performance.now() - openedAt.current > SETTLE_MS;
+    const scrolled = (sentinel.current?.closest('.gallery-overlay')?.scrollTop ?? 0) > 200;
+    if ((settled || scrolled) && topArrival.current && newestLive > topArrival.current) setHeld(live);
+    else applyLive(live);
+    // `frames` too: the store can land before the bundle has seeded the stream.
+  }, [live, frames, applyLive]);
 
   // Flatten the fleet, sort by arrival, then fold each craft's sol into one post.
   const pubs = useMemo(() => {
@@ -135,7 +183,10 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
     for (const [id, list] of Object.entries(byCraft)) {
       const m = meta[id];
       if (!m) continue;
-      for (const f of list) flat.push({ f, craftId: id, arr: arrivedMs(f, m.owlt) });
+      for (const f of list) {
+        if ((f.score ?? 0) < 0) continue; // night noise, flat sky, sun-finding crops
+        flat.push({ f, craftId: id, arr: arrivedMs(f, m.owlt) });
+      }
     }
     flat.sort((a, b) => b.arr - a.arr);
 
@@ -158,6 +209,7 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
       // if they run in the order the camera shot them — a whole downlink shares
       // one arrival time, so sorting the post by arrival would scramble it.
       b.photos.sort((x, y) => capMs(y.capturedUtc) - capMs(x.capturedUtc));
+      b.photos = visibleFrames(b.photos);
       return {
         key, craftId: b.craftId, craftName: m.name, location: m.location,
         owlt: m.owlt, lightLine: m.lightLine,
@@ -166,13 +218,7 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
     });
   }, [byCraft, meta]);
 
-  // The lede used to read the bundled snapshot while the stream showed live
-  // frames, so it could name one craft and one age while the post right under
-  // it showed another. One source of truth: whatever is actually on top.
-  useEffect(() => {
-    const top = pubs[0];
-    if (top) onFreshest?.({ name: top.craftName, ms: top.arrivalMs });
-  }, [pubs, onFreshest]);
+  topArrival.current = pubs[0]?.arrivalMs ?? 0;
 
   // Step every rover back one sol and re-merge, so the stream stays in date
   // order across craft rather than exhausting one rover first.
@@ -245,11 +291,26 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
   const shown = pubs.slice(0, visible);
   const exhausted = Object.values(cursors.current).every((c) => c.done);
 
+  const showHeld = () => {
+    if (held) applyLive(held);
+    sentinel.current?.closest('.gallery-overlay')?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="feed">
-      {shown.map((pub) => (
-        <PublicationCard key={pub.key} pub={pub} now={now} onOpenList={onOpenList} />
-      ))}
+      {held && (
+        <button className="feed-new" onClick={showHeld}>↑ New photos</button>
+      )}
+      {!painted || shown.length === 0 ? (
+        <article className="post post-skeleton" aria-busy="true" aria-label="Loading the latest photos">
+          <div className="post-head"><span className="ga-avatar" /></div>
+          <div className="pub-stage" />
+        </article>
+      ) : (
+        shown.map((pub, i) => (
+          <PublicationCard key={pub.key} pub={pub} now={now} first={i === 0} onOpenList={onOpenList} />
+        ))
+      )}
       <div ref={sentinel} className="feed-sentinel" aria-hidden />
       {loading && <p className="feed-status">Reaching further back…</p>}
       {!loading && exhausted && shown.length > 0 && <p className="feed-status">That is the whole archive.</p>}
@@ -264,26 +325,33 @@ export function Feed({ frames, model, generatedAt, now, onOpenList, onFreshest }
  * they read as motion, the way a flipbook does. Scrub the strip, or hit play.
  */
 function PublicationCard({
-  pub, now, onOpenList,
+  pub, now, first, onOpenList,
 }: {
   pub: Publication;
   now: number;
+  first: boolean;
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
 }) {
   const count = pub.photos.length;
-  // Open on the best camera in the batch rather than on whatever the sequence
-  // happens to start with, which is often a PIXL micro-shot or a hazcam of the
-  // wheels. The array stays in capture order so the flipbook still reads as
-  // motion; only the frame you land on changes.
-  const [index, setIndex] = useState(0);
+  // Open on the best-scored frame rather than on whatever the sequence happens
+  // to start with. The array stays in capture order so the flipbook still reads
+  // as motion; only the frame you land on changes. Picked during the first
+  // render, so the wrong frame is never requested at all.
+  const [index, setIndex] = useState(() => openingFrame(pub.photos));
   /** Set as soon as the reader scrubs or plays, so we stop moving the frame. */
   const touched = useRef(false);
-  // Recomputed when the photos change, not only on mount: the card first
-  // renders on the bundled seed and the live batch replaces it a moment later,
-  // so an index picked once would point into an array that no longer exists.
+  // When more frames land, the picture on screen stays the picture on screen:
+  // follow it to its new position. Only if it has gone does the post re-open.
+  // The exception is the first moments after mount, when the whole sol lands a
+  // beat after a partial answer: nobody has looked yet, and a frame chosen from
+  // a handful must not outlive the sol's real best.
+  const shownKey = useRef<string | null>(null);
+  const mountedAt = useRef(performance.now());
   useEffect(() => {
-    if (touched.current) return;
-    setIndex(openingFrame(pub.photos));
+    const fresh = performance.now() - mountedAt.current < 1500;
+    const at = shownKey.current ? pub.photos.findIndex((p) => frameKey(p) === shownKey.current) : -1;
+    if (at >= 0 && (touched.current || !fresh)) setIndex(at);
+    else if (!touched.current) setIndex(openingFrame(pub.photos));
   }, [pub.photos]);
   const [playing, setPlaying] = useState(false);
   /** The sharp source that has finished loading, if it is the one on screen. */
@@ -294,6 +362,7 @@ function PublicationCard({
 
   const clamp = (i: number) => Math.min(Math.max(i, 0), count - 1);
   const current = pub.photos[clamp(index)]!;
+  shownKey.current = frameKey(current);
   // The stage is 380px tall, so it takes the mid size; the strip takes the
   // smallest. Bundled frames have no mid size — their `file` is already a local
   // 720px render, which serves the stage fine.
@@ -399,7 +468,7 @@ function PublicationCard({
           <span className="post-craft">{pub.craftName}</span>
           <span className="post-loc">{pub.location}</span>
         </div>
-        <span className="post-when">arrived {fmtSince(new Date(pub.arrivalMs).toISOString(), now)} ago</span>
+        <span className="post-when">arrived {sinceLabel(pub.arrivalMs, now)}</span>
       </header>
 
       <div
@@ -420,7 +489,7 @@ function PublicationCard({
              page comes from one host, and a post fires up to 40 strip requests,
              so without this the picture the reader is looking at queues behind
              its own filmstrip and the stage stays black. */
-          {...({ fetchpriority: 'high' } as object)}
+          {...({ fetchpriority: first ? 'high' : 'auto' } as object)}
           onError={(e) => {
             // A dropped frame leaves the stage blank; give it one retry.
             const el = e.currentTarget;
@@ -465,10 +534,15 @@ function PublicationCard({
 
       <div className="post-foot">
         <div className="post-caption">
-          {pub.sol != null ? `Sol ${pub.sol.toLocaleString()} · ` : ''}{current.instrument.replace(/_/g, ' ')}
+          {pub.sol != null ? `Sol ${pub.sol} · ` : ''}{cameraName(current.instrument)}
           {count > 1 && <span className="post-of"> · {count.toLocaleString()} frames</span>}
         </div>
-        {pub.lightLine && <div className="post-light">↗ {pub.lightLine}</div>}
+        {pub.lightLine && (
+          <div className="post-light" title="How long this light took to reach Earth">
+            <span className="post-light-l">Light-time</span>
+            {pub.lightLine}
+          </div>
+        )}
       </div>
     </article>
   );

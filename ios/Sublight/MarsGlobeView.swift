@@ -41,7 +41,7 @@ struct MarsGlobeView: View {
                 MarsSceneView(sites: sites, selected: $selected)
                     .overlay(alignment: .bottom) {
                         if selected == nil {
-                            Text(ageLine).font(.mono(12)).foregroundColor(Theme.delay)
+                            ageLine
                                 .padding(.bottom, 14).multilineTextAlignment(.center)
                                 .padding(.horizontal, 20)
                         }
@@ -52,53 +52,65 @@ struct MarsGlobeView: View {
         .preferredColorScheme(.dark)
     }
 
-    private var ageLine: String {
-        if let s = marsLightSeconds, s > 0 { return "You are seeing Mars as it was \(Fmt.lightTime(s)) ago." }
-        return "Drag to spin. Tap a rover to follow its drive."
+    /// Mars as it was one light-time ago: a micro-label, the value in amber.
+    @ViewBuilder private var ageLine: some View {
+        if let s = marsLightSeconds, s > 0 {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                MicroLabel("Light-time")
+                Text(Fmt.lightTime(s)).font(.monoMed(13)).foregroundColor(Theme.delay)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .glassPill()
+            .accessibilityElement(children: .combine)
+        } else {
+            Text("Drag to spin. Tap a rover to follow its drive.")
+                .font(.sans(13)).foregroundColor(Theme.dim)
+        }
     }
 
+    // A tab root: the nav bar is the way out, so there is no back button here.
     private var bar: some View {
         HStack(spacing: 16) {
-            Button(action: onClose) {
-                Text("← BACK").font(.mono(11)).tracking(1.5).foregroundColor(Theme.dim)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Mars").font(.title(22)).foregroundColor(Theme.txt)
-                Text("\(sites.count) sites · drag to spin · tap a marker").font(.mono(10)).foregroundColor(Theme.dim)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Mars").font(.titleSemi(30)).titleTracking(30).foregroundColor(Theme.txt)
+                (Text("\(sites.count)").font(.mono(12))
+                    + Text(" sites · drag to spin · tap a marker").font(.sans(13)))
+                    .foregroundColor(Theme.dim)
             }
             Spacer()
         }
-        .padding(.horizontal, 18).padding(.vertical, 12)
-        .background(Theme.panel)
-        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .bottom)
+        .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
+        .background(Theme.void)
     }
 
     private var panel: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 if let p = selSite {
-                    Text(p.site.name).font(.title(22)).foregroundColor(Theme.txt)
-                    Text(subtitle(p)).font(.mono(11)).foregroundColor(Theme.dim)
-                    Text(p.site.note).font(.mono(13)).foregroundColor(Theme.txt).lineSpacing(5)
+                    Text(p.site.name).font(.titleSemi(22)).titleTracking(22).foregroundColor(Theme.txt)
+                    subtitle(p).foregroundColor(Theme.dim)
+                    Text(p.site.note).font(.sans(15)).foregroundColor(Theme.txt).lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 10) {
                         if let cid = p.site.craftId, store.tracks[cid] != nil {
+                            // Tinted action: signal text on signal at 10%.
                             Button { onOpenTraverse(cid) } label: {
-                                Text("View surface traverse →").font(.mono(12)).foregroundColor(Theme.signal)
-                                    .padding(.horizontal, 14).padding(.vertical, 10)
-                                    .background(RoundedRectangle(cornerRadius: 6).fill(Theme.signal.opacity(0.08)))
-                                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.rule2, lineWidth: 1))
+                                Label("View surface traverse", systemImage: "arrow.right")
+                                    .labelStyle(TrailingIconLabel())
+                                    .font(.sansMed(15)).foregroundColor(Theme.signal)
+                                    .padding(.horizontal, 16).padding(.vertical, 10)
+                                    .background(Capsule().fill(Theme.signal.opacity(0.1)))
                             }.buttonStyle(.plain)
                         }
                         Button { selected = nil } label: {
-                            Text("CLEAR").font(.mono(10)).tracking(1.4).foregroundColor(Theme.dim)
-                                .padding(.horizontal, 12).padding(.vertical, 9)
-                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.rule2, lineWidth: 1))
+                            Text("Clear").font(.sansMed(15)).foregroundColor(Theme.txt)
+                                .padding(.horizontal, 16).padding(.vertical, 10)
+                                .glassPill()
                         }.buttonStyle(.plain)
                     }
                 } else {
                     Text("A globe of Mars from the Viking mosaic, with every place we have landed marked on it. The two amber dots are Perseverance and Curiosity, at their current drive positions. Tap one to walk its route.")
-                        .font(.mono(13)).foregroundColor(Theme.dim).lineSpacing(5)
+                        .font(.sans(15)).foregroundColor(Theme.dim).lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 18) {
                         legend(Theme.delay, "Active rover")
@@ -107,23 +119,47 @@ struct MarsGlobeView: View {
                     }
                 }
             }
-            .padding(18).padding(.bottom, 24)
+            // Clears the floating nav bar, which sits over the foot of this panel.
+            .padding(20).padding(.bottom, 64)
         }
-        .frame(maxHeight: 240)
-        .background(Theme.panel)
-        .overlay(Rectangle().fill(Theme.rule).frame(height: 1), alignment: .top)
+        .frame(maxHeight: 260)
+        .background(
+            UnevenRoundedRectangle(topLeadingRadius: Theme.rL, topTrailingRadius: Theme.rL, style: .continuous)
+                .fill(Theme.panel)
+                .ignoresSafeArea(edges: .bottom)
+        )
+        .overlay(
+            UnevenRoundedRectangle(topLeadingRadius: Theme.rL, topTrailingRadius: Theme.rL, style: .continuous)
+                .stroke(Theme.rule, lineWidth: 1)
+                .ignoresSafeArea(edges: .bottom)
+        )
     }
 
-    private func subtitle(_ p: PlacedMarsSite) -> String {
+    /// Kind in Geist; the year and coordinates are values, so mono.
+    private func subtitle(_ p: PlacedMarsSite) -> Text {
         let kind = p.site.kind == .feature ? "Landmark" : p.site.kind == .rover ? "Active rover" : "Lander"
         let yr = p.site.year.map { " · \($0)" } ?? ""
-        return "\(kind)\(yr) · \(String(format: "%.1f", p.lat))°, \(String(format: "%.1f", p.lon))°E"
+        let coords = "\(String(format: "%.1f", p.lat))°, \(String(format: "%.1f", p.lon))°E"
+        return Text(kind).font(.sans(13))
+            + Text(yr).font(.mono(12))
+            + Text(" · ").font(.sans(13))
+            + Text(coords).font(.mono(12))
     }
 
     private func legend(_ c: Color, _ label: String) -> some View {
         HStack(spacing: 7) {
-            Circle().fill(c).frame(width: 9, height: 9)
-            Text(label).font(.mono(11)).foregroundColor(Theme.dim)
+            Circle().fill(c).frame(width: 8, height: 8)
+            Text(label).font(.sans(13)).foregroundColor(Theme.dim)
+        }
+    }
+}
+
+/// Title first, icon after: "View surface traverse →".
+private struct TrailingIconLabel: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            configuration.title
+            configuration.icon.font(.system(size: 13, weight: .semibold))
         }
     }
 }

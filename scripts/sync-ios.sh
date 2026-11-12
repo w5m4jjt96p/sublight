@@ -22,7 +22,7 @@ echo "→ emitting editorial bodies.json"
 npx tsx -e "import {BODIES} from './src/data/bodies.ts'; import {writeFileSync} from 'node:fs'; writeFileSync('ios/Resources/data/bodies.json', JSON.stringify(BODIES,null,2)+'\n');"
 
 echo "→ rasterising wordmark"
-node -e "import('sharp').then(async ({default:sharp})=>{const {readFileSync}=await import('node:fs');await sharp(readFileSync('public/sublight.svg'),{density:600}).resize({height:144}).png().toFile('ios/Resources/bodies/sublight-wordmark.png');})"
+node -e "import('sharp').then(async ({default:sharp})=>{const {readFileSync}=await import('node:fs');await sharp(readFileSync('public/sublight.svg'),{density:72}).resize({height:144}).png().toFile('ios/Resources/bodies/sublight-wordmark.png');})"
 
 echo "→ regenerating Xcode project"
 cd ios && xcodegen generate

@@ -1,20 +1,14 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Self-hosted fonts (no CDN — the showcase must work offline once built).
-// Primary: Stack Sans Notch (big titles) + Roboto Mono (numbers / small text).
-// IBM Plex stays imported as a per-glyph fallback for symbols the display faces
-// may not cover (— · ↗ → ≈ °).
+// Self-hosted fonts (no CDN: the site must work offline once built).
+// Stack Sans Notch for titles and craft names, Geist for everything else people
+// read, Geist Mono for measured values.
 import '@fontsource/stack-sans-notch/400.css';
 import '@fontsource/stack-sans-notch/500.css';
 import '@fontsource/stack-sans-notch/600.css';
-import '@fontsource/roboto-mono/latin-400.css';
-import '@fontsource/roboto-mono/latin-500.css';
-import '@fontsource/ibm-plex-mono/400.css';
-import '@fontsource/ibm-plex-mono/500.css';
-import '@fontsource/ibm-plex-mono/600.css';
-import '@fontsource/ibm-plex-sans/400.css';
-import '@fontsource/ibm-plex-sans/500.css';
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 
 import './styles/tokens.css';
 import './styles/app.css';

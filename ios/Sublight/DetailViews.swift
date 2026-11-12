@@ -14,24 +14,30 @@ struct BundleImage: View {
     }
 }
 
+/// A short descriptive line (agency, kind, location, caption). Sentence case,
+/// Geist: only labels that name a value are uppercase.
 private struct Kicker: View {
     let text: String
     var color: Color = Theme.dim
     var body: some View {
-        Text(text.uppercased())
-            .font(.mono(10)).tracking(1.5).foregroundColor(color)
+        Text(text)
+            .font(.sans(13)).foregroundColor(color)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
+/// A micro-label naming a value, then the value. Measured values are mono;
+/// `prose` values (agency, type) are words and stay in Geist.
 private struct StatCell: View {
     let label: String
     let value: String
     var accent: Bool = false
+    var prose: Bool = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Kicker(text: label, color: Theme.dim2)
+        VStack(alignment: .leading, spacing: 5) {
+            MicroLabel(label)
             Text(value)
-                .font(.monoMed(15))
+                .font(prose ? .sansMed(16) : .monoMed(16))
                 .foregroundColor(accent ? Theme.delay : Theme.txt)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -52,10 +58,10 @@ private struct StatusChip: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 6, height: 6)
-            Text(status.uppercased()).font(.mono(10)).tracking(1.2).foregroundColor(color)
+            Text(status.prefix(1).uppercased() + status.dropFirst()).font(.sansMed(13)).foregroundColor(color)
         }
-        .padding(.horizontal, 9).padding(.vertical, 5)
-        .overlay(RoundedRectangle(cornerRadius: 4).stroke(color.opacity(0.4), lineWidth: 1))
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Capsule().fill(color.opacity(0.1)))
     }
 }
 
@@ -70,6 +76,7 @@ private struct SheetChrome<Content: View>: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Theme.panel)
+        .presentationCornerRadius(Theme.rL)
     }
 }
 
@@ -98,7 +105,7 @@ struct CraftDetail: View {
                     }
                 }
             } else {
-                Text("Unknown craft").font(.mono(13)).foregroundColor(Theme.dim)
+                Text("Unknown craft").font(.sans(15)).foregroundColor(Theme.dim)
             }
         }
         .fullScreenCover(item: $lightbox) { url in
@@ -118,21 +125,25 @@ struct CraftDetail: View {
                 Spacer()
                 StatusChip(status: c.reg.status)
             }
-            Text(c.name).font(.title(34)).foregroundColor(Theme.txt).lineSpacing(2)
+            Text(c.name).font(.titleSemi(34)).titleTracking(34).foregroundColor(Theme.txt).lineSpacing(2)
             Kicker(text: c.reg.location, color: Theme.dim)
         }
     }
 
     private func hero(_ c: Craft) -> some View {
         let full = store.heroFull(for: id)
-        let cap: String? = store.frames[id].map { "\($0.instrument) · \(Fmt.ago($0.capturedUtc))" }
-            ?? store.archive[id].map { $0.title }
+        // Instrument in Geist, the capture age (a timestamp) in mono.
+        let cap: Text? = store.frames[id].map {
+            Text($0.instrument).font(.sans(13))
+                + Text(" · ").font(.sans(13))
+                + Text(Fmt.ago($0.capturedUtc)).font(.mono(12))
+        } ?? store.archive[id].map { Text($0.title).font(.sans(13)) }
         return Button { lightbox = full } label: {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 BundleImage(url: store.heroThumb(for: id))
                     .frame(height: 210).frame(maxWidth: .infinity)
-                    .clipped().cornerRadius(6)
-                if let cap { Kicker(text: cap, color: Theme.dim) }
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.rM, style: .continuous))
+                if let cap { cap.foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true) }
             }
         }
         .buttonStyle(.plain)
@@ -144,16 +155,15 @@ struct CraftDetail: View {
                 Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                     .font(.system(size: 18)).foregroundColor(Theme.signal)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Surface traverse").font(.titleSemi(15)).foregroundColor(Theme.txt)
+                    Text("Surface traverse").font(.titleSemi(17)).foregroundColor(Theme.txt)
                     Text("Every drive and photo, on the real map of Mars")
-                        .font(.mono(11)).foregroundColor(Theme.dim)
+                        .font(.sans(13)).foregroundColor(Theme.dim)
                 }
                 Spacer()
-                Image(systemName: "arrow.right").font(.system(size: 13)).foregroundColor(Theme.dim)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
             }
             .padding(14)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Theme.signal.opacity(0.06)))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
+            .card(radius: Theme.rM, fill: Theme.panel2)
         }
         .buttonStyle(.plain)
     }
@@ -161,10 +171,10 @@ struct CraftDetail: View {
     private func lightTimeBlock(_ c: Craft) -> some View {
         let owlt = c.eph.owltSeconds
         return VStack(alignment: .leading, spacing: 14) {
-            VStack(alignment: .leading, spacing: 5) {
-                Kicker(text: "You are seeing light that left", color: Theme.dim)
-                Text(Fmt.lightTime(owlt) + " ago")
-                    .font(.title(30)).foregroundColor(Theme.delay)
+            VStack(alignment: .leading, spacing: 6) {
+                MicroLabel("Light-time")
+                Text(Fmt.lightTime(owlt))
+                    .font(.monoMed(30)).foregroundColor(Theme.delay)
             }
             HStack(spacing: 16) {
                 StatCell(label: "One-way delay", value: Fmt.lightTimeShort(owlt), accent: true)
@@ -176,8 +186,7 @@ struct CraftDetail: View {
             }
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Theme.void))
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.rule2, lineWidth: 1))
+        .card(radius: Theme.rM, fill: Theme.panel2)
     }
 
     private func factsGrid(_ c: Craft) -> some View {
@@ -185,26 +194,27 @@ struct CraftDetail: View {
         return LazyVGrid(columns: cols, alignment: .leading, spacing: 16) {
             StatCell(label: "Launched", value: Fmt.date(c.reg.launched))
             if let arr = c.reg.arrived { StatCell(label: "Arrived", value: Fmt.date(arr)) }
-            StatCell(label: "Agency", value: c.reg.agency)
-            StatCell(label: "Type", value: c.reg.kind.capitalized)
+            StatCell(label: "Agency", value: c.reg.agency, prose: true)
+            StatCell(label: "Type", value: c.reg.kind.capitalized, prose: true)
         }
     }
 
     private func note(_ text: String) -> some View {
         Text(text)
-            .font(.mono(13)).foregroundColor(Theme.dim).lineSpacing(4)
+            .font(.sans(15)).foregroundColor(Theme.dim).lineSpacing(4)
             .fixedSize(horizontal: false, vertical: true)
     }
 
     private func recentStrip(_ frames: [FrameThumb]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Kicker(text: "Recent frames")
+            Text("Recent frames").font(.titleSemi(17)).foregroundColor(Theme.txt)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(Array(frames.enumerated()), id: \.offset) { _, f in
                         Button { lightbox = DataStore.imageURL(f.full) } label: {
                             BundleImage(url: DataStore.imageURL(f.file))
-                                .frame(width: 110, height: 84).clipped().cornerRadius(4)
+                                .frame(width: 110, height: 84)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.rS, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                 }
@@ -228,25 +238,25 @@ struct BodyDetail: View {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 8) {
                         Kicker(text: info.kind)
-                        Text(info.name).font(.title(34)).foregroundColor(Theme.txt)
+                        Text(info.name).font(.titleSemi(34)).titleTracking(34).foregroundColor(Theme.txt)
                     }
                     if let url = store.bodyPhotoURL(id) {
                         Button { lightbox = store.bodyPhotoURL(id, full: true) } label: {
                             BundleImage(url: url)
                                 .frame(height: 220).frame(maxWidth: .infinity)
-                                .clipped().cornerRadius(6)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.rM, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                     Text(info.blurb)
-                        .font(.mono(14)).foregroundColor(Theme.txt).lineSpacing(5)
+                        .font(.sans(17)).foregroundColor(Theme.txt).lineSpacing(5)
                         .fixedSize(horizontal: false, vertical: true)
                     factsGrid(info)
                     if let credit = info.photo.credit {
-                        Kicker(text: "Image · " + credit, color: Theme.dim2)
+                        Kicker(text: "Image: " + credit, color: Theme.dim2)
                     }
                 }
             } else {
-                Text("No data").font(.mono(13)).foregroundColor(Theme.dim)
+                Text("No data").font(.sans(15)).foregroundColor(Theme.dim)
             }
         }
         .fullScreenCover(item: $lightbox) { url in

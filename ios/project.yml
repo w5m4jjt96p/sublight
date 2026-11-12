@@ -61,9 +61,13 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIAppFonts:
-          - RobotoMono-Regular.ttf
-          - RobotoMono-Medium.ttf
-          - RobotoMono-Bold.ttf
+          - Geist-Regular.ttf
+          - Geist-Medium.ttf
+          - Geist-SemiBold.ttf
+          - Geist-Bold.ttf
+          - GeistMono-Regular.ttf
+          - GeistMono-Medium.ttf
+          - GeistMono-SemiBold.ttf
           - StackSansNotch-Regular.ttf
           - StackSansNotch-SemiBold.ttf
           - StackSansNotch-Bold.ttf

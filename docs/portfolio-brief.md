@@ -107,9 +107,9 @@ admet ouvertement qu'elle est une échelle, pas une photographie.
 Trois couleurs seulement portent du sens :
 
 ```
---signal  #8FD6E6   actif
---delay   #E5B571   temps-lumière, et engins qui renvoient des images
---dead    #3B4250   silencieux / retiré
+--signal  #74D4F0   actif
+--delay   #F2B766   temps-lumière, et engins qui renvoient des images
+--dead    #3C3C43   silencieux / retiré
 ```
 
 `--delay` (l'ambre) ne sert **jamais** de décoration. Elle ne marque que deux
@@ -200,14 +200,20 @@ contient « Deep Sky », et un jeu générique aurait donné à l'ensemble un ai
 tableau de bord SaaS. Réglages, recherche et horloge gardent des glyphes
 système, trop basiques pour mériter un dessin.
 
-### 4.8 Typographie
+### 4.8 Typographie et identité
 
-- **Roboto Mono** pour les chiffres et le petit texte. Un chiffre monospacé ne
-  saute pas quand une horloge s'incrémente, et l'ensemble a le ton d'un
-  instrument.
-- **Stack Sans Notch** pour les titres et les noms d'engins.
-- **IBM Plex Mono / Sans** en repli par glyphe, uniquement pour les symboles que
-  les polices d'affichage ne couvrent pas (— · ↗ ≈ °).
+Refonte de novembre 2026, vers le registre d'une grande marque technologique
+(charte complète dans `docs/brand.md`) :
+
+- **Trois polices, trois rôles.** Stack Sans Notch, la police d'origine de la
+  marque, reste pour les titres et les noms d'engins. Geist prend tout le texte
+  courant, Geist Mono uniquement ce qu'un instrument a mesuré (valeurs, unités,
+  horodatages). Un paragraphe en mono avait l'air d'un terminal : il n'y en a plus.
+- **Les seules capitales** sont les micro-libellés qui nomment une valeur
+  (« LIGHT-TIME », « RANGE »), en mono 11 px espacé.
+- **Fond noir pur, gris neutres.** L'ancien bleu nuit teintait les photos ; les
+  photos portent désormais seules la couleur.
+- **Le logo** d'origine (l'éclat lumineux et le mot-symbole) est conservé.
 
 La typographie des éléments d'interface a été agrandie en deux passes tardives,
 sur retour utilisateur : les relevés (horloge UTC, compteur de suivi), la puce

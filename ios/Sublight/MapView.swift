@@ -55,6 +55,8 @@ struct MapView: View {
     @ObservedObject var store: DataStore
     @ObservedObject var controller: MapController
     @Binding var selection: Selection?
+    /// Nobody can see it behind the feed, so it does not draw behind the feed.
+    var active = true
 
     @State private var stars: [Star] = []
 
@@ -63,7 +65,7 @@ struct MapView: View {
 
     var body: some View {
         GeometryReader { geo in
-            TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { tl in
+            TimelineView(.animation(minimumInterval: 1.0 / 60.0, paused: !active)) { tl in
                 Canvas { ctx, size in
                     let layout = computeLayout(size: size, date: tl.date,
                                                cam: effCam, scale: effScale)
@@ -268,20 +270,20 @@ struct MapView: View {
         }
         // planet orbits
         for p in store.planets where p.id != "moon" {
-            ring(Projection.rOf(p.heliocentricAu), Color(hex: "465266").opacity(0.34))
+            ring(Projection.rOf(p.heliocentricAu), Color.white.opacity(0.09))
         }
         // heliopause
         ring(Projection.rOf(120), Theme.signal.opacity(0.10), dash: [3, 6])
         let hp = Projection.rOf(120) * Double(effScale)
         if hp > 40 {
             drawLabel(ctx, text: "HELIOPAUSE ≈ 120 AU",
-                      at: CGPoint(x: sun.x, y: sun.y - CGFloat(hp) - 6), color: Theme.dim2)
+                      at: CGPoint(x: sun.x, y: sun.y - CGFloat(hp) - 6), color: Theme.dim2, mono: true)
         }
         // AU scale markers along the +x axis
         for (au, label) in [(1.0, "1 AU"), (10.0, "10 AU"), (100.0, "100 AU")] {
             let r = Projection.rOf(au) * Double(effScale)
             guard r > 10 else { continue }
-            drawLabel(ctx, text: label, at: CGPoint(x: sun.x + CGFloat(r), y: sun.y + 8), color: Theme.dim2)
+            drawLabel(ctx, text: label, at: CGPoint(x: sun.x + CGFloat(r), y: sun.y + 8), color: Theme.dim2, mono: true)
         }
     }
 
@@ -399,8 +401,10 @@ struct MapView: View {
                    style: StrokeStyle(lineWidth: 1.5))
     }
 
-    private func drawLabel(_ ctx: GraphicsContext, text: String, at p: CGPoint, color: Color) {
-        let t = Text(text).font(.mono(9)).foregroundColor(color)
+    /// Names (planets, craft) are Geist; distances and scale marks are values,
+    /// so Geist Mono, a touch smaller, as on the web map.
+    private func drawLabel(_ ctx: GraphicsContext, text: String, at p: CGPoint, color: Color, mono: Bool = false) {
+        let t = Text(text).font(mono ? .monoMed(9.5) : .sansMed(11)).foregroundColor(color)
         ctx.draw(t, at: CGPoint(x: p.x, y: p.y + 4), anchor: .top)
     }
 

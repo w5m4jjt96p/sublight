@@ -85,6 +85,8 @@ void main(){
 
 const MAX_ZOOM = 40;
 
+let webglProbe: boolean | undefined;
+
 export function MarsGlobe({ tracks, marsLightSeconds, focusId, onOpenTraverse, onBack }: MarsGlobeProps) {
   const glRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -169,7 +171,7 @@ export function MarsGlobe({ tracks, marsLightSeconds, focusId, onOpenTraverse, o
         octx.beginPath(); octx.arc(p.x, p.y, isSel ? 5.5 : isRover ? 4.5 : 3.5, 0, Math.PI * 2);
         octx.fillStyle = col; octx.fill();
         if (isSel) { octx.beginPath(); octx.arc(p.x, p.y, 11, 0, Math.PI * 2); octx.strokeStyle = col; octx.lineWidth = 1.4; octx.stroke(); }
-        if (isSel || isRover) { octx.font = '12px "Roboto Mono", monospace'; octx.fillStyle = isSel ? PAL.txt : PAL.dim; octx.fillText(s.name, p.x + 10, p.y + 4); }
+        if (isSel || isRover) { octx.font = '12px "Stack Sans Notch", "Geist Variable", system-ui, sans-serif'; octx.fillStyle = isSel ? PAL.txt : PAL.dim; octx.fillText(s.name, p.x + 10, p.y + 4); }
       }
     };
 
@@ -183,28 +185,34 @@ export function MarsGlobe({ tracks, marsLightSeconds, focusId, onOpenTraverse, o
     // rasterisation — draw a green triangle and read it back — because some
     // environments report a working context and compiling shaders yet never
     // draw anything. If it can't rasterise, use the Canvas-2D fallback.
-    const webglWorks = (() => {
+    // Probed once per page, and the probe's context released at once: browsers
+    // cap live WebGL contexts and drop the oldest, which could be this globe's.
+    const webglWorks = webglProbe ??= (() => {
+      let g: WebGLRenderingContext | null = null;
       try {
         const c = document.createElement('canvas'); c.width = 4; c.height = 4;
-        const g = c.getContext('webgl'); if (!g) return false;
-        const sh = (t: number, s: string) => { const o = g.createShader(t)!; g.shaderSource(o, s); g.compileShader(o); return o; };
-        const pr = g.createProgram()!;
-        g.attachShader(pr, sh(g.VERTEX_SHADER, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}'));
-        g.attachShader(pr, sh(g.FRAGMENT_SHADER, 'void main(){gl_FragColor=vec4(0.0,1.0,0.0,1.0);}'));
-        g.linkProgram(pr);
-        if (!g.getProgramParameter(pr, g.LINK_STATUS)) return false;
-        g.useProgram(pr);
-        const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b);
-        g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), g.STATIC_DRAW);
-        const loc = g.getAttribLocation(pr, 'p'); g.enableVertexAttribArray(loc); g.vertexAttribPointer(loc, 2, g.FLOAT, false, 0, 0);
-        g.clearColor(0, 0, 0, 1); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLES, 0, 3);
-        const px = new Uint8Array(4); g.readPixels(2, 2, 1, 1, g.RGBA, g.UNSIGNED_BYTE, px);
+        const gc = c.getContext('webgl'); g = gc; if (!gc) return false;
+        const sh = (t: number, s: string) => { const o = gc.createShader(t)!; gc.shaderSource(o, s); gc.compileShader(o); return o; };
+        const pr = gc.createProgram()!;
+        gc.attachShader(pr, sh(gc.VERTEX_SHADER, 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}'));
+        gc.attachShader(pr, sh(gc.FRAGMENT_SHADER, 'void main(){gl_FragColor=vec4(0.0,1.0,0.0,1.0);}'));
+        gc.linkProgram(pr);
+        if (!gc.getProgramParameter(pr, gc.LINK_STATUS)) return false;
+        gc.useProgram(pr);
+        const b = gc.createBuffer(); gc.bindBuffer(gc.ARRAY_BUFFER, b);
+        gc.bufferData(gc.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gc.STATIC_DRAW);
+        const loc = gc.getAttribLocation(pr, 'p'); gc.enableVertexAttribArray(loc); gc.vertexAttribPointer(loc, 2, gc.FLOAT, false, 0, 0);
+        gc.clearColor(0, 0, 0, 1); gc.clear(gc.COLOR_BUFFER_BIT); gc.drawArrays(gc.TRIANGLES, 0, 3);
+        const px = new Uint8Array(4); gc.readPixels(2, 2, 1, 1, gc.RGBA, gc.UNSIGNED_BYTE, px);
         return px[1]! > 200 && px[0]! < 80;
       } catch { return false; }
+      finally { g?.getExtension('WEBGL_lose_context')?.loseContext(); }
     })();
 
     if (webglWorks) {
-      const gl = glCanvas.getContext('webgl', { antialias: true, alpha: true })!;
+      // Opaque: a transparent WebGL canvas composites as white in some WebKit
+      // views, which turned the whole globe view into a blank page.
+      const gl = glCanvas.getContext('webgl', { antialias: true, alpha: false })!;
       const compile = (t: number, src: string) => { const sh = gl.createShader(t)!; gl.shaderSource(sh, src); gl.compileShader(sh); return sh; };
       const prog = gl.createProgram()!;
       gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG)); gl.linkProgram(prog);
@@ -237,13 +245,16 @@ export function MarsGlobe({ tracks, marsLightSeconds, focusId, onOpenTraverse, o
         };
         gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS);
 
-        cleanupGlobe = () => gl.getExtension('WEBGL_lose_context')?.loseContext();
+        // Shrinking the drawing buffer frees the GPU memory. Losing the context
+        // instead broke every remount (React re-runs this effect in development,
+        // and getContext then hands back the same, dead, context): a blank globe.
+        cleanupGlobe = () => { glCanvas.width = 0; glCanvas.height = 0; };
         (glCanvas as HTMLCanvasElement & { _drawGlobe?: (g: ReturnType<typeof geom>, dpr: number) => void })._drawGlobe = (g, dpr) => {
           if (glCanvas.width !== Math.round(g.w * dpr) || glCanvas.height !== Math.round(g.h * dpr)) {
             glCanvas.width = Math.round(g.w * dpr); glCanvas.height = Math.round(g.h * dpr);
           }
           gl.viewport(0, 0, glCanvas.width, glCanvas.height);
-          gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
           gl.uniformMatrix3fv(uRot, false, viewRot(view.current.lon, view.current.lat));
           gl.uniform2f(uCenter, g.cx, g.cy); gl.uniform1f(uR, g.R); gl.uniform2f(uVp, g.w, g.h);
           gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_SHORT, 0);

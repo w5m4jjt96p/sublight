@@ -36,14 +36,20 @@ struct SearchView: View {
         ZStack {
             Theme.void.ignoresSafeArea()
             VStack(spacing: 0) {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").foregroundColor(Theme.dim)
-                    TextField("", text: $query, prompt: Text("Jump to a craft or world").foregroundColor(Theme.dim2))
-                        .font(.mono(15)).foregroundColor(Theme.txt)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                        .focused($focused)
+                HStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass").foregroundColor(Theme.dim)
+                        TextField("", text: $query, prompt: Text("Jump to a craft or world").foregroundColor(Theme.dim2))
+                            .font(.sans(17)).foregroundColor(Theme.txt)
+                            .tint(Theme.signal)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .focused($focused)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(Capsule().fill(Theme.panel2))
+                    .overlay(Capsule().stroke(Theme.rule, lineWidth: 1))
                     Button(action: onClose) {
-                        Text("Close").font(.mono(12)).foregroundColor(Theme.dim)
+                        Text("Close").font(.sansMed(17)).foregroundColor(Theme.signal)
                     }
                 }
                 .padding(16)
@@ -55,17 +61,17 @@ struct SearchView: View {
                             Button { onSelect(row.sel) } label: {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(row.name).font(.monoMed(15)).foregroundColor(Theme.txt)
-                                        Text(row.sub.uppercased()).font(.mono(9)).tracking(1)
+                                        Text(row.name).font(.sansMed(17)).foregroundColor(Theme.txt)
+                                        Text(row.sub).font(.sans(13))
                                             .foregroundColor(Theme.dim)
                                     }
                                     Spacer()
                                     Image(systemName: "arrow.up.right").font(.system(size: 11))
                                         .foregroundColor(Theme.dim2)
                                 }
-                                .padding(.horizontal, 16).padding(.vertical, 12)
+                                .padding(.horizontal, 20).padding(.vertical, 12)
                             }.buttonStyle(.plain)
-                            Rectangle().fill(Theme.rule).frame(height: 1)
+                            Rectangle().fill(Theme.rule).frame(height: 1).padding(.leading, 20)
                         }
                     }
                 }

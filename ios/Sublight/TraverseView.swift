@@ -105,27 +105,31 @@ struct TraverseView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
+        // Presented full screen over another view, so it keeps its way back.
+        HStack(alignment: .center, spacing: 12) {
             Button(action: onClose) {
-                HStack(spacing: 5) {
-                    Image(systemName: "chevron.left").font(.system(size: 12, weight: .semibold))
-                    Text("Back").font(.mono(13))
-                }.foregroundColor(Theme.txt)
+                Image(systemName: "chevron.left").font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Theme.txt)
+                    .frame(width: 36, height: 36)
+                    .background(Circle().fill(Color.white.opacity(0.1)))
             }
+            .accessibilityLabel("Back")
             VStack(alignment: .leading, spacing: 2) {
-                Text(craftName).font(.title(20)).foregroundColor(Theme.txt)
-                Text("Surface traverse · \(region)").font(.mono(10)).foregroundColor(Theme.dim)
+                Text(craftName).font(.titleSemi(20)).titleTracking(20).foregroundColor(Theme.txt)
+                Text("Surface traverse · \(region)").font(.sans(13)).foregroundColor(Theme.dim)
+                    .lineLimit(1)
             }
             Spacer()
             if let d = track.distanceKm {
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text(String(format: "%.1f km", d)).font(.monoMed(14)).foregroundColor(Theme.txt)
-                    Text("DRIVEN").font(.mono(8)).tracking(1.4).foregroundColor(Theme.dim2)
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(String(format: "%.1f km", d)).font(.monoMed(15)).foregroundColor(Theme.txt)
+                    MicroLabel("Driven")
                 }
             }
         }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .background(Theme.panel.opacity(0.92))
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .glass(radius: Theme.rL)
+        .padding(.horizontal, 12).padding(.top, 4)
     }
 
     // MARK: - Canvas
@@ -151,7 +155,7 @@ struct TraverseView: View {
             let p = toScreen(start.lon, start.lat, off, s)
             ctx.stroke(Path(ellipseIn: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10)),
                        with: .color(Theme.txt), lineWidth: 1.5)
-            ctx.draw(Text("Landing").font(.mono(10)).foregroundColor(Theme.txt),
+            ctx.draw(Text("Landing").font(.sansMed(12)).foregroundColor(Theme.txt),
                      at: CGPoint(x: p.x, y: p.y - 14))
         }
         // selected drive stop
@@ -168,8 +172,9 @@ struct TraverseView: View {
         ctx.stroke(Path(ellipseIn: CGRect(x: cp.x - pr, y: cp.y - pr, width: pr * 2, height: pr * 2)),
                    with: .color(Theme.signal.opacity(Double(0.4 * (1 - phase)))), lineWidth: 1.5)
         ctx.fill(Path(ellipseIn: CGRect(x: cp.x - 5, y: cp.y - 5, width: 10, height: 10)), with: .color(Theme.signal))
-        ctx.draw(Text("\(craftName)\(track.current.sol.map { " · sol \($0)" } ?? "")")
-            .font(.mono(11)).foregroundColor(.white),
+        ctx.draw((Text(craftName).font(.sansSemi(13))
+                  + Text(track.current.sol.map { " · sol \($0)" } ?? "").font(.monoMed(11)))
+            .foregroundColor(Theme.txt),
                  at: CGPoint(x: cp.x, y: cp.y - 16))
     }
 
@@ -228,29 +233,39 @@ struct TraverseView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Sol \(s)").font(.titleSemi(15)).foregroundColor(Theme.txt)
-                    Text(loading ? "loading frames…"
-                         : sol.map { "\($0.count) raw frame\($0.count == 1 ? "" : "s")" } ?? "")
-                        .font(.mono(10)).tracking(1).foregroundColor(Theme.delay)
+                    Text("Sol \(s)").font(.titleSemi(17)).foregroundColor(Theme.txt)
+                    // A count, not a light-time: mono, and not amber.
+                    Group {
+                        if loading {
+                            Text("Loading frames…").font(.sans(13))
+                        } else if let sol {
+                            Text("\(sol.count)").font(.mono(12))
+                                + Text(" raw frame\(sol.count == 1 ? "" : "s")").font(.sans(13))
+                        }
+                    }
+                    .foregroundColor(Theme.dim)
                 }
                 Spacer()
                 if let sol, sol.count > 0 {
                     Button { storySol = StorySol(id: s) } label: {
-                        Text("View all \(sol.count) →").font(.mono(11)).foregroundColor(Theme.signal)
-                            .padding(.horizontal, 10).padding(.vertical, 6)
-                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(Theme.rule2, lineWidth: 1))
+                        (Text("View all ").font(.sansMed(15)) + Text("\(sol.count)").font(.monoMed(14)))
+                            .foregroundColor(Theme.signal)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .background(Capsule().fill(Theme.signal.opacity(0.1)))
                     }.buttonStyle(.plain)
                 }
                 Button { selSol = nil; sol = nil } label: {
-                    Image(systemName: "xmark").font(.system(size: 13)).foregroundColor(Theme.dim)
+                    Image(systemName: "xmark").font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.dim)
+                        .frame(width: 32, height: 32)
                 }
+                .accessibilityLabel("Close")
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if loading {
                         ProgressView().tint(Theme.dim).frame(width: 120, height: 88)
                     } else if let sol, sol.images.isEmpty {
-                        Text("No public frames for this sol.").font(.mono(11)).foregroundColor(Theme.dim)
+                        Text("No public frames for this sol.").font(.sans(13)).foregroundColor(Theme.dim)
                             .frame(height: 88)
                     }
                     ForEach(sol?.images ?? []) { img in
@@ -261,15 +276,17 @@ struct TraverseView: View {
                                 default: Rectangle().fill(Theme.rule)
                                 }
                             }
-                            .frame(width: 120, height: 88).clipped().cornerRadius(4)
-                            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Theme.rule2, lineWidth: 1))
+                            .frame(width: 120, height: 88)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.rS, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: Theme.rS, style: .continuous).stroke(Theme.rule, lineWidth: 1))
                         }.buttonStyle(.plain)
                     }
                 }
             }
         }
         .padding(14)
-        .background(Theme.panel.opacity(0.95))
+        .glass(radius: Theme.rL)
+        .padding(.horizontal, 12).padding(.bottom, 8)
     }
 }
 
@@ -284,21 +301,23 @@ private struct RemotePhotoView: View {
                 switch phase {
                 case .success(let img): img.resizable().aspectRatio(contentMode: .fit)
                 case .empty: ProgressView().tint(.white)
-                default: Text("Couldn't load image").font(.mono(12)).foregroundColor(Theme.dim)
+                default: Text("Couldn't load image").font(.sans(15)).foregroundColor(Theme.dim)
                 }
             }
             VStack {
                 HStack {
-                    Text("\(image.instrument.replacingOccurrences(of: "_", with: " "))\(image.sol > 0 ? " · sol \(image.sol)" : "")")
-                        .font(.mono(11)).foregroundColor(Theme.dim)
+                    (Text(image.instrument.replacingOccurrences(of: "_", with: " ")).font(.sans(13))
+                        + Text(image.sol > 0 ? " · sol \(image.sol)" : "").font(.mono(12)))
+                        .foregroundColor(Theme.dim)
                     Spacer()
                     Button(action: onClose) {
-                        Image(systemName: "xmark").font(.system(size: 15, weight: .medium)).foregroundColor(Theme.txt)
-                            .padding(10).background(Circle().fill(Color.black.opacity(0.5)))
+                        Image(systemName: "xmark").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.txt)
+                            .frame(width: 40, height: 40)
+                            .glassPill()
                     }
                 }
                 Spacer()
-                Text("NASA/JPL-Caltech").font(.mono(9)).foregroundColor(Theme.dim2)
+                Text("NASA/JPL-Caltech").font(.sans(12)).foregroundColor(Theme.dim2)
             }.padding(16)
         }
     }
