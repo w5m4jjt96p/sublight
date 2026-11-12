@@ -3,23 +3,23 @@ app: sublight
 nom: Sublight
 statut: testflight
 plateformes: [iOS, web]
-attente: relire
+attente: valider
 date: 2026-11-12
 session: 7385da6c-a0b1-43ed-8cf3-75ad59fba284
 dossier: /Users/florian/dev/outthere
 ---
 ## Ce qui attend Florian
-Relire la refonte sur le site local et sur simulateur iOS (logo et titres d'origine conservés), puis valider le commit : rien n'est encore commité.
+Valider la mise en ligne : les deux commits sont poussés sur la branche refonte-photos-marque, et le site ne se déploie que depuis main.
 
 ## Prochaine étape
-Après validation, commiter en deux temps (photos d'abord, puis refonte de marque), puis incrémenter le build et archiver iOS.
+Fusionner la branche dans main pour déployer, mesurer le temps jusqu'à la première photo en production, puis incrémenter le build et archiver iOS.
 
 ## Fait aujourd'hui
 - Refonte : logo et titres Stack Sans Notch d'origine conservés, Geist pour le texte, Geist Mono pour les valeurs, palette noire neutre, charte dans docs/brand.md.
-- Site entièrement restylé : carte sans noms qui se chevauchent, image de partage refaite, page confidentialité alignée.
-- App iOS restylée à l'identique (icône d'origine, ambre retiré des réglages), compilée et vérifiée sur simulateur.
+- Site et app iOS restylés et vérifiés, image de partage refaite.
+- Deux commits poussés sur la branche refonte-photos-marque, rebasés sur les dernières données.
 
 ## À faire
 - [ ] Relire la refonte sur le site local et sur simulateur
-- [ ] Valider le commit et le push
+- [ ] Valider la fusion dans main pour mettre en ligne
 - [ ] Refaire les captures App Store avec la nouvelle identité
