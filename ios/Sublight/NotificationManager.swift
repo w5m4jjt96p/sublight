@@ -136,7 +136,8 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
         for craftId in watched {
             let images = await RoverImages.fetchLatest(roverId: craftId, limit: 48, force: true)
             var bySol: [Int: Int] = [:]
-            for i in images where i.sol > 0 { bySol[i.sol, default: 0] += 1 }
+            // Only frames the feed would show: a sol of night noise is not news.
+            for i in images where i.sol > 0 && i.score >= 0 { bySol[i.sol, default: 0] += 1 }
             out.append(contentsOf: bySol.map { Publication(craftId: craftId, sol: $0.key, frames: $0.value) })
         }
         return out.sorted { $0.sol > $1.sol }

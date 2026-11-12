@@ -1,18 +1,19 @@
-// The gallery — "the wall of arriving light". One chronological stream for the
-// whole fleet: publications from different craft interleave by when their light
-// reached Earth, newest first, each carrying its author. Retired craft have no
-// live arrival and would sink out of a dated feed forever, so they get their own
-// shelf at the end.
-import { useCallback, useState } from 'react';
+// The home of the product: open the site and this is what you see. One
+// chronological stream for the whole fleet: publications from different craft
+// interleave by when their light reached Earth, newest first, each carrying its
+// author. The photo comes first, so the thesis is one line and not an essay; the
+// post itself carries the rest ("arrived 2h ago", "its light took 4m"). Retired
+// craft have no live arrival and would sink out of a dated feed forever, so they
+// get their own shelf at the end.
 import type { FramesData, ArchiveData, FrameThumb } from '../types.ts';
 import type { MapModel } from '../map/model.ts';
-import { fmtSince } from '../data/format.ts';
 import { Feed } from './Feed.tsx';
 import { Avatar } from './Avatar.tsx';
 
 const asset = (p: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}${p}`;
 
 interface GalleryProps {
+  hidden: boolean;
   frames: FramesData;
   archive: ArchiveData;
   model: MapModel | null;
@@ -22,41 +23,15 @@ interface GalleryProps {
   onOpenList: (frames: FrameThumb[], index: number, craftName: string, owlt: number) => void;
 }
 
-export function Gallery({ frames, archive, model, generatedAt, now, onOpenArchive, onOpenList }: GalleryProps) {
+export function Gallery({ hidden, frames, archive, model, generatedAt, now, onOpenArchive, onOpenList }: GalleryProps) {
   const archiveCraft = (model?.craft ?? []).filter((c) => !frames[c.entry.id] && archive[c.entry.id]);
 
-  // The freshest arrival, for the lede. The bundled snapshot only seeds it:
-  // it is hours old by design, so quoting it while the live stream sat right
-  // underneath had the lede naming one craft and one age and the first post
-  // showing another. The feed reports whatever ends up on top, and that wins.
-  const [live, setLive] = useState<{ name: string; ms: number } | null>(null);
-  const onFreshest = useCallback((f: { name: string; ms: number }) => {
-    setLive((prev) => (prev && prev.ms === f.ms && prev.name === f.name ? prev : f));
-  }, []);
-
-  let seeded: { name: string; ms: number } | null = null;
-  for (const c of model?.craft ?? []) {
-    const f = frames[c.entry.id];
-    const stamp = f?.receivedUtc || f?.capturedUtc;
-    if (!stamp) continue;
-    const ms = Date.parse(stamp) || 0;
-    if (ms && (!seeded || ms > seeded.ms)) seeded = { name: c.entry.name, ms };
-  }
-  const freshest = live ?? seeded;
-
   return (
-    <div className="gallery-overlay">
+    <div className="gallery-overlay" hidden={hidden}>
       <div className="gallery">
-        <h1>The wall of arriving light</h1>
-        <p className="gallery-lede">
-          Every frame the fleet has sent home, in one stream ordered by when its light actually
-          reached Earth, most recent arrivals first. None of it is happening now.
-          {freshest && (
-            <> The freshest light here reached us from {freshest.name} {fmtSince(new Date(freshest.ms).toISOString(), now)} ago.</>
-          )}
-        </p>
+        <h1 className="gallery-lede">Just arrived from Mars. <span>None of it is happening now.</span></h1>
 
-        <Feed frames={frames} model={model} generatedAt={generatedAt} now={now} onOpenList={onOpenList} onFreshest={onFreshest} />
+        <Feed frames={frames} model={model} generatedAt={generatedAt} now={now} onOpenList={onOpenList} />
 
         {archiveCraft.length > 0 && (
           <section className="archive-shelf">

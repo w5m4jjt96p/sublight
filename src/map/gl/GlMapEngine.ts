@@ -133,6 +133,7 @@ export class GlMapEngine {
   private lastT = 0;
   private fontScale = 1;
   private frameCount = 0;
+  private paused = false;
   private reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   private resizeObs: ResizeObserver;
 
@@ -248,6 +249,7 @@ export class GlMapEngine {
   /** Planet icons are the flat map's; here the planets are lit spheres. */
   setPlanetImages(_images: Map<string, HTMLImageElement>): void { /* not used in 3D */ }
   setFocusInset(px: number): void { this.focusInsetX = px; }
+  setPaused(v: boolean): void { this.paused = v; }
 
   flyToId(id: string): void {
     const c = this.model?.craft.find((c) => c.entry.id === id);
@@ -639,6 +641,7 @@ export class GlMapEngine {
     this.raf = requestAnimationFrame(this.loop);
     const dt = (now - this.lastT) / 1000;
     this.lastT = now;
+    if (this.paused) return;
     if (this.frameCount++ % 15 === 0) {
       const n = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-scale'));
       if (isFinite(n) && n > 0) this.fontScale = n;
@@ -945,10 +948,33 @@ export class GlMapEngine {
     const w = this.w, h = this.h;
     ctx.clearRect(0, 0, w, h);
     const labelPx = 12 * this.fontScale;
-    const font = `${labelPx}px ${LABEL_FACE}`;
-    const label = (sx: number, sy: number, text: string, color: string, dy: number): void => {
-      ctx.fillStyle = color; ctx.font = font; ctx.textAlign = 'center'; ctx.fillText(text, sx, sy + dy);
+    // Names in sentence case and a medium weight, the way a product labels a
+    // thing; capitals and the mono face are kept for the instrument's own
+    // readouts (the legend, the light-time on the pulse).
+    const font = `500 ${labelPx}px ${LABEL_FACE}`;
+    const monoFont = `500 ${Math.round(labelPx * 0.85)}px "Geist Mono Variable", ui-monospace, monospace`;
+    // Labels are queued with a rank and placed at the end, best first; one
+    // that would overlap a placed label is left out, so the inner system reads
+    // as names and not as a smear. The selected craft is always placed.
+    type Q = { sx: number; sy: number; text: string; color: string; dy: number; f: string; rank: number };
+    const queue: Q[] = [];
+    const label = (sx: number, sy: number, text: string, color: string, dy: number, f = font, rank = 1): void => {
+      queue.push({ sx, sy, text, color, dy, f, rank });
     };
+    const placeLabels = (): void => {
+      queue.sort((a, b) => b.rank - a.rank);
+      const boxes: number[][] = [];
+      for (const q of queue) {
+        ctx.font = q.f;
+        const tw = ctx.measureText(q.text).width, th = labelPx;
+        const x0 = q.sx - tw / 2 - 3, y0 = q.sy + q.dy - th, x1 = q.sx + tw / 2 + 3, y1 = q.sy + q.dy + 3;
+        if (q.rank < 9 && boxes.some((b) => x0 < b[2]! && x1 > b[0]! && y0 < b[3]! && y1 > b[1]!)) continue;
+        boxes.push([x0, y0, x1, y1]);
+        ctx.fillStyle = q.color; ctx.textAlign = 'center'; ctx.fillText(q.text, q.sx, q.sy + q.dy);
+      }
+    };
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 6;
     const zoomFactor = this.homeDist / this.cur.dist;
 
     // Planet labels and hit radii, from the same matrices the GPU used.
@@ -958,7 +984,7 @@ export class GlMapEngine {
       if (!s) { p.sx = p.sy = -9999; p.hitR = 0; continue; }
       const rpx = this.sphereR(p.id, gx, gy, gz) * this.pxPerUnit(gx, gy, gz);
       p.sx = s[0]; p.sy = s[1]; p.hitR = rpx + 6;
-      label(s[0], s[1], p.name.toUpperCase(), PAL.planetLabel, p.id === 'moon' ? -(rpx + 8) : rpx + 13);
+      label(s[0], s[1], p.name, PAL.planetLabel, p.id === 'moon' ? -(rpx + 8) : rpx + 13, font, p.id === 'earth' ? 6 : p.id === 'moon' ? 2 : 4);
     }
 
     // Craft: anchors projected, then fanned in screen space, then drawn as the
@@ -984,7 +1010,7 @@ export class GlMapEngine {
       }
     }
     ctx.save();
-    ctx.strokeStyle = 'rgba(70,82,102,.5)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1;
     for (const g of m.clusters) {
       if (g.members.length === 1 || g.ax < -999) continue;
       ctx.beginPath(); ctx.arc(g.ax, g.ay, 2.4, 0, Math.PI * 2); ctx.stroke();
@@ -1001,7 +1027,7 @@ export class GlMapEngine {
       if (img && img.complete && img.naturalWidth > 0) {
         f.hitR = Math.max(chipW, chipH) / 2 + 3;
         drawChip(ctx, f.sx, f.sy, chipW, chipH, img, on, now, this.reducedMotion);
-        label(f.sx, f.sy, f.entry.name.toUpperCase(), on ? PAL.txt : PAL.delay, chipH / 2 + (on ? 15 : 12));
+        label(f.sx, f.sy, f.entry.name, on ? PAL.txt : PAL.delay, chipH / 2 + (on ? 15 : 12), font, on ? 10 : 7);
         continue;
       }
       f.hitR = on ? 14 : 12;
@@ -1013,7 +1039,7 @@ export class GlMapEngine {
       }
       ctx.fillStyle = col;
       ctx.fillRect(f.sx - 2.5, f.sy - 2.5, 5, 5);
-      label(f.sx, f.sy, f.entry.name.toUpperCase(), on ? PAL.txt : quiet ? '#39414F' : PAL.dim, on ? 24 : 14);
+      label(f.sx, f.sy, f.entry.name, on ? PAL.txt : quiet ? PAL.dead : PAL.dim, on ? 24 : 14, font, on ? 10 : quiet ? 1 : 3);
     }
 
     // The selected craft's leading pulse carries its remaining light-time.
@@ -1022,23 +1048,22 @@ export class GlMapEngine {
       if (s) {
         const mins = this.leadPulse.minutes;
         const t = mins >= 90 ? `${(mins / 60).toFixed(1)} LIGHT-H OUT` : `${Math.max(1, Math.round(mins))} LIGHT-MIN OUT`;
-        label(s[0], s[1], t, PAL.delay, -8);
+        label(s[0], s[1], t, PAL.delay, -8, monoFont, 9);
       }
     }
 
     // Heliopause label, and the legend that names the distortion.
     const hp = this.toScreen(0, 0, -rOf(120));
-    if (hp) label(hp[0], hp[1], 'HELIOPAUSE ≈ 120 AU', PAL.faint, -8);
-    ctx.fillStyle = PAL.faint; ctx.font = font; ctx.textAlign = 'right';
+    if (hp) label(hp[0], hp[1], 'HELIOPAUSE ≈ 120 AU', PAL.dim2, -8, monoFont, 0);
+    placeLabels();
+    ctx.fillStyle = PAL.dim2; ctx.font = monoFont; ctx.textAlign = 'right';
     // The legend names every distortion. On a phone the long form would run
     // off the left edge, so it is said shorter, and the gesture is the touch one.
     const narrow = w < 700;
     const lines = narrow
       ? [
-          'DISTANCE LOG · DIRECTIONS TRUE',
-          'BODIES IN TRUE PROPORTION',
+          'LOG DISTANCE · TRUE DIRECTIONS',
           `SIGNALS · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`,
-          'DRAG TO ORBIT · PINCH TO APPROACH',
         ]
       : [
           'DISTANCE · LOG SCALE, r = log10(1 + AU×400) · DIRECTIONS TRUE',
@@ -1046,7 +1071,12 @@ export class GlMapEngine {
           `SIGNALS INBOUND · 1 S = ${LIGHT_MIN_PER_S} LIGHT-MIN`,
           'DRAG TO ORBIT · SCROLL TO APPROACH',
         ];
-    if (this.skyTex) lines.push(narrow ? 'SKY · NASA SVS · ESA GAIA' : 'SKY · NASA/GSFC SVS · ESA GAIA DR2');
-    lines.forEach((t, i) => ctx.fillText(t, w - 16, 112 + labelPx * 1.5 * i));
+    if (this.skyTex && !narrow) lines.push('SKY · NASA/GSFC SVS · ESA GAIA DR2');
+    // Bottom right, under everything: a caption for the instrument, not a
+    // headline. On a phone it sits above the floating navigation.
+    const lh = labelPx * 1.35;
+    const y0 = h - (narrow ? 112 : 24) - lh * (lines.length - 1);
+    lines.forEach((t, i) => ctx.fillText(t, w - 16, y0 + lh * i));
+    ctx.restore();
   }
 }

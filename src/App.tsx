@@ -9,6 +9,10 @@ import { Lightbox } from './ui/Lightbox.tsx';
 import { About } from './ui/About.tsx';
 import { Gallery } from './ui/Gallery.tsx';
 import { startLiveFeed } from './data/liveFeed.ts';
+
+// Before anything else: the newest photos start on their way while the rest of
+// the app is still loading its own files.
+startLiveFeed();
 import { BottomNav } from './ui/BottomNav.tsx';
 import { Traverse } from './ui/Traverse.tsx';
 import { RoverStory } from './ui/RoverStory.tsx';
@@ -29,13 +33,6 @@ export function App() {
   const stageRef = useRef<HTMLDivElement>(null);
 
   const { model, frames, archive, bodyPhotos, tracks, deepSky, generatedAt, loading } = useData();
-
-  // Start pulling the live rover stream as soon as the bundle names the
-  // rovers, so the gallery is already fresh when the reader opens it.
-  useEffect(() => {
-    const ids = Object.entries(frames).filter(([, f]) => f.sol != null).map(([id]) => id);
-    if (ids.length) startLiveFeed(ids);
-  }, [frames]);
   const now = useNow();
   const dsn = useDsn();
   const spaceWeather = useSpaceWeather();
@@ -52,13 +49,22 @@ export function App() {
     owlt: number | null;
   } | null>(null);
   const [view, setView] = useState<'map' | 'about' | 'gallery' | 'traverse' | 'mars' | 'deepsky'>(() => {
-    if (window.location.hash === '#about') return 'about';
-    if (window.location.hash === '#gallery') return 'gallery';
-    if (window.location.hash.startsWith('#mars')) return 'mars';
-    if (window.location.hash === '#deepsky') return 'deepsky';
-    if (window.location.hash.startsWith('#t/')) return 'traverse';
+    const h = window.location.hash;
+    if (h === '#about') return 'about';
+    // No hash is the front door, and the front door is the photos.
+    if (h === '' || h === '#gallery') return 'gallery';
+    if (h.startsWith('#mars')) return 'mars';
+    if (h === '#deepsky') return 'deepsky';
+    if (h.startsWith('#t/')) return 'traverse';
     return 'map';
   });
+  // Kept mounted once opened, so going to the map and back returns to the same
+  // place in the stream. Not mounted before, so a deep link to the map does not
+  // download the feed's photos behind it.
+  const [feedOpened, setFeedOpened] = useState(view === 'gallery');
+  useEffect(() => {
+    if (view === 'gallery') setFeedOpened(true);
+  }, [view]);
   const [traverseId, setTraverseId] = useState<string | null>(null);
   // Full-screen rover "story": every raw frame of a sol, live, paging backward.
   // App-level so the gallery rail and any traverse drive-stop can open it.
@@ -96,6 +102,7 @@ export function App() {
     selectedId,
     showPath,
     focusInset,
+    active: view === 'map',
     onPick,
   });
 
@@ -147,7 +154,7 @@ export function App() {
         setView('about');
         return;
       }
-      if (h === '#gallery') {
+      if (h === '' || h === '#gallery') {
         setView('gallery');
         return;
       }
@@ -183,8 +190,9 @@ export function App() {
     apply();
     window.addEventListener('hashchange', apply);
     return () => window.removeEventListener('hashchange', apply);
+    // `tracks` too: they load after the model, and #mars/ and #t/ links need them.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model]);
+  }, [model, tracks]);
 
   // ⌘K / Ctrl+K / "/" opens the jump-to search (unless already typing in a field).
   useEffect(() => {
@@ -409,12 +417,13 @@ export function App() {
 
       {view === 'about' && (
         <div className="about-overlay">
-          <About model={model} onBack={() => navigate('map')} />
+          <About model={model} onBack={() => navigate('gallery')} />
         </div>
       )}
 
-      {view === 'gallery' && (
+      {feedOpened && (
         <Gallery
+          hidden={view !== 'gallery'}
           frames={frames}
           archive={archive}
           model={model}
@@ -444,7 +453,7 @@ export function App() {
         />
       )}
 
-      {view === 'deepsky' && <DeepSky objects={deepSky} onBack={() => navigate('map')} />}
+      {view === 'deepsky' && <DeepSky objects={deepSky} onBack={() => navigate('gallery')} />}
 
       {view === 'mars' && (
         <div className="mars-overlay">

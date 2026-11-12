@@ -68,6 +68,9 @@ struct FrameThumb: Codable {
     /// existed don't carry it.
     let receivedUtc: String?
     let sol: Int?
+    /// What the frame is worth showing. Optional: bundles written before scores
+    /// existed don't carry it.
+    let score: Int?
 }
 
 struct FrameData: Codable {

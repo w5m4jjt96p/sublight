@@ -11,6 +11,12 @@ struct Craft: Identifiable {
 }
 
 /// Loads every bundled JSON snapshot and exposes the joined model.
+///
+/// Positions and light-times must not be as old as the build. An app archived in
+/// August kept showing August's solar system, and every "Its light took..." line
+/// drifted further from the truth. So the ephemerides are read at launch from the
+/// site's static files, the same ones the web reads, and kept on disk for the next
+/// launch. The bundle is only the offline floor. No backend: these are plain files.
 final class DataStore: ObservableObject {
     @Published private(set) var craft: [Craft] = []
     @Published private(set) var planets: [PlanetEphemeris] = []
@@ -24,11 +30,72 @@ final class DataStore: ObservableObject {
     private(set) var satellites: [SatelliteRecord] = []
     private(set) var deepSky: [DeepSkyObject] = []
     private(set) var fleetGeneratedAt: String = ""
+    private var registry: [RegistryEntry] = []
+    private var planetsGeneratedAt: String = ""
 
-    init() { load() }
+    private static let site = "https://sublight.observer/data/"
+
+    init() {
+        load()
+        // Last launch's files, so this launch starts from them and not the bundle.
+        if let d = Self.readCache("fleet"), let fleet = try? JSONDecoder().decode(FleetData.self, from: d) { apply(fleet) }
+        if let d = Self.readCache("planets"), let p = try? JSONDecoder().decode(PlanetsData.self, from: d) { apply(p) }
+    }
+
+    /// Newer files from the site, if there are any. Failing is fine: whatever is
+    /// already loaded stays, and the next launch tries again.
+    @MainActor
+    func refreshEphemeris() async {
+        async let fleetData = Self.download("fleet")
+        async let planetsData = Self.download("planets")
+        if let d = await fleetData, let fleet = try? JSONDecoder().decode(FleetData.self, from: d),
+           fleet.generatedAt > fleetGeneratedAt, !fleet.craft.isEmpty {
+            apply(fleet)
+            Self.writeCache("fleet", d)
+        }
+        if let d = await planetsData, let p = try? JSONDecoder().decode(PlanetsData.self, from: d),
+           p.generatedAt > planetsGeneratedAt, !p.planets.isEmpty {
+            apply(p)
+            Self.writeCache("planets", d)
+        }
+    }
+
+    private func apply(_ fleet: FleetData) {
+        guard fleet.generatedAt > fleetGeneratedAt else { return }
+        fleetGeneratedAt = fleet.generatedAt
+        let ephById = Dictionary(fleet.craft.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        craft = registry.compactMap { r in ephById[r.id].map { Craft(reg: r, eph: $0) } }
+    }
+
+    private func apply(_ data: PlanetsData) {
+        guard data.generatedAt > planetsGeneratedAt else { return }
+        planetsGeneratedAt = data.generatedAt
+        planets = data.planets
+        planetsById = Dictionary(data.planets.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+    }
+
+    private static func download(_ name: String) async -> Data? {
+        guard let url = URL(string: site + name + ".json") else { return nil }
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadRevalidatingCacheData
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return data
+    }
+
+    private static func cacheURL(_ name: String) -> URL? {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+            .first?.appendingPathComponent("live-\(name).json")
+    }
+    private static func readCache(_ name: String) -> Data? {
+        cacheURL(name).flatMap { try? Data(contentsOf: $0) }
+    }
+    private static func writeCache(_ name: String, _ data: Data) {
+        if let url = cacheURL(name) { try? data.write(to: url, options: .atomic) }
+    }
 
     private func load() {
-        let registry: [RegistryEntry] = decode("registry") ?? []
+        registry = decode("registry") ?? []
         let fleet: FleetData? = decode("fleet")
         let planetsData: PlanetsData? = decode("planets")
         frames = decode("frames") ?? [:]
@@ -48,6 +115,7 @@ final class DataStore: ObservableObject {
             return Craft(reg: r, eph: e)
         }
 
+        planetsGeneratedAt = planetsData?.generatedAt ?? ""
         planets = planetsData?.planets ?? []
         planetsById = Dictionary(uniqueKeysWithValues: planets.map { ($0.id, $0) })
     }

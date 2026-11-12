@@ -1,7 +1,7 @@
 // The floating navigation, mirroring the iOS app: a capsule at the foot of the
-// screen with the Sun at its centre — tap it to come back to the map — and the
-// four destinations either side. Moving navigation out of the masthead also
-// stops that bar from overflowing on a phone.
+// screen. The photos lead because they are home; tapping them there returns to
+// the top of the stream, the way every feed does. Moving navigation out of the
+// masthead also stops that bar from overflowing on a phone.
 import type { ReactNode } from 'react';
 import { IconGallery, IconMars, IconDeepSky, IconSun } from './Icons.tsx';
 
@@ -20,7 +20,10 @@ export function BottomNav({ view, onNavigate, onHome }: BottomNavProps) {
   const item = (target: NavTarget, label: string, icon: ReactNode) => (
     <button
       className={`bn-item${view === target ? ' is-on' : ''}`}
-      onClick={() => onNavigate(view === target ? 'map' : target)}
+      onClick={() => {
+        if (view !== target) onNavigate(target);
+        else if (target === 'gallery') document.querySelector('.gallery-overlay')?.scrollTo({ top: 0, behavior: 'smooth' });
+      }}
       aria-label={label}
       aria-current={view === target ? 'page' : undefined}
     >
@@ -32,8 +35,7 @@ export function BottomNav({ view, onNavigate, onHome }: BottomNavProps) {
   return (
     <nav className="bottom-nav" aria-label="Sections">
       <div className="bn-capsule">
-        {/* The map leads: it is home, and the Sun no longer needs a raised
-            button to say so now that its icon sits at the set's weight. */}
+        {item('gallery', 'Photos', <IconGallery />)}
         <button
           className={`bn-item${view === 'map' ? ' is-on' : ''}`}
           onClick={onHome}
@@ -43,7 +45,6 @@ export function BottomNav({ view, onNavigate, onHome }: BottomNavProps) {
           <IconSun />
           <span>Map</span>
         </button>
-        {item('gallery', 'Gallery', <IconGallery />)}
         {item('mars', 'Mars', <IconMars />)}
         {item('deepsky', 'Deep Sky', <IconDeepSky />)}
       </div>

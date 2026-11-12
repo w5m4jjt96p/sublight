@@ -133,6 +133,8 @@ export interface FrameThumb {
    *  because bundles written before this existed don't carry it. */
   receivedUtc?: string;
   sol: number | null;
+  /** What the frame is worth showing, from its metadata (see data/frameScore.ts). */
+  score?: number;
 }
 
 export interface FrameData {

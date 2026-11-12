@@ -34,6 +34,7 @@ export class MapEngine {
   private lastT = 0;
   private fontScale = 1;
   private frameCount = 0;
+  private paused = false;
   private detachInteraction: () => void;
   private resizeObs: ResizeObserver;
 
@@ -109,6 +110,10 @@ export class MapEngine {
   }
 
   /** Px reserved by the right info panel; the map shifts left to stay centred. */
+  setPaused(v: boolean): void {
+    this.paused = v;
+  }
+
   setFocusInset(px: number): void {
     this.focusInsetX = px;
   }
@@ -198,6 +203,11 @@ export class MapEngine {
   }
 
   private loop(now: number): void {
+    if (this.paused) {
+      this.lastT = now;
+      this.raf = requestAnimationFrame(this.loop);
+      return;
+    }
     const dt = (now - this.lastT) / 1000;
     this.lastT = now;
     this.camera.step(dt);

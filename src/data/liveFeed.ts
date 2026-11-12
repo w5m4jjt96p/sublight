@@ -1,15 +1,12 @@
-// The live rover feed, loaded once for the whole app and shared. It starts the
-// moment the site opens, on the map, not when the gallery is first shown: the
-// mars2020 endpoint answers in eleven to sixteen seconds, and a reader who
-// opened the gallery used to sit through two of those in a row before a
-// single live post appeared. Now those seconds pass while they look at the
-// map, and the last visit's stream is kept in localStorage so even the first
-// paint is the newest thing we had, not the daily bundle.
+// The live rover feed, loaded once for the whole app and shared. It starts as
+// soon as the code runs, before the bundled JSON has even arrived, so the
+// newest photos are usually in hand by the time the first post can paint. The
+// last stream is kept in localStorage, so a returning reader starts from it.
 //
-// Two publications per load, neither of which reshuffles the top of the
-// stream: first the newest frames of every rover (one slow request each, in
-// parallel), then those sols pulled whole, which only grows posts and appends
-// older ones below.
+// Each rover loads on its own, in two steps: its newest frames (a fraction of a
+// second), then its latest sols whole, because a publication has to be complete
+// before the reader can scroll past it. A poll keeps what is on screen until
+// the whole sols are in, so nothing shrinks while it runs.
 import type { FrameThumb } from '../types.ts';
 import { fetchLatestFrames, fetchSolImages } from './roverImages.ts';
 
@@ -22,25 +19,29 @@ export interface LiveCursor {
 export interface LiveFeedState {
   byCraft: Record<string, FrameThumb[]>;
   cursors: Record<string, LiveCursor>;
-  /** Where the frames came from: the last visit, the newest-frames pass, or whole sols. */
-  stage: 'none' | 'cache' | 'latest' | 'complete';
+  /** 'cache' is the last visit; 'live' means at least one rover has answered. */
+  stage: 'none' | 'cache' | 'live';
   /** When the live data was fetched. */
   at: number;
 }
 
-const STORE_KEY = 'sublight.feed.live';
+// The two rovers with a live feed; the fetchers above know no others.
+const ROVERS = ['perseverance', 'curiosity'];
+const STORE_KEY = 'sublight.feed.v2'; // v2: frames carry a score
 const CACHE_PER_CRAFT = 150;
+const SOLS_PER_ROVER = 3;
 const MIN_GAP_MS = 2 * 60 * 1000;   // never twice within two minutes
-const POLL_MS = 15 * 60 * 1000;     // and at most four times an hour: NASA publishes every 4–7 h
+const POLL_MS = 15 * 60 * 1000;     // and at most four times an hour: NASA publishes every 4 to 7 h
 
 const listeners = new Set<() => void>();
 let state: LiveFeedState = hydrate();
-
-if (import.meta.env.DEV) (window as unknown as { __sublightLive?: () => LiveFeedState }).__sublightLive = () => state;
-let ids: string[] = [];
+/** Rovers whose whole sols have landed at least once this visit. */
+const complete = new Set<string>();
 let started = false;
 let loading = false;
 let lastLoad = 0;
+
+if (import.meta.env.DEV) (window as unknown as { __sublightLive?: () => LiveFeedState }).__sublightLive = () => state;
 
 function hydrate(): LiveFeedState {
   const empty: LiveFeedState = { byCraft: {}, cursors: {}, stage: 'none', at: 0 };
@@ -65,9 +66,15 @@ function persist(s: LiveFeedState): void {
   }
 }
 
-function emit(next: LiveFeedState): void {
-  state = next;
+function publish(id: string, frames: FrameThumb[], cursor: LiveCursor): void {
+  state = {
+    byCraft: { ...state.byCraft, [id]: frames },
+    cursors: { ...state.cursors, [id]: cursor },
+    stage: 'live',
+    at: Date.now(),
+  };
   for (const l of listeners) l();
+  persist(state);
 }
 
 export function subscribeLiveFeed(listener: () => void): () => void {
@@ -79,10 +86,9 @@ export function getLiveFeed(): LiveFeedState {
   return state;
 }
 
-/** Kick off the live load and the polling. Idempotent; called as soon as the bundle names the rovers. */
-export function startLiveFeed(roverIds: string[]): void {
-  ids = roverIds;
-  if (started || !ids.length) return;
+/** Start the live load and the polling. Idempotent. */
+export function startLiveFeed(): void {
+  if (started) return;
   started = true;
   void load(false);
   const maybe = () => {
@@ -94,78 +100,41 @@ export function startLiveFeed(roverIds: string[]): void {
   window.setInterval(maybe, POLL_MS);
 }
 
-/** A reload on demand (pull to refresh), paced like the poll. */
-export function refreshLiveFeed(): void {
-  if (Date.now() - lastLoad < MIN_GAP_MS) return;
-  void load(true);
-}
-
 async function load(force: boolean): Promise<void> {
-  if (loading || !ids.length) return;
+  if (loading) return;
   loading = true;
   lastLoad = Date.now();
   try {
-    // Stage one: the newest frames of every rover, published together once
-    // all are in, so the top of the stream lands in one piece.
-    const latest = await Promise.all(
-      ids.map(async (id) => {
-        try {
-          const fresh = await fetchLatestFrames(id, 48, force);
-          return fresh.length ? { id, fresh } : null;
-        } catch {
-          return null; // offline or feed down: this rover keeps what it had
-        }
-      }),
-    );
-    const byCraft = { ...state.byCraft };
-    const cursors = { ...state.cursors };
-    const plans: { id: string; sols: number[] }[] = [];
-    for (const r of latest) {
-      if (!r) continue;
-      byCraft[r.id] = r.fresh;
-      // Every sol in the newest downlink, not just the highest one. A rover can
-      // send an older sol home after a newer one, and the stream is ordered by
-      // arrival, so that older sol belongs at the top. Capped, so an unusual
-      // batch can't fan out into requests.
-      const sols = [...new Set(r.fresh.map((f) => f.sol).filter((x): x is number => x != null))]
-        .sort((a, b) => b - a)
-        .slice(0, 3);
-      if (sols.length) {
-        cursors[r.id] = { nextSol: Math.min(...sols), topSolComplete: false, done: false };
-        plans.push({ id: r.id, sols });
-      }
-    }
-    if (plans.length) {
-      const at = Date.now();
-      emit({ byCraft, cursors, stage: 'latest', at });
-      persist(state);
-    }
-
-    // Stage two: those sols whole. A publication must be complete before the
-    // reader can scroll past it, or loading older would grow it in place.
-    const whole = await Promise.all(
-      plans.map(async ({ id, sols }) => {
-        const parts = await Promise.all(
-          sols.map((sn) => fetchSolImages(id, sn, 600, force).then((r) => r.frames).catch(() => [])),
-        );
-        const merged = parts.flat();
-        return merged.length ? { id, frames: merged, nextSol: Math.min(...sols) - 1 } : null;
-      }),
-    );
-    const byCraft2 = { ...state.byCraft };
-    const cursors2 = { ...state.cursors };
-    let any = false;
-    for (const r of whole) {
-      if (!r) continue;
-      byCraft2[r.id] = r.frames;
-      cursors2[r.id] = { nextSol: r.nextSol, topSolComplete: true, done: false };
-      any = true;
-    }
-    if (any) {
-      emit({ byCraft: byCraft2, cursors: cursors2, stage: 'complete', at: Date.now() });
-      persist(state);
-    }
+    await Promise.all(ROVERS.map((id) => loadRover(id, force)));
   } finally {
     loading = false;
   }
+}
+
+async function loadRover(id: string, force: boolean): Promise<void> {
+  let fresh: FrameThumb[];
+  try {
+    fresh = await fetchLatestFrames(id, 100, force);
+  } catch {
+    return; // offline or feed down: this rover keeps what it had
+  }
+  if (!fresh.length) return;
+
+  // Every sol in the newest downlink, then back from there, so the stream opens
+  // with several posts and not one. Capped, so an unusual batch can't fan out.
+  const seen = [...new Set(fresh.map((f) => f.sol).filter((x): x is number => x != null))].sort((a, b) => b - a);
+  if (!seen.length) return;
+  const sols = seen.slice(0, SOLS_PER_ROVER);
+  while (sols.length < SOLS_PER_ROVER && sols[sols.length - 1]! > 0) sols.push(sols[sols.length - 1]! - 1);
+  const oldest = sols[sols.length - 1]!;
+
+  if (!complete.has(id)) publish(id, fresh, { nextSol: oldest, topSolComplete: false, done: false });
+
+  const parts = await Promise.all(
+    sols.map((sol) => fetchSolImages(id, sol, 600, force).then((r) => r.frames).catch(() => [] as FrameThumb[])),
+  );
+  const whole = parts.flat();
+  if (!whole.length) return;
+  complete.add(id);
+  publish(id, whole, { nextSol: oldest - 1, topSolComplete: true, done: oldest - 1 < 0 });
 }

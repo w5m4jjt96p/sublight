@@ -5,6 +5,7 @@
 // the DSN feed — the browser reads them directly when the user opens a drive stop.
 // Every frame stays linked; none is hosted or invented.
 import type { FrameThumb } from '../types.ts';
+import { frameScore } from './frameScore.ts';
 
 // mars.nasa.gov serves size variants of every MSL frame by suffix, and the
 // saving is dramatic: a NAVCAM frame is 536 KB raw, 113 KB as -br, 8 KB as
@@ -38,25 +39,16 @@ function dropStereoTwins(frames: FrameThumb[]): FrameThumb[] {
 }
 
 /**
- * How much a camera is worth opening a post on, highest first. The raw feeds
- * carry no "featured" or "interesting" flag; the closest thing NASA publishes
- * is MSL's `instrument_sort` (Mastcam 1, ChemCam RMI 4, Navcam 7-8), and this
- * ordering matches it while also covering Perseverance, whose feed has no
- * equivalent field.
+ * The frame a post opens on: the best score, newest first on a tie. Frames from
+ * a cache written before scores existed count as equal, which falls back to the
+ * sequence's own first frame.
  */
-const CAMERA_RANK: [RegExp, number][] = [
-  [/MCZ|MAST|ZCAM/, 0],        // colour, scenic
-  [/NAVCAM|NAV_/, 1],          // wide, grey
-  [/RMI|SUPERCAM|CHEMCAM/, 2], // distant detail
-  [/HAZ/, 3],                  // wheels and ground
-];
-export function openingFrame(frames: { instrument: string }[]): number {
+export function openingFrame(frames: { score?: number }[]): number {
   let best = 0;
-  let bestRank = 99;
+  let top = -Infinity;
   for (let i = 0; i < frames.length; i++) {
-    const inst = frames[i]!.instrument;
-    const rank = CAMERA_RANK.find(([re]) => re.test(inst))?.[1] ?? 4;
-    if (rank < bestRank) { bestRank = rank; best = i; if (rank === 0) break; }
+    const v = frames[i]!.score ?? 0;
+    if (v > top) { top = v; best = i; }
   }
   return best;
 }
@@ -68,12 +60,33 @@ export interface SolImages {
   more: string;       // deep link to the full set on mars.nasa.gov
 }
 
+const m20Score = (im: any): number =>
+  frameScore({
+    instrument: im.camera?.instrument ?? '',
+    name: im.image_files?.small ?? im.imageid ?? '',
+    lmst: im.date_taken_mars,
+    mastEl: im.extended?.mastEl,
+    rect: im.extended?.dimension,
+  });
+const mslScore = (im: any): number =>
+  frameScore({
+    instrument: im.instrument ?? '',
+    name: im.url ?? '',
+    lmst: im.extended?.lmst,
+    mastEl: im.extended?.mast_el,
+    rect: im.subframe_rect,
+  });
+
 const cache = new Map<string, SolImages>();
 
 // ---- newest published frames ------------------------------------------------
 // The bundled snapshot is only as fresh as the last data refresh, and NASA
-// publishes in bursts through the day, so the feed asks for the most recently
-// *published* frames (ordered by date_received) rather than guessing a sol.
+// publishes in bursts through the day, so the feed asks NASA for what is newest.
+//
+// Perseverance is asked by sol, not by date_received. Measured uncached, the
+// mars2020 endpoint takes 11 s to sort on date_received and 0.35 s to sort on
+// sol, for the same newest frames. That one parameter was the whole of the
+// feed's famous slowness. Curiosity's endpoint sorts date_received in 0.5 s.
 const latestCache = new Map<string, { at: number; frames: FrameThumb[] }>();
 const LATEST_TTL_MS = 5 * 60 * 1000;
 
@@ -94,7 +107,7 @@ export async function fetchLatestFrames(
   const url =
     roverId === 'curiosity'
       ? `https://mars.nasa.gov/api/v1/raw_image_items/?order=date_received+desc&per_page=${limit * 2}&page=0&condition_1=msl%3Amission`
-      : `https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=${limit}&page=0&order=date_received+desc`;
+      : `https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=${limit}&page=0&order=sol+desc`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${roverId} latest: HTTP ${res.status}`);
   const data = await res.json();
@@ -112,6 +125,7 @@ export async function fetchLatestFrames(
             capturedUtc: im.date_taken ?? '',
             receivedUtc: im.date_received ?? '',
             sol: im.sol ?? null,
+            score: mslScore(im),
           }))
           .slice(0, limit)
       : ((data.images ?? []) as any[])
@@ -126,6 +140,7 @@ export async function fetchLatestFrames(
               capturedUtc: im.date_taken_utc ?? '',
               receivedUtc: im.date_received ?? '',
               sol: im.sol ?? null,
+              score: m20Score(im),
             };
           })
           .filter((f) => f.file);
@@ -172,6 +187,7 @@ async function fetchPerseverance(sol: number, limit: number): Promise<SolImages>
       capturedUtc: im.date_taken_utc ?? im.date_taken_mars ?? '',
       receivedUtc: im.date_received ?? '',
       sol: im.sol ?? sol,
+      score: m20Score(im),
     };
   }).filter((f) => f.file);
   return {
@@ -201,6 +217,7 @@ async function fetchCuriosity(sol: number, limit: number): Promise<SolImages> {
     capturedUtc: im.date_taken ?? '',
     receivedUtc: im.date_received ?? '',
     sol: im.sol ?? sol,
+    score: mslScore(im),
   })).filter((f) => f.file).slice(0, limit);
   return {
     sol,

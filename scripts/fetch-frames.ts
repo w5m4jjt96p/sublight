@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import sharp from 'sharp';
 import type { Registry, FramesData, FrameData, FrameThumb } from '../src/types.ts';
+import { frameScore, SCORE_HIDDEN } from '../src/data/frameScore.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REGISTRY = join(ROOT, 'data', 'registry.json');
@@ -38,9 +39,6 @@ const FULL_WIDTH = 1600; // full-screen viewer + one-click HQ download
 const RECENT_COUNT = 12;
 const UA = { 'User-Agent': 'out-there/0.4 (static site build)' };
 
-/** Surface cameras make better hero frames than sky/engineering cams. */
-const PREFERRED = ['NAVCAM', 'MASTCAM', 'MAST', 'ZCAM', 'MCZ', 'FHAZ', 'RHAZ', 'HAZCAM'];
-
 /** Normalised frame, source-agnostic. */
 interface Frame {
   sol: number | null;
@@ -55,6 +53,8 @@ interface Frame {
   /** Original full-resolution image at the source, for "view original". */
   sourceUrl: string;
   credit: string;
+  /** What the frame is worth showing (see src/data/frameScore.ts). */
+  score?: number;
 }
 
 function slug(s: string): string {
@@ -68,24 +68,25 @@ function frameBase(craftId: string, f: Frame): string {
 }
 
 /**
- * Order frames for display: the newest surface-camera frame leads (it becomes
- * the hero), then a round-robin across every camera so the wall stays varied
- * instead of showing a burst from one instrument. A sol can carry 500+ frames
- * dominated by a single camera; interleaving keeps the colour Mastcam-Z / Navcam
- * views in the mix. The first RECENT_COUNT entries feed the gallery strip.
+ * Order frames for display: the best frame of the newest sol leads (it becomes
+ * the hero, the map chip and usually the first photo a reader sees), then a
+ * round-robin across every camera so the seed stays varied instead of showing a
+ * burst from one instrument. A sol can carry 500+ frames dominated by a single
+ * camera. Night noise, flat sky and sun-finding crops never get in at all.
  */
 function orderFrames(frames: Frame[]): Frame[] {
-  // De-dupe, newest first.
+  // De-dupe, drop what is not a picture of anything.
   const seen = new Set<string>();
-  const uniq = frames
-    .filter((f) => {
-      if (seen.has(f.url)) return false;
-      seen.add(f.url);
-      return true;
-    })
-    .sort((a, b) => Date.parse(b.capturedUtc) - Date.parse(a.capturedUtc));
+  const uniq = frames.filter((f) => {
+    if (seen.has(f.url) || (f.score ?? 0) < SCORE_HIDDEN) return false;
+    seen.add(f.url);
+    return true;
+  });
+  const sol = (f: Frame) => f.sol ?? 0;
+  const rank = (a: Frame, b: Frame) =>
+    sol(b) - sol(a) || (b.score ?? 0) - (a.score ?? 0) || Date.parse(b.capturedUtc) - Date.parse(a.capturedUtc);
 
-  // Bucket by camera, each bucket already newest-first.
+  // Bucket by camera, each bucket best-first within the newest sol.
   const buckets = new Map<string, Frame[]>();
   for (const f of uniq) {
     const cam = f.instrument.toUpperCase();
@@ -93,15 +94,8 @@ function orderFrames(frames: Frame[]): Frame[] {
     if (b) b.push(f);
     else buckets.set(cam, [f]);
   }
-
-  // Camera order: surface cameras first (ranked by their newest frame), so the
-  // hero is a real landscape, not a sky/engineering shot.
-  const cams = [...buckets.keys()].sort((a, b) => {
-    const pa = PREFERRED.some((p) => a.includes(p)) ? 0 : 1;
-    const pb = PREFERRED.some((p) => b.includes(p)) ? 0 : 1;
-    if (pa !== pb) return pa - pb;
-    return Date.parse(buckets.get(b)![0]!.capturedUtc) - Date.parse(buckets.get(a)![0]!.capturedUtc);
-  });
+  for (const b of buckets.values()) b.sort(rank);
+  const cams = [...buckets.keys()].sort((a, b) => rank(buckets.get(a)![0]!, buckets.get(b)![0]!));
 
   // Round-robin: one frame from each camera per pass.
   const out: Frame[] = [];
@@ -129,10 +123,12 @@ async function fetchMars2020(): Promise<Frame[]> {
     images?: {
       sol?: number;
       date_taken_utc?: string;
+      date_taken_mars?: string;
       credit?: string;
       camera?: { instrument?: string };
       image_files?: { large?: string; full_res?: string; medium?: string; small?: string };
       date_received?: string;
+      extended?: { mastEl?: string; dimension?: string };
     }[];
   };
   return (json.images ?? [])
@@ -150,6 +146,13 @@ async function fetchMars2020(): Promise<Frame[]> {
             url: best,
             sourceUrl: f.full_res ?? best,
             credit: im.credit?.trim() || 'NASA/JPL-Caltech',
+            score: frameScore({
+              instrument: im.camera!.instrument!,
+              name: best,
+              lmst: im.date_taken_mars,
+              mastEl: im.extended?.mastEl,
+              rect: im.extended?.dimension,
+            }),
           }
         : null;
     })
@@ -167,7 +170,8 @@ async function fetchMsl(): Promise<Frame[]> {
     // full ones so the wall isn't half grainy previews.
     items?: {
       sol?: number; instrument?: string; date_taken?: string; url?: string;
-      is_thumbnail?: boolean; date_received?: string;
+      is_thumbnail?: boolean; date_received?: string; subframe_rect?: string | null;
+      extended?: { lmst?: string; mast_el?: string | number };
     }[];
   };
   return (json.items ?? [])
@@ -180,6 +184,13 @@ async function fetchMsl(): Promise<Frame[]> {
       url: im.url!,
       sourceUrl: im.url!,
       credit: 'NASA/JPL-Caltech/MSSS',
+      score: frameScore({
+        instrument: im.instrument!,
+        name: im.url!,
+        lmst: im.extended?.lmst,
+        mastEl: im.extended?.mast_el,
+        rect: im.subframe_rect,
+      }),
     }));
 }
 
@@ -328,6 +339,7 @@ async function main() {
           capturedUtc: f.capturedUtc,
           receivedUtc: f.receivedUtc,
           sol: f.sol,
+          ...(f.score != null ? { score: f.score } : {}),
         });
       }
       if (recent.length === 0) {

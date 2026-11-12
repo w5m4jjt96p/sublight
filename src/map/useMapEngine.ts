@@ -19,6 +19,9 @@ export interface UseMapEngineArgs {
   showPath: boolean;
   /** Px reserved on the right by the info panel (0 when closed). */
   focusInset: number;
+  /** The map is on screen. The engine, its sky and planet maps (2 MB) and its
+   *  draw loop wait for this: the reader who came for photos pays for none of it. */
+  active: boolean;
   onPick: (kind: 'craft' | 'body', id: string) => void;
 }
 
@@ -30,12 +33,44 @@ export interface MapControls {
 }
 
 export function useMapEngine(args: UseMapEngineArgs): MapControls {
-  const { canvasRef, stageRef, model, frames, selectedId, showPath, focusInset, onPick } = args;
+  const { canvasRef, stageRef, model, frames, selectedId, showPath, focusInset, active, onPick } = args;
   const engineRef = useRef<AnyEngine | null>(null);
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;
+  /** A fly-to asked for before the engine exists: search from the feed lands here. */
+  const pendingRef = useRef<((e: AnyEngine) => void) | null>(null);
 
+  const planetImages = (): Map<string, HTMLImageElement> => {
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const ids = ['mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+    const cache = new Map<string, HTMLImageElement>();
+    for (const id of ids) {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = `${base}/planets/${id}.svg`;
+      cache.set(id, img);
+    }
+    return cache;
+  };
+  // Each imaging craft's hero frame; the render loop draws whatever has decoded
+  // so far, so late arrivals simply appear on the next frame.
+  const frameImages = (): Map<string, HTMLImageElement> => {
+    const base = import.meta.env.BASE_URL;
+    const cache = new Map<string, HTMLImageElement>();
+    for (const [id, frame] of Object.entries(frames)) {
+      if (!frame?.file) continue;
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = `${base.replace(/\/$/, '')}${frame.file}`;
+      cache.set(id, img);
+    }
+    return cache;
+  };
+
+  // Built the first time the map is shown, then kept: leaving and coming back
+  // must not lose the camera.
   useEffect(() => {
+    if (!active || engineRef.current) return;
     const canvas = canvasRef.current;
     const stage = stageRef.current;
     if (!canvas || !stage) return;
@@ -60,12 +95,26 @@ export function useMapEngine(args: UseMapEngineArgs): MapControls {
       engine = new MapEngine(canvas, stage, opts);
     }
     engineRef.current = engine;
-    return () => {
-      engine.destroy();
-      engineRef.current = null;
-    };
+    if (model) engine.setModel(model);
+    engine.setSelected(selectedId);
+    engine.setShowPath(showPath);
+    engine.setFocusInset(focusInset);
+    engine.setPlanetImages(planetImages());
+    engine.setFrameImages(frameImages());
+    pendingRef.current?.(engine);
+    pendingRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
+
+  useEffect(() => () => {
+    engineRef.current?.destroy();
+    engineRef.current = null;
   }, []);
+
+  // Nobody can see it behind the feed, so it does not draw behind the feed.
+  useEffect(() => {
+    engineRef.current?.setPaused(!active);
+  }, [active]);
 
   useEffect(() => {
     if (model) engineRef.current?.setModel(model);
@@ -83,38 +132,19 @@ export function useMapEngine(args: UseMapEngineArgs): MapControls {
     engineRef.current?.setFocusInset(focusInset);
   }, [focusInset]);
 
-  // Preload the (fixed) set of planet icons once.
   useEffect(() => {
-    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-    const ids = ['mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-    const cache = new Map<string, HTMLImageElement>();
-    for (const id of ids) {
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = `${base}/planets/${id}.svg`;
-      cache.set(id, img);
-    }
-    engineRef.current?.setPlanetImages(cache);
-  }, []);
-
-  // Preload each imaging craft's hero frame; the render loop draws whatever has
-  // decoded so far, so late arrivals simply appear on the next frame.
-  useEffect(() => {
-    const base = import.meta.env.BASE_URL;
-    const cache = new Map<string, HTMLImageElement>();
-    for (const [id, frame] of Object.entries(frames)) {
-      if (!frame?.file) continue;
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = `${base.replace(/\/$/, '')}${frame.file}`;
-      cache.set(id, img);
-    }
-    engineRef.current?.setFrameImages(cache);
+    engineRef.current?.setFrameImages(frameImages());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frames]);
 
+  const withEngine = (act: (e: AnyEngine) => void) => {
+    if (engineRef.current) act(engineRef.current);
+    else pendingRef.current = act;
+  };
+
   return {
-    flyTo: (id) => engineRef.current?.flyToId(id),
-    flyToBody: (id) => engineRef.current?.flyToBody(id),
+    flyTo: (id) => withEngine((e) => e.flyToId(id)),
+    flyToBody: (id) => withEngine((e) => e.flyToBody(id)),
     reset: () => engineRef.current?.reset(),
     zoomBy: (factor) => engineRef.current?.zoomBy(factor),
   };
