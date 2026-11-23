@@ -134,32 +134,32 @@
   "curiosity": {
     "sol": 5082,
     "instrument": "NAV_LEFT_B",
-    "capturedUtc": "2026-11-22T20:31:33.000Z",
-    "receivedUtc": "2026-11-22T21:04:02.000Z",
-    "file": "/frames/curiosity-5082-nav-left-b-c48161.jpg",
-    "full": "/frames/curiosity-5082-nav-left-b-c48161-full.jpg",
-    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848647104EDR_D1260072TRAV01533M_.JPG",
+    "capturedUtc": "2026-11-22T21:33:57.000Z",
+    "receivedUtc": "2026-11-23T13:01:28.000Z",
+    "file": "/frames/curiosity-5082-nav-left-b-2ef6cd.jpg",
+    "full": "/frames/curiosity-5082-nav-left-b-2ef6cd-full.jpg",
+    "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848650847EDR_F1270000NCAM00290M_.JPG",
     "credit": "NASA/JPL-Caltech/MSSS",
     "recent": [
       {
-        "file": "/frames/curiosity-5082-nav-left-b-c48161.jpg",
-        "full": "/frames/curiosity-5082-nav-left-b-c48161-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848647104EDR_D1260072TRAV01533M_.JPG",
+        "file": "/frames/curiosity-5082-nav-left-b-2ef6cd.jpg",
+        "full": "/frames/curiosity-5082-nav-left-b-2ef6cd-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848650847EDR_F1270000NCAM00290M_.JPG",
         "instrument": "NAV_LEFT_B",
-        "capturedUtc": "2026-11-22T20:31:33.000Z",
-        "receivedUtc": "2026-11-22T21:04:02.000Z",
+        "capturedUtc": "2026-11-22T21:33:57.000Z",
+        "receivedUtc": "2026-11-23T13:01:28.000Z",
         "sol": 5082,
-        "score": 45
+        "score": 55
       },
       {
-        "file": "/frames/curiosity-5082-nav-right-b-61af00.jpg",
-        "full": "/frames/curiosity-5082-nav-right-b-61af00-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NRB_848647104EDR_D1260072TRAV01533M_.JPG",
+        "file": "/frames/curiosity-5082-nav-right-b-6b3731.jpg",
+        "full": "/frames/curiosity-5082-nav-right-b-6b3731-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NRB_848650778EDR_F1270000NCAM00353M_.JPG",
         "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-11-22T20:31:33.000Z",
-        "receivedUtc": "2026-11-22T21:03:58.000Z",
+        "capturedUtc": "2026-11-22T21:32:47.000Z",
+        "receivedUtc": "2026-11-23T13:01:18.000Z",
         "sol": 5082,
-        "score": 45
+        "score": 55
       },
       {
         "file": "/frames/curiosity-5082-chemcam-rmi-f7c942.jpg",
@@ -172,24 +172,54 @@
         "score": 38
       },
       {
-        "file": "/frames/curiosity-5082-nav-left-b-1f8196.jpg",
-        "full": "/frames/curiosity-5082-nav-left-b-1f8196-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848646951EDR_D1260066TRAV01533M_.JPG",
-        "instrument": "NAV_LEFT_B",
-        "capturedUtc": "2026-11-22T20:29:01.000Z",
-        "receivedUtc": "2026-11-22T21:02:54.000Z",
+        "file": "/frames/curiosity-5082-rhaz-right-b-841e6e.jpg",
+        "full": "/frames/curiosity-5082-rhaz-right-b-841e6e-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/rcam/RRB_848650798EDR_S1270000RHAZ00303M_.JPG",
+        "instrument": "RHAZ_RIGHT_B",
+        "capturedUtc": "2026-11-22T21:33:08.000Z",
+        "receivedUtc": "2026-11-23T13:01:16.000Z",
         "sol": 5082,
-        "score": 45
+        "score": 30
       },
       {
-        "file": "/frames/curiosity-5082-nav-right-b-f3ced7.jpg",
-        "full": "/frames/curiosity-5082-nav-right-b-f3ced7-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NRB_848646951EDR_D1260066TRAV01533M_.JPG",
-        "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-11-22T20:29:01.000Z",
-        "receivedUtc": "2026-11-22T21:03:36.000Z",
+        "file": "/frames/curiosity-5082-fhaz-right-b-406036.jpg",
+        "full": "/frames/curiosity-5082-fhaz-right-b-406036-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/fcam/FRB_848650691EDR_F1270000FHAZ00302M_.JPG",
+        "instrument": "FHAZ_RIGHT_B",
+        "capturedUtc": "2026-11-22T21:31:21.000Z",
+        "receivedUtc": "2026-11-23T12:59:51.000Z",
         "sol": 5082,
-        "score": 45
+        "score": 30
+      },
+      {
+        "file": "/frames/curiosity-5082-fhaz-left-b-e6d9d8.jpg",
+        "full": "/frames/curiosity-5082-fhaz-left-b-e6d9d8-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/fcam/FLB_848650691EDR_F1270000FHAZ00302M_.JPG",
+        "instrument": "FHAZ_LEFT_B",
+        "capturedUtc": "2026-11-22T21:31:21.000Z",
+        "receivedUtc": "2026-11-23T12:59:27.000Z",
+        "sol": 5082,
+        "score": 30
+      },
+      {
+        "file": "/frames/curiosity-5082-nav-left-b-6f4fc6.jpg",
+        "full": "/frames/curiosity-5082-nav-left-b-6f4fc6-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848650778EDR_F1270000NCAM00353M_.JPG",
+        "instrument": "NAV_LEFT_B",
+        "capturedUtc": "2026-11-22T21:32:47.000Z",
+        "receivedUtc": "2026-11-23T13:01:09.000Z",
+        "sol": 5082,
+        "score": 55
+      },
+      {
+        "file": "/frames/curiosity-5082-nav-right-b-8c5615.jpg",
+        "full": "/frames/curiosity-5082-nav-right-b-8c5615-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NRB_848650746EDR_F1270000NCAM00353M_.JPG",
+        "instrument": "NAV_RIGHT_B",
+        "capturedUtc": "2026-11-22T21:32:16.000Z",
+        "receivedUtc": "2026-11-23T13:01:07.000Z",
+        "sol": 5082,
+        "score": 55
       },
       {
         "file": "/frames/curiosity-5082-chemcam-rmi-ba1ad4.jpg",
@@ -202,170 +232,132 @@
         "score": 38
       },
       {
-        "file": "/frames/curiosity-5082-nav-left-b-da85ce.jpg",
-        "full": "/frames/curiosity-5082-nav-left-b-da85ce-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848646867EDR_D1260060TRAV01533M_.JPG",
+        "file": "/frames/curiosity-5082-nav-left-b-d3df3a.jpg",
+        "full": "/frames/curiosity-5082-nav-left-b-d3df3a-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848650746EDR_F1270000NCAM00353M_.JPG",
         "instrument": "NAV_LEFT_B",
-        "capturedUtc": "2026-11-22T20:27:37.000Z",
-        "receivedUtc": "2026-11-22T21:01:16.000Z",
+        "capturedUtc": "2026-11-22T21:32:16.000Z",
+        "receivedUtc": "2026-11-23T13:01:07.000Z",
         "sol": 5082,
-        "score": 45
+        "score": 55
       },
       {
-        "file": "/frames/curiosity-5082-nav-right-b-2f1e45.jpg",
-        "full": "/frames/curiosity-5082-nav-right-b-2f1e45-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NRB_848646867EDR_D1260060TRAV01533M_.JPG",
-        "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-11-22T20:27:37.000Z",
-        "receivedUtc": "2026-11-22T21:01:34.000Z",
-        "sol": 5082,
-        "score": 45
-      },
-      {
-        "file": "/frames/curiosity-5081-chemcam-rmi-c51e42.jpg",
-        "full": "/frames/curiosity-5081-chemcam-rmi-c51e42-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05081/opgs/edr/ccam/CR0_848555213EDR_F1260000CCAM02081M_.JPG",
-        "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-11-21T19:00:02.000Z",
-        "receivedUtc": "2026-11-21T23:05:51.000Z",
-        "sol": 5081,
-        "score": 38
-      },
-      {
-        "file": "/frames/curiosity-5082-nav-left-b-19ffd0.jpg",
-        "full": "/frames/curiosity-5082-nav-left-b-19ffd0-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848646787EDR_D1260054TRAV01533M_.JPG",
+        "file": "/frames/curiosity-5082-nav-left-b-5ec6ad.jpg",
+        "full": "/frames/curiosity-5082-nav-left-b-5ec6ad-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848648811EDR_F1260192NCAM00385M_.JPG",
         "instrument": "NAV_LEFT_B",
-        "capturedUtc": "2026-11-22T20:26:17.000Z",
-        "receivedUtc": "2026-11-22T21:01:23.000Z",
+        "capturedUtc": "2026-11-22T21:00:01.000Z",
+        "receivedUtc": "2026-11-23T13:00:40.000Z",
         "sol": 5082,
-        "score": 45
+        "score": 55
       },
       {
-        "file": "/frames/curiosity-5082-nav-right-b-da36c8.jpg",
-        "full": "/frames/curiosity-5082-nav-right-b-da36c8-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NRB_848646787EDR_D1260054TRAV01533M_.JPG",
-        "instrument": "NAV_RIGHT_B",
-        "capturedUtc": "2026-11-22T20:26:17.000Z",
-        "receivedUtc": "2026-11-22T21:01:28.000Z",
+        "file": "/frames/curiosity-5082-nav-left-b-de486c.jpg",
+        "full": "/frames/curiosity-5082-nav-left-b-de486c-full.jpg",
+        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05082/opgs/edr/ncam/NLB_848648786EDR_F1260192NCAM00385M_.JPG",
+        "instrument": "NAV_LEFT_B",
+        "capturedUtc": "2026-11-22T20:59:36.000Z",
+        "receivedUtc": "2026-11-23T13:01:05.000Z",
         "sol": 5082,
-        "score": 45
-      },
-      {
-        "file": "/frames/curiosity-5081-chemcam-rmi-82f4fc.jpg",
-        "full": "/frames/curiosity-5081-chemcam-rmi-82f4fc-full.jpg",
-        "sourceUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05081/opgs/edr/ccam/CR0_848554480EDR_F1260000CCAM02081M_.JPG",
-        "instrument": "CHEMCAM_RMI",
-        "capturedUtc": "2026-11-21T18:47:49.000Z",
-        "receivedUtc": "2026-11-21T23:05:27.000Z",
-        "sol": 5081,
-        "score": 38
+        "score": 55
       }
     ]
   },
   "dscovr": {
     "sol": null,
     "instrument": "EPIC",
-    "capturedUtc": "2026-11-20T21:58:53.000Z",
-    "file": "/frames/dscovr-x-epic-587de2.jpg",
-    "full": "/frames/dscovr-x-epic-587de2-full.jpg",
-    "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120220342.png",
+    "capturedUtc": "2026-11-21T18:41:30.000Z",
+    "file": "/frames/dscovr-x-epic-249573.jpg",
+    "full": "/frames/dscovr-x-epic-249573-full.jpg",
+    "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121184618.png",
     "credit": "NASA / NOAA / DSCOVR EPIC",
     "recent": [
       {
-        "file": "/frames/dscovr-x-epic-587de2.jpg",
-        "full": "/frames/dscovr-x-epic-587de2-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120220342.png",
+        "file": "/frames/dscovr-x-epic-249573.jpg",
+        "full": "/frames/dscovr-x-epic-249573-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121184618.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T21:58:53.000Z",
+        "capturedUtc": "2026-11-21T18:41:30.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-5a65ff.jpg",
-        "full": "/frames/dscovr-x-epic-5a65ff-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120201540.png",
+        "file": "/frames/dscovr-x-epic-1c67ba.jpg",
+        "full": "/frames/dscovr-x-epic-1c67ba-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121165816.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T20:10:51.000Z",
+        "capturedUtc": "2026-11-21T16:53:27.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-13fc1e.jpg",
-        "full": "/frames/dscovr-x-epic-13fc1e-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120182737.png",
+        "file": "/frames/dscovr-x-epic-77a87e.jpg",
+        "full": "/frames/dscovr-x-epic-77a87e-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121151014.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T18:22:48.000Z",
+        "capturedUtc": "2026-11-21T15:05:25.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-a3317e.jpg",
-        "full": "/frames/dscovr-x-epic-a3317e-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120163935.png",
+        "file": "/frames/dscovr-x-epic-99e1ab.jpg",
+        "full": "/frames/dscovr-x-epic-99e1ab-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121132211.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T16:34:46.000Z",
+        "capturedUtc": "2026-11-21T13:17:23.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-95c934.jpg",
-        "full": "/frames/dscovr-x-epic-95c934-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120145132.png",
+        "file": "/frames/dscovr-x-epic-76e7c2.jpg",
+        "full": "/frames/dscovr-x-epic-76e7c2-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121113409.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T14:46:44.000Z",
+        "capturedUtc": "2026-11-21T11:29:20.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-adc2b4.jpg",
-        "full": "/frames/dscovr-x-epic-adc2b4-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120130330.png",
+        "file": "/frames/dscovr-x-epic-677875.jpg",
+        "full": "/frames/dscovr-x-epic-677875-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121094606.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T12:58:41.000Z",
+        "capturedUtc": "2026-11-21T09:41:18.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-125a86.jpg",
-        "full": "/frames/dscovr-x-epic-125a86-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120111527.png",
+        "file": "/frames/dscovr-x-epic-9ec1df.jpg",
+        "full": "/frames/dscovr-x-epic-9ec1df-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121075804.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T11:10:39.000Z",
+        "capturedUtc": "2026-11-21T07:53:16.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-44933b.jpg",
-        "full": "/frames/dscovr-x-epic-44933b-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120092725.png",
+        "file": "/frames/dscovr-x-epic-4a0d2b.jpg",
+        "full": "/frames/dscovr-x-epic-4a0d2b-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121061002.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T09:22:36.000Z",
+        "capturedUtc": "2026-11-21T06:05:13.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-521af8.jpg",
-        "full": "/frames/dscovr-x-epic-521af8-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120073922.png",
+        "file": "/frames/dscovr-x-epic-45c8fe.jpg",
+        "full": "/frames/dscovr-x-epic-45c8fe-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121042200.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T07:34:34.000Z",
+        "capturedUtc": "2026-11-21T04:17:11.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-a29865.jpg",
-        "full": "/frames/dscovr-x-epic-a29865-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120055120.png",
+        "file": "/frames/dscovr-x-epic-0a99bf.jpg",
+        "full": "/frames/dscovr-x-epic-0a99bf-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121023357.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T05:46:31.000Z",
+        "capturedUtc": "2026-11-21T02:29:08.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-da7cfc.jpg",
-        "full": "/frames/dscovr-x-epic-da7cfc-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120040317.png",
+        "file": "/frames/dscovr-x-epic-44366b.jpg",
+        "full": "/frames/dscovr-x-epic-44366b-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/21/png/epic_1b_20261121004555.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T03:58:29.000Z",
-        "sol": null
-      },
-      {
-        "file": "/frames/dscovr-x-epic-aec18f.jpg",
-        "full": "/frames/dscovr-x-epic-aec18f-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/20/png/epic_1b_20261120021515.png",
-        "instrument": "EPIC",
-        "capturedUtc": "2026-11-20T02:10:26.000Z",
+        "capturedUtc": "2026-11-21T00:41:06.000Z",
         "sol": null
       }
     ]
