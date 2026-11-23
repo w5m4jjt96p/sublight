@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-23T13:12:28.625Z",
+  "generatedAt": "2026-11-23T19:21:03.132Z",
   "craft": [
     {
       "id": "perseverance",
@@ -82,13 +82,13 @@
     {
       "id": "bepicolombo",
       "heliocentricAu": 0.349831,
-      "eclipticLonDeg": 150.8548,
-      "heliocentricAuNextDay": 0.355532,
-      "eclipticLonDegNextDay": 155.6758,
+      "eclipticLonDeg": 150.8547,
+      "heliocentricAuNextDay": 0.355533,
+      "eclipticLonDegNextDay": 155.6753,
       "eclipticLatDeg": 6.8399,
       "eclipticLatDegNextDay": 6.6737,
       "rangeAu": 1.050746,
-      "rangeAuNextDay": 1.074309,
+      "rangeAuNextDay": 1.074307,
       "owltSeconds": 524.327,
       "source": "horizons:-121"
     },
