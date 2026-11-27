@@ -266,106 +266,82 @@
   "dscovr": {
     "sol": null,
     "instrument": "EPIC",
-    "capturedUtc": "2026-11-24T22:08:12.000Z",
-    "file": "/frames/dscovr-x-epic-9046cd.jpg",
-    "full": "/frames/dscovr-x-epic-9046cd-full.jpg",
-    "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124221300.png",
+    "capturedUtc": "2026-11-25T14:37:20.000Z",
+    "file": "/frames/dscovr-x-epic-9f9b0b.jpg",
+    "full": "/frames/dscovr-x-epic-9f9b0b-full.jpg",
+    "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125144209.png",
     "credit": "NASA / NOAA / DSCOVR EPIC",
     "recent": [
       {
-        "file": "/frames/dscovr-x-epic-9046cd.jpg",
-        "full": "/frames/dscovr-x-epic-9046cd-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124221300.png",
+        "file": "/frames/dscovr-x-epic-9f9b0b.jpg",
+        "full": "/frames/dscovr-x-epic-9f9b0b-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125144209.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T22:08:12.000Z",
+        "capturedUtc": "2026-11-25T14:37:20.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-d330e3.jpg",
-        "full": "/frames/dscovr-x-epic-d330e3-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124202458.png",
+        "file": "/frames/dscovr-x-epic-236bbf.jpg",
+        "full": "/frames/dscovr-x-epic-236bbf-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125125406.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T20:20:09.000Z",
+        "capturedUtc": "2026-11-25T12:49:18.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-632218.jpg",
-        "full": "/frames/dscovr-x-epic-632218-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124183655.png",
+        "file": "/frames/dscovr-x-epic-3c42be.jpg",
+        "full": "/frames/dscovr-x-epic-3c42be-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125110604.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T18:32:07.000Z",
+        "capturedUtc": "2026-11-25T11:01:15.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-c23aa7.jpg",
-        "full": "/frames/dscovr-x-epic-c23aa7-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124164853.png",
+        "file": "/frames/dscovr-x-epic-9bc412.jpg",
+        "full": "/frames/dscovr-x-epic-9bc412-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125091802.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T16:44:05.000Z",
+        "capturedUtc": "2026-11-25T09:13:13.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-422df8.jpg",
-        "full": "/frames/dscovr-x-epic-422df8-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124150051.png",
+        "file": "/frames/dscovr-x-epic-b473bd.jpg",
+        "full": "/frames/dscovr-x-epic-b473bd-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125073000.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T14:56:02.000Z",
+        "capturedUtc": "2026-11-25T07:25:11.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-8ed2ba.jpg",
-        "full": "/frames/dscovr-x-epic-8ed2ba-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124131249.png",
+        "file": "/frames/dscovr-x-epic-669ff4.jpg",
+        "full": "/frames/dscovr-x-epic-669ff4-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125054157.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T13:08:00.000Z",
+        "capturedUtc": "2026-11-25T05:37:09.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-bf26c2.jpg",
-        "full": "/frames/dscovr-x-epic-bf26c2-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124112447.png",
+        "file": "/frames/dscovr-x-epic-0b9fa3.jpg",
+        "full": "/frames/dscovr-x-epic-0b9fa3-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125035355.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T11:19:58.000Z",
+        "capturedUtc": "2026-11-25T03:49:07.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-08b62d.jpg",
-        "full": "/frames/dscovr-x-epic-08b62d-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124093644.png",
+        "file": "/frames/dscovr-x-epic-d05a8d.jpg",
+        "full": "/frames/dscovr-x-epic-d05a8d-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125020553.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T09:31:56.000Z",
+        "capturedUtc": "2026-11-25T02:01:05.000Z",
         "sol": null
       },
       {
-        "file": "/frames/dscovr-x-epic-e73c0e.jpg",
-        "full": "/frames/dscovr-x-epic-e73c0e-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124074842.png",
+        "file": "/frames/dscovr-x-epic-ddcf48.jpg",
+        "full": "/frames/dscovr-x-epic-ddcf48-full.jpg",
+        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/25/png/epic_1b_20261125001751.png",
         "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T07:43:54.000Z",
-        "sol": null
-      },
-      {
-        "file": "/frames/dscovr-x-epic-179f1e.jpg",
-        "full": "/frames/dscovr-x-epic-179f1e-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124060040.png",
-        "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T05:55:52.000Z",
-        "sol": null
-      },
-      {
-        "file": "/frames/dscovr-x-epic-518343.jpg",
-        "full": "/frames/dscovr-x-epic-518343-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124041238.png",
-        "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T04:07:50.000Z",
-        "sol": null
-      },
-      {
-        "file": "/frames/dscovr-x-epic-11b0b8.jpg",
-        "full": "/frames/dscovr-x-epic-11b0b8-full.jpg",
-        "sourceUrl": "https://epic.gsfc.nasa.gov/archive/natural/2026/11/24/png/epic_1b_20261124022436.png",
-        "instrument": "EPIC",
-        "capturedUtc": "2026-11-24T02:19:47.000Z",
+        "capturedUtc": "2026-11-25T00:13:03.000Z",
         "sol": null
       }
     ]
